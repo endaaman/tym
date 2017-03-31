@@ -4,6 +4,7 @@
 
 ## Dependencies
 
+- [GTK+3](https://www.gtk.org/)
 - [VTE](https://github.com/GNOME/vte)
 
 ## Build
