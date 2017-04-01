@@ -1,0 +1,9 @@
+#!/bin/bash
+
+rm tym
+gcc \
+  `pkg-config --cflags gtk+-3.0 vte-2.91 lua` \
+  `pkg-config --libs gtk+-3.0 vte-2.91 lua` \
+  -o tym \
+  -Og -g -Wall \
+  src/tym.c && ./tym

@@ -4,8 +4,6 @@
 .deps/
 .dirstamp
 .libs/
-/Makefile
-/Makefile.in
 /aclocal.m4
 /autom4te.cache/
 /config.*
@@ -17,6 +15,6 @@
 /m4/
 /missing
 /stamp-h?
+Makefile
 
-src/Makefile
-src/tym
+tym

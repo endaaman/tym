@@ -1,0 +1,14 @@
+[Desktop Entry]
+Categories=GTK;System;TerminalEmulator;
+Comment=tiny terminal based on VTE
+Encoding=UTF-8
+Exec=tym
+Icon=terminal
+Name=tym
+StartupNotify=true
+Terminal=false
+TryExec=tym
+Type=Application
+Version=1.0
+X-GNOME-Bugzilla-Version=0.1.0
+X-GNOME-SingleWindow=false
