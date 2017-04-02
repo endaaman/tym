@@ -58,25 +58,16 @@ config.color_0  = '#151515'
 config.color_1  = '#ac4142'
 config.color_2  = '#90a959'
 config.color_3  = '#f4bf75'
-config.color_4  = '#6a9fb5'
-config.color_5  = '#aa759f'
-config.color_6  = '#75b5aa'
-config.color_7  = '#d0d0d0'
-config.color_8  = '#505050'
-config.color_9  = '#ac4142'
-config.color_10 = '#90a959'
-config.color_11 = '#f4bf75'
-config.color_12 = '#6a9fb5'
-config.color_13 = '#aa759f'
-config.color_14 = '#75b5aa'
-config.color_15 = '#f5f5f5'
-config.color_16 = '#d28445'
-config.color_17 = '#8f5536'
-config.color_18 = '#202020'
-config.color_19 = '#303030'
-config.color_20 = '#b0b0b0'
-config.color_21 = '#e0e0e0'
+
+-- SNIP
 ```
+
+## Key bindings
+
+| Key              | Action                |
+|:---------------- |:--------------------- |
+| Ctrl + Shift + v | Pasete from clipboard |
+| Ctrl + Shift + r | Reload config file    |
 
 ## Build and install
 
@@ -92,6 +83,10 @@ $ sudo make install
 
 - Configurable features
   - Geometry
-  - Key bind
+  - Custom key bindings
     - Reload config file
     - Paste clipboard
+
+## License
+
+MIT
