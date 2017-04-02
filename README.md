@@ -1,7 +1,5 @@
 # tym
 
-__THIS IS ALPHA VERSION UNDER DEVELOPMENT__
-
 `tym` is a tiny VTE-based terminal emulator written in C and configurable by lua.
 
 ## Motivation
