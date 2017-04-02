@@ -4,7 +4,7 @@
 
 ## Motivation
 
-[`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its slection mode feature is not needed for me because tmux has almost same (or even better) one.
+[`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its slection mode feature is not needed for me because tmux has almost same (or a bit better) one.
 
 So I want a terminal emulator which is
 - original VTE-based
