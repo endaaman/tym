@@ -78,13 +78,14 @@ config.color_20 = '#b0b0b0'
 config.color_21 = '#e0e0e0'
 ```
 
-
 ## Build and install
+
+Download source from [release page](https://github.com/endaaman/tym/releases), unarchive it and
 
 ```
 $ ./configure
 $ make
-$ sudo make install   // if you want to install
+$ sudo make install
 ```
 
 ## TODOs
