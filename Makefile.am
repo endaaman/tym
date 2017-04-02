@@ -1,4 +1,4 @@
 SUBDIRS = src
 
 desktopdir = $(datadir)/applications
-desktop_DATA = tym.desktop
+dist_desktop_DATA = tym.desktop
