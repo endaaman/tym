@@ -2,8 +2,9 @@
 
 rm tym
 gcc \
-  `pkg-config --cflags gtk+-3.0 vte-2.91 lua` \
-  `pkg-config --libs gtk+-3.0 vte-2.91 lua` \
+  `pkg-config --cflags gtk+-3.0 vte-2.91 lua53` \
+  `pkg-config --libs gtk+-3.0 vte-2.91 lua53` \
   -o tym \
-  -Og -g -Wall \
+  -std=c11 -Wall -Wextra \
+  -Og -g \
   src/tym.c && ./tym
