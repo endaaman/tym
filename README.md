@@ -74,7 +74,7 @@ config.color_3  = '#f4bf75'
 Download source from [release page](https://github.com/endaaman/tym/releases), unarchive it and
 
 ```
-$ ./configure
+$ ./configure --prefix=/usr/local/
 $ make
 $ sudo make install
 ```
