@@ -17,6 +17,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#define UNUSED(x) (void)(x)
 
 #define VTE_CJK_WIDTH_NARROW 1
 #define VTE_CJK_WIDTH_WIDE 2
@@ -31,6 +32,8 @@
 
 #define CJK_WIDTH_NARROW "narrow"
 #define CJK_WIDTH_WIDE "wide"
+
+typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
 GList* config_fields = NULL;
 
@@ -201,8 +204,6 @@ static void config_load(GHashTable* c) {
   lua_close(l);
 }
 
-typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
-
 static void config_apply_color(
   GHashTable* c,
   VteTerminal* vte,
@@ -277,12 +278,7 @@ static void config_apply_all(GHashTable* c, VteTerminal* vte) {
   config_apply_colors(c, vte);
 }
 
-static void quit(GtkWidget* widget, gpointer data) {
-  gtk_main_quit();
-}
-
-
-static bool on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   VteTerminal* vte = VTE_TERMINAL(widget);
   GHashTable* config = *((GHashTable **)user_data);
@@ -315,12 +311,12 @@ static void start(GHashTable* c) {
   gtk_window_set_title(GTK_WINDOW(window), "tym");
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-  g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(quit), NULL);
+  g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
   // setup vte widget
   GtkWidget* vte_widget = vte_terminal_new();
   VteTerminal* vte = VTE_TERMINAL(vte_widget);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(quit), NULL);
+  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), &c);
 
   config_apply_all(c, vte);
