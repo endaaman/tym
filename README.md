@@ -69,7 +69,17 @@ config.color_3  = '#f4bf75'
 | Ctrl + Shift + v | Pasete from clipboard |
 | Ctrl + Shift + r | Reload config file    |
 
-## Build and install
+## Install
+
+If you are an Arch linux user, just run
+
+```
+$ yaourt -S tym
+```
+
+[the AUR package](https://aur.archlinux.org/packages/tym/) is maintained by me.
+
+## Compile
 
 Download source from [release page](https://github.com/endaaman/tym/releases), unarchive it and
 
