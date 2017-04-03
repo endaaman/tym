@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR([src/tym.c])
 AC_CONFIG_HEADERS([config.h])
 
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua ])
+PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 ])
 
 # Checks for programs.
 AC_PROG_CC
