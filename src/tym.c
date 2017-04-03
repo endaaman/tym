@@ -86,7 +86,7 @@ static VteCursorBlinkMode match_cursor_blink_mode(const char* str) {
   return VTE_CURSOR_BLINK_SYSTEM;
 }
 
-static VteCursorBlinkMode match_cjk_width(const char* str) {
+static unsigned match_cjk_width(const char* str) {
   if (0 == g_strcmp0(str, CJK_WIDTH_WIDE)) {
     return VTE_CJK_WIDTH_WIDE;
   }
@@ -287,7 +287,7 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_da
   VteTerminal* vte = VTE_TERMINAL(widget);
   GHashTable* config = *((GHashTable **)user_data);
 
-  const unsigned int mod = event->state & gtk_accelerator_get_default_mod_mask();
+  const unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
 
   if (mod == (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) {
     switch (gdk_keyval_to_lower(event->keyval)) {
