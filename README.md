@@ -20,7 +20,7 @@ but such a terminal does not exist so I created.
 
 ## Configration
 
-`tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Available options are below.
+When started, `tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Available options are below.
 
 - `shell`  
   Set your prefered shell. (default: check `$SHELL`, if not set, check `vte_get_user_shell()` and if it NULL use `'/bin/sh'`  )
@@ -34,8 +34,8 @@ but such a terminal does not exist so I created.
 - `cjk_width`  
   `'narrow'` or `'wide'` are available (default: `'narrow'`)
 
-- `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground` and `color_0` from `color_255`  
-  you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'` whick can be parsed by `gdk_rgba_parse()`. If set `''`(empty string), VTE default color will be used.  (default: `''`)
+- `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground` and `color_0` ... `color_255`  
+  you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'` whick can be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If set `''`(empty string), VTE default color will be used.  (default: `''`)
 
 
 ### Example confing
