@@ -284,8 +284,24 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
   GHashTable* config = *((GHashTable **)user_data);
 
   const unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
+  double scale;
+  if (mod & GDK_CONTROL_MASK) {
+    switch (gdk_keyval_to_lower(event->keyval)) {
+      case GDK_KEY_minus:
+        scale = vte_terminal_get_font_scale(vte) - 0.1;
+        vte_terminal_set_font_scale(vte, scale);
+        return true;
+      case GDK_KEY_plus:
+        scale = vte_terminal_get_font_scale(vte) + 0.1;
+        vte_terminal_set_font_scale(vte, scale);
+        return true;
+      case GDK_KEY_equal:
+        vte_terminal_set_font_scale(vte, 1.0);
+        return true;
+    }
+  }
 
-  if (mod == (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) {
+  if ((mod & GDK_CONTROL_MASK) && (mod & GDK_SHIFT_MASK)) {
     switch (gdk_keyval_to_lower(event->keyval)) {
       case GDK_KEY_c:
         vte_terminal_copy_clipboard(vte);

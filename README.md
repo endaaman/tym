@@ -64,10 +64,13 @@ config.color_3  = '#f4bf75'
 
 ## Key bindings
 
-| Key              | Action                |
-|:---------------- |:--------------------- |
-| Ctrl + Shift + v | Pasete from clipboard |
-| Ctrl + Shift + r | Reload config file    |
+| Key            | Action                |
+|:-------------- |:--------------------- |
+| Ctrl Shift v   | Pasete from clipboard |
+| Ctrl Shift r   | Reload config file    |
+| Ctrl -         | Decrease font scale   |
+| Ctrl +         | Increase font scale   |
+| Ctrl =         | Reset font scale      |
 
 ## Install
 
