@@ -89,13 +89,18 @@ $ make
 $ sudo make install
 ```
 
+## Development
+
+Run `$ autoreconf`
+
+
 ## TODOs
 
 - Configurable features
-  - Geometry
+  - Default geometry
   - Custom key bindings
-    - Reload config file
-    - Paste clipboard
+- Shortcut function
+  - Scale font size
 
 ## License
 
