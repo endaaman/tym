@@ -268,6 +268,7 @@ static void config_apply_all(GHashTable* c, VteTerminal* vte) {
     pango_font_description_free(font_desc);
   }
 
+  config_apply_colors(c, vte);
   config_apply_color(c, vte, vte_terminal_set_color_bold, "color_bold");
   config_apply_color(c, vte, vte_terminal_set_color_background, "color_background");
   config_apply_color(c, vte, vte_terminal_set_color_foreground, "color_foreground");
@@ -275,7 +276,6 @@ static void config_apply_all(GHashTable* c, VteTerminal* vte) {
   config_apply_color(c, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
   config_apply_color(c, vte, vte_terminal_set_color_highlight, "color_highlight");
   config_apply_color(c, vte, vte_terminal_set_color_highlight_foreground, "color_highlight_foreground");
-  config_apply_colors(c, vte);
 }
 
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)

@@ -54,10 +54,14 @@ config.color_cursor            = '#d0d0d0'
 config.color_cursor_foreground = '#181818'
 config.color_background        = '#181818'
 
-config.color_0  = '#151515'
+config.color_0  = '#181818' -- overwritten by color_background
 config.color_1  = '#ac4142'
 config.color_2  = '#90a959'
 config.color_3  = '#f4bf75'
+
+-- SNIP
+--
+config.color_7  = '#d0d0d0' -- overwritten by color_foreground
 
 -- SNIP
 ```
