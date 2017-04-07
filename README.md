@@ -1,12 +1,13 @@
 # tym
 
-`tym` is a tiny VTE-based terminal emulator written in C and configurable by lua.
+`tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by lua.
 
 ## Motivation
 
 [`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its slection mode feature is not needed for me because tmux has almost same (or a bit better) one.
 
-So I want a terminal emulator which is
+Thus I want a terminal emulator that is
+
 - original VTE-based
 - configurable with text file, which can be managed by personal so called `dotfiles` repository like [this](https://github.com/endaaman/dotfiles)
 
@@ -60,7 +61,7 @@ config.color_2  = '#90a959'
 config.color_3  = '#f4bf75'
 
 -- SNIP
---
+
 config.color_7  = '#d0d0d0' -- overwritten by color_foreground
 
 -- SNIP
