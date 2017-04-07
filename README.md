@@ -89,18 +89,13 @@ $ yaourt -S tym
 
 ## Compile
 
-Download source from [release page](https://github.com/endaaman/tym/releases), unarchive it and
+Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and
 
 ```
-$ ./configure --prefix=/usr/local/
+$ ./configure
 $ make
 $ sudo make install
 ```
-
-## Development
-
-Run `$ autoreconf`
-
 
 ## TODOs
 
