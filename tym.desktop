@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=GTK;System;TerminalEmulator;
-Comment=tiny terminal based on VTE
+Comment=A tiny term for minimalists
 Encoding=UTF-8
 Exec=tym
 Icon=terminal
@@ -9,6 +9,4 @@ StartupNotify=true
 Terminal=false
 TryExec=tym
 Type=Application
-Version=1.0
-X-GNOME-Bugzilla-Version=0.1.0
 X-GNOME-SingleWindow=false
