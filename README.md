@@ -4,14 +4,12 @@
 
 ## Motivation
 
-[`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its slection mode feature is not needed for me because tmux has almost same (or a bit better) one.
-
-Thus I want a terminal emulator that is
+[`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its selection mode feature is not needed for me because tmux has almost same (or a bit better) one. I wanted a terminal emulator that is
 
 - original VTE-based
 - configurable with text file, which can be managed by personal so called `dotfiles` repository like [this](https://github.com/endaaman/dotfiles)
 
-but such a terminal does not exist so I created.
+but such a terminal did not exist so I created.
 
 ## Dependencies
 
