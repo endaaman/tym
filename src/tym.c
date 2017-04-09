@@ -19,19 +19,19 @@
 
 #define UNUSED(x) (void)(x)
 
-#define VTE_CJK_WIDTH_NARROW 1
-#define VTE_CJK_WIDTH_WIDE 2
+static const unsigned VTE_CJK_WIDTH_NARROW = 1;
+static const unsigned VTE_CJK_WIDTH_WIDE = 2;
 
-#define APP_NAME "tym"
-#define CONFIG_FILE_NAME "config.lua"
-#define FALL_BACK_SHELL "/bin/sh"
+static const char* APP_NAME = "tym";
+static const char* CONFIG_FILE_NAME = "config.lua";
+static const char* FALL_BACK_SHELL = "/bin/sh";
 
-#define CURSOR_BLINK_MODE_SYSTEM "system"
-#define CURSOR_BLINK_MODE_ON "on"
-#define CURSOR_BLINK_MODE_OFF "off"
+static const char* CURSOR_BLINK_MODE_SYSTEM = "system";
+static const char* CURSOR_BLINK_MODE_ON = "on";
+static const char* CURSOR_BLINK_MODE_OFF = "off";
 
-#define CJK_WIDTH_NARROW "narrow"
-#define CJK_WIDTH_WIDE "wide"
+static const char* CJK_WIDTH_NARROW = "narrow";
+static const char* CJK_WIDTH_WIDE = "wide";
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
