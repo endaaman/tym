@@ -34,7 +34,7 @@ When started, `tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Availa
   `'narrow'` or `'wide'` are available (default: `'narrow'`)
 
 - `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground` and `color_0` ... `color_255`  
-  you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'` whick can be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If set `''`(empty string), VTE default color will be used.  (default: `''`)
+  you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If set `''`(empty string), VTE default color will be used.  (default: `''`)
 
 
 ### Example confing
@@ -67,13 +67,14 @@ config.color_7  = '#d0d0d0' -- overwritten by color_foreground
 
 ## Key bindings
 
-| Key            | Action                |
-|:-------------- |:--------------------- |
-| Ctrl Shift v   | Pasete from clipboard |
-| Ctrl Shift r   | Reload config file    |
-| Ctrl -         | Decrease font scale   |
-| Ctrl +         | Increase font scale   |
-| Ctrl =         | Reset font scale      |
+| Key            | Action                      |
+|:-------------- |:--------------------------- |
+| Ctrl Shift c   | Copy selection to clipboard |
+| Ctrl Shift v   | Paste from clipboard        |
+| Ctrl Shift r   | Reload config file          |
+| Ctrl -         | Decrease font scale         |
+| Ctrl +         | Increase font scale         |
+| Ctrl =         | Reset font scale            |
 
 ## Install
 
@@ -100,8 +101,6 @@ $ sudo make install
 - Configurable features
   - Default geometry
   - Custom key bindings
-- Shortcut function
-  - Scale font size
 
 ## License
 
