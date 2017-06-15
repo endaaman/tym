@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([tym], [0.1.1])
+AC_INIT([tym], [0.1.2])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/tym.c])
 AC_CONFIG_HEADERS([config.h])
