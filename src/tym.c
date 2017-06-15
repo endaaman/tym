@@ -19,6 +19,12 @@
 
 #define UNUSED(x) (void)(x)
 
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 48
+#define USE_ASYNC_SPAWN
+#endif
+#endif
+
 static const unsigned VTE_CJK_WIDTH_NARROW = 1;
 static const unsigned VTE_CJK_WIDTH_WIDE = 2;
 
@@ -273,9 +279,14 @@ static void config_apply_all(GHashTable* c, VteTerminal* vte) {
   config_apply_color(c, vte, vte_terminal_set_color_background, "color_background");
   config_apply_color(c, vte, vte_terminal_set_color_foreground, "color_foreground");
   config_apply_color(c, vte, vte_terminal_set_color_cursor, "color_cursor");
-  config_apply_color(c, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
   config_apply_color(c, vte, vte_terminal_set_color_highlight, "color_highlight");
   config_apply_color(c, vte, vte_terminal_set_color_highlight_foreground, "color_highlight_foreground");
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 46
+  /* vte_terminal_set_color_cursor_foreground is implemented since v0.46 */
+  config_apply_color(c, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
+#endif
+#endif
 }
 
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -319,9 +330,20 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
   return false;
 }
 
-static void start(GHashTable* c) {
-  GError* error = NULL;
+#ifdef USE_ASYNC_SPAWN
+static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpointer user_data) {
+  UNUSED(terminal);
+  UNUSED(pid);
+  UNUSED(user_data);
 
+  if (!error) {
+    return;
+  }
+  g_printerr("warining: key `%s` is not initailized.\n", error->message);
+}
+#endif
+
+static void start(GHashTable* c) {
   // setup window
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(window), "tym");
@@ -340,6 +362,24 @@ static void start(GHashTable* c) {
   char* argv[2] = {config_get(c, "shell"), NULL};
   char** env = g_get_environ();
 
+#ifdef USE_ASYNC_SPAWN
+  vte_terminal_spawn_async(
+    vte,                 // terminal
+    VTE_PTY_DEFAULT,     // pty flag
+    NULL,                // working directory
+    argv,                // argv
+    env,                 // envv
+    G_SPAWN_SEARCH_PATH, // spawn_flags
+    NULL,                // child_setup
+    NULL,                // child_setup_data
+    NULL,                // child_setup_data_destroy
+    1000,                // timeout
+    NULL,                // cancel callback
+    spawn_callback,      // callback
+    NULL                 // user_data
+  );
+#else
+  GError* error = NULL;
   GPid child_pid;
   vte_terminal_spawn_sync(
     vte,
@@ -354,15 +394,15 @@ static void start(GHashTable* c) {
     NULL,
     &error
   );
-  g_strfreev(env);
 
   if (error) {
     g_printerr("%s\n", error->message);
     g_error_free(error);
+    g_strfreev(env);
     return;
   }
-
-  vte_terminal_watch_child(vte, child_pid);
+#endif
+  g_strfreev(env);
 
   gtk_container_add(GTK_CONTAINER(window), vte_widget);
   gtk_widget_grab_focus(vte_widget);
