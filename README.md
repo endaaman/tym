@@ -80,7 +80,7 @@ config.color_7  = '#d0d0d0' -- overwritten by color_foreground
 
 If you are an Arch linux user, just run
 
-```
+```console
 $ yaourt -S tym
 ```
 
@@ -90,7 +90,7 @@ $ yaourt -S tym
 
 Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and
 
-```
+```console
 $ ./configure
 $ make
 $ sudo make install
