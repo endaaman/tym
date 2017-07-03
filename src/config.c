@@ -15,6 +15,8 @@ const unsigned VTE_CJK_WIDTH_WIDE = 2;
 const char* APP_NAME = "tym";
 const char* CONFIG_FILE_NAME = "config.lua";
 const char* FALL_BACK_SHELL = "/bin/sh";
+const int DEFAULT_WIDTH = 80;
+const int DEFAULT_HEIGHT = 22;
 
 const char* CURSOR_BLINK_MODE_SYSTEM = "system";
 const char* CURSOR_BLINK_MODE_ON = "on";
@@ -24,6 +26,7 @@ const char* CJK_WIDTH_NARROW = "narrow";
 const char* CJK_WIDTH_WIDE = "wide";
 
 GList* config_fields = NULL;
+GList* config_fields_int = NULL;
 
 void init_config_fields() {
   const char* base_config_fields[] = {
@@ -40,6 +43,13 @@ void init_config_fields() {
     "color_highlight",
     "color_highlight_foreground",
   };
+
+  const char* base_config_fields_int[] = {
+    "width",
+    "height",
+  };
+
+  // initialize string fields
   for (unsigned i = 0; i < sizeof(base_config_fields) / sizeof(char*); i++) {
     config_fields = g_list_append(config_fields, g_strdup(base_config_fields[i]));
   }
@@ -49,10 +59,16 @@ void init_config_fields() {
     sprintf(numbered_color_key, "color_%d", i);
     config_fields = g_list_append(config_fields, g_strdup(numbered_color_key));
   }
+
+  // initialize integer fields
+  for (unsigned i = 0; i < sizeof(base_config_fields_int) / sizeof(char*); i++) {
+    config_fields_int = g_list_append(config_fields_int, g_strdup(base_config_fields_int[i]));
+  }
 }
 
 void close_config_fields() {
   g_list_foreach(config_fields, (GFunc)g_free, NULL);
+  g_list_foreach(config_fields_int, (GFunc)g_free, NULL);
   g_list_free(config_fields);
 }
 
@@ -86,7 +102,20 @@ static unsigned match_cjk_width(const char* str) {
 }
 
 char* config_get_str(GHashTable* c, const char* key) {
-  return (char*) g_hash_table_lookup(c, key);
+  char* ptr = (char*)g_hash_table_lookup(c, key);
+  if (!ptr) {
+    g_printerr("warining: tried to refer null string field: `%s`.\n", key);
+  }
+  return ptr;
+}
+
+int config_get_int(GHashTable* c, const char* key) {
+  int* ptr = (int*)g_hash_table_lookup(c, key);
+  if (!ptr) {
+    g_printerr("warining: tried to refer null integer field: `%s`.\n", key);
+    return 0;
+  }
+  return *ptr;
 }
 
 bool config_has(GHashTable* c, const char* key) {
@@ -107,6 +136,16 @@ void config_set_str(GHashTable* c, const char* key, const char* value) {
     g_hash_table_remove(c, old_key);
   }
   g_hash_table_insert(c, g_strdup(key), g_strdup(value));
+}
+
+
+void config_set_int(GHashTable* c, const char* key, int value) {
+  char* old_key = NULL;
+  bool has_value = g_hash_table_lookup_extended(c, key, (gpointer)&old_key, NULL);
+  if (has_value) {
+    g_hash_table_remove(c, old_key);
+  }
+  g_hash_table_insert(c, g_strdup(key), g_memdup((gpointer)&value, sizeof(int)));
 }
 
 GHashTable* config_init() {
@@ -131,13 +170,16 @@ static void config_reset(GHashTable* c) {
   config_set_str(c, "font", "");
   config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
   config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
-  for(GList* li = config_fields; li != NULL; li = li->next) {
+  for (GList* li = config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     // set empty value if start with "color_"
     if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
       config_set_str(c, key, "");
     }
   }
+
+  config_set_int(c, "width", DEFAULT_WIDTH);
+  config_set_int(c, "height", DEFAULT_HEIGHT);
 }
 
 
@@ -160,17 +202,22 @@ void config_load(GHashTable* c) {
   lua_State* l = luaL_newstate();
   luaL_openlibs(l);
 
-  // push config to lua env
   lua_newtable(l);
-  for(GList* li = config_fields; li != NULL; li = li->next) {
-    const char* key = (char *)li->data;
+  // push string fields
+  for (GList* li = config_fields; li != NULL; li = li->next) {
+    const char* key = (char*)li->data;
     const char* value = config_get_str(c, key);
-    if (!value) {
-      g_printerr("warining: key `%s` is not initailized.\n", key);
-    }
-    lua_pushstring(l, key); \
-    lua_pushstring(l, value ? value : ""); \
-    lua_settable(l, -3); \
+    lua_pushstring(l, key);
+    lua_pushstring(l, value ? value : "");
+    lua_settable(l, -3);
+  }
+  // push int fields
+  for (GList* li = config_fields_int; li != NULL; li = li->next) {
+    const char* key = (char*)li->data;
+    int value = config_get_int(c, key);
+    lua_pushstring(l, key);
+    lua_pushinteger(l, value);
+    lua_settable(l, -3);
   }
   lua_setglobal(l, "config");
 
@@ -186,10 +233,18 @@ void config_load(GHashTable* c) {
   }
 
   lua_getglobal(l, "config");
-  for(GList* li = config_fields; li != NULL; li = li->next) {
+  // store string fields
+  for (GList* li = config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     lua_getfield(l, -1, key);
     config_set_str(c, key, lua_tostring(l, -1));
+    lua_pop(l, 1);
+  }
+  // store int fields
+  for (GList* li = config_fields_int; li != NULL; li = li->next) {
+    const char* key = (char *)li->data;
+    lua_getfield(l, -1, key);
+    config_set_int(c, key, lua_tointeger(l, -1));
     lua_pop(l, 1);
   }
   lua_close(l);
@@ -252,6 +307,8 @@ static void config_apply_colors(GHashTable* c, VteTerminal* vte) {
 void config_apply_all(GHashTable* c, VteTerminal* vte) {
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
+
+  vte_terminal_set_size(vte, config_get_int(c, "width"), config_get_int(c, "height"));
 
   if (config_has(c, "font")) {
     PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(c, "font"));

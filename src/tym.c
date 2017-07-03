@@ -8,7 +8,6 @@
  */
 
 #include "tym.h"
-#include "config.h"
 
 #define UNUSED(x) (void)(x)
 
@@ -69,7 +68,7 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
   if (!error) {
     return;
   }
-  g_printerr("warining: key `%s` is not initailized.\n", error->message);
+  g_printerr("warining: `%s`.\n", error->message);
 }
 #endif
 
@@ -129,7 +128,6 @@ static void start(GHashTable* c) {
   if (error) {
     g_printerr("%s\n", error->message);
     g_error_free(error);
-    g_strfreev(env);
     return;
   }
 #endif

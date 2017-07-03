@@ -36,5 +36,3 @@ PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 ])
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT
-
-

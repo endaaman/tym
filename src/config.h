@@ -28,9 +28,10 @@ void close_config_fields();
 GHashTable* config_init();
 void config_close(GHashTable* config);
 
-
 bool config_has(GHashTable* c, const char* key);
 char* config_get_str(GHashTable* c, const char* key);
+int config_get_int(GHashTable* c, const char* key);
+
 void config_load(GHashTable* c);
 void config_apply_all(GHashTable* c, VteTerminal* vte);
 
