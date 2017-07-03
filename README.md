@@ -9,7 +9,7 @@
 - original VTE-based
 - configurable with text file, which can be managed by personal so called `dotfiles` repository like [this](https://github.com/endaaman/dotfiles)
 
-but such a terminal did not exist so I created.
+but could not find such a terminal did not exist so I created.
 
 ## Dependencies
 
@@ -19,46 +19,15 @@ but such a terminal did not exist so I created.
 
 ## Configration
 
-When started, `tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Available options are below.
-
-### String fields
-
-- `title`  
-  Set your prefered title. (default: `'tym'`)
-
-- `shell`  
-  Set your prefered shell. (default: check `$SHELL`, if not set, check `vte_get_user_shell()` and if it NULL use `'/bin/sh'`  )
-
-- `font`  
-  Set `'FAMILY-LIST [SIZE]'` like `'Ubuntu Mono 12'`. This option value is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If set `''`(empty string), system default fixed width font will be used. (default: `''`)
-
-- `cursor_blink`  
-  `'system'`, `'on'` or `'off'` are available. (default: `'system'`)
-
-- `cjk_width`  
-  `'narrow'` or `'wide'` are available (default: `'narrow'`)
-
-- `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground` and `color_0` ... `color_255`  
-  you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If set `''`(empty string), VTE default color will be used.  (default: `''`)
-
-
-### Integer fields
-
-- `width`  
-  Set prefered yours columns. (default: `80`)
-
-- `height`  
-  Set prefered yours rows. (default: `22`)
-
-
-### Example confing
-
-Here is an example.
+When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed with the global table variable `config` defined. You can do configuration by modifying `config`. For example you can write for
 
 ```lua
+config.height = 30
+config.width = 100
+
 config.shell = '/bin/fish'
 config.font = 'DejaVu Sans Mono 10'
-config.cursor_blink_mode = 'system'
+config.cursor_blink_mode = 'on'
 config.cjk_width = 'narrow'
 
 config.color_foreground        = '#d0d0d0'
@@ -78,6 +47,19 @@ config.color_7  = '#d0d0d0' -- overwritten by color_foreground
 
 -- SNIP
 ```
+
+All available options are shown below.
+
+| field name | type | default value | description |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|-------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `width` | integer | `80` | Initial columns. |
+| `height` | integer | `22` | Initial rows. |
+| `title` | string | `'tym'` | Window title |
+| `shell`  | string | `$SHELL` -> `vte_get_user_shell()` ->  `/bin/sh` | Shell to excute |
+| `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
+| `cursor_blink` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
+| `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_0` ... `color_255` | string | `''` (empty string) | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If you set empty string, the VTE default color will be used. |
 
 ## Key bindings
 
@@ -112,9 +94,7 @@ $ sudo make install
 
 ## TODOs
 
-- Configurable features
-  - Default geometry
-  - Custom key bindings
+- Custom key bindings
 
 ## License
 
