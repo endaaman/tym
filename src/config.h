@@ -33,6 +33,6 @@ char* config_get_str(GHashTable* c, const char* key);
 int config_get_int(GHashTable* c, const char* key);
 
 void config_load(GHashTable* c);
-void config_apply_all(GHashTable* c, VteTerminal* vte);
+void config_apply_all(GHashTable* c, VteTerminal* vte, bool is_startup);
 
 #endif

@@ -52,7 +52,7 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
         return true;
       case GDK_KEY_r:
         config_load(config);
-        config_apply_all(config, vte);
+        config_apply_all(config, vte, false);
         return true;
     }
   }
@@ -89,7 +89,7 @@ static void start(GHashTable* c) {
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), &c);
 
-  config_apply_all(c, vte);
+  config_apply_all(c, vte, true);
 
   char* argv[2] = {config_get_str(c, "shell"), NULL};
   char** env = g_get_environ();
