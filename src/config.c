@@ -328,10 +328,9 @@ void config_apply_all(GHashTable* c, VteTerminal* vte, bool is_startup) {
     gtk_window_resize(
       GTK_WINDOW(window),
       width * char_width + border.left + border.right,
-      height * char_height + border.left + border.bottom
+      height * char_height + border.top + border.bottom
     );
   }
-
 
   if (config_has(c, "font")) {
     PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(c, "font"));
