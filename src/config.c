@@ -305,10 +305,28 @@ static void config_apply_colors(GHashTable* c, VteTerminal* vte) {
 }
 
 void config_apply_all(GHashTable* c, VteTerminal* vte) {
+  GtkWidget* window = gtk_widget_get_toplevel(GTK_WIDGET(vte));
+
+  gtk_window_set_title(GTK_WINDOW(window), config_get_str(c, "title"));
+
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
 
-  vte_terminal_set_size(vte, config_get_int(c, "width"), config_get_int(c, "height"));
+  int width = config_get_int(c, "width"); // Number of horizontal char
+  int height = config_get_int(c, "height"); // Number of vertical char
+  GtkBorder border;
+  gtk_style_context_get_padding(
+    gtk_widget_get_style_context(GTK_WIDGET(vte)),
+    gtk_widget_get_state_flags(GTK_WIDGET(vte)),
+    &border
+  );
+  const int char_width = vte_terminal_get_char_width(vte);
+  const int char_height = vte_terminal_get_char_height(vte);
+  gtk_window_resize(
+    GTK_WINDOW(window),
+    width * char_width + border.left + border.right,
+    height * char_height + border.left + border.bottom
+  );
 
   if (config_has(c, "font")) {
     PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(c, "font"));

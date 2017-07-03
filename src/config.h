@@ -36,4 +36,3 @@ void config_load(GHashTable* c);
 void config_apply_all(GHashTable* c, VteTerminal* vte);
 
 #endif
-

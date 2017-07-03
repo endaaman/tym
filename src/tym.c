@@ -75,15 +75,17 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
 static void start(GHashTable* c) {
   // setup window
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), config_get_str(c, "title"));
-
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
   // setup vte widget
   GtkWidget* vte_widget = vte_terminal_new();
+  gtk_container_add(GTK_CONTAINER(window), vte_widget);
+
   VteTerminal* vte = VTE_TERMINAL(vte_widget);
+  vte_terminal_set_rewrap_on_resize(vte, true);
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), &c);
 
@@ -133,7 +135,6 @@ static void start(GHashTable* c) {
 #endif
   g_strfreev(env);
 
-  gtk_container_add(GTK_CONTAINER(window), vte_widget);
   gtk_widget_grab_focus(vte_widget);
   gtk_widget_show_all(window);
   gtk_main();
