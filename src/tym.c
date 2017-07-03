@@ -76,7 +76,8 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
 static void start(GHashTable* c) {
   // setup window
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), "tym");
+  gtk_window_set_title(GTK_WINDOW(window), config_get_str(c, "title"));
+
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);

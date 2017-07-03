@@ -9,27 +9,25 @@
 
 #include "config.h"
 
-typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
+const unsigned VTE_CJK_WIDTH_NARROW = 1;
+const unsigned VTE_CJK_WIDTH_WIDE = 2;
 
-static const unsigned VTE_CJK_WIDTH_NARROW = 1;
-static const unsigned VTE_CJK_WIDTH_WIDE = 2;
+const char* APP_NAME = "tym";
+const char* CONFIG_FILE_NAME = "config.lua";
+const char* FALL_BACK_SHELL = "/bin/sh";
 
-static const char* APP_NAME = "tym";
-static const char* CONFIG_FILE_NAME = "config.lua";
-static const char* FALL_BACK_SHELL = "/bin/sh";
+const char* CURSOR_BLINK_MODE_SYSTEM = "system";
+const char* CURSOR_BLINK_MODE_ON = "on";
+const char* CURSOR_BLINK_MODE_OFF = "off";
 
-static const char* CURSOR_BLINK_MODE_SYSTEM = "system";
-static const char* CURSOR_BLINK_MODE_ON = "on";
-static const char* CURSOR_BLINK_MODE_OFF = "off";
-
-static const char* CJK_WIDTH_NARROW = "narrow";
-static const char* CJK_WIDTH_WIDE = "wide";
-
+const char* CJK_WIDTH_NARROW = "narrow";
+const char* CJK_WIDTH_WIDE = "wide";
 
 GList* config_fields = NULL;
 
 void init_config_fields() {
   const char* base_config_fields[] = {
+    "title",
     "shell",
     "font",
     "cursor_blink_mode",
@@ -91,7 +89,7 @@ char* config_get_str(GHashTable* c, const char* key) {
   return (char*) g_hash_table_lookup(c, key);
 }
 
-static bool config_has(GHashTable* c, const char* key) {
+bool config_has(GHashTable* c, const char* key) {
   char* value = config_get_str(c, key);
   if (!value) {
     return false;
@@ -129,6 +127,7 @@ static void config_reset(GHashTable* c) {
   char* default_shell = get_default_shell();
   config_set_str(c, "shell", default_shell);
   g_free(default_shell);
+  config_set_str(c, "title", APP_NAME);
   config_set_str(c, "font", "");
   config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
   config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
