@@ -21,6 +21,11 @@ but such a terminal did not exist so I created.
 
 When started, `tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Available options are below.
 
+### String fields
+
+- `title`  
+  Set your prefered title. (default: `'tym'`)
+
 - `shell`  
   Set your prefered shell. (default: check `$SHELL`, if not set, check `vte_get_user_shell()` and if it NULL use `'/bin/sh'`  )
 
@@ -35,6 +40,15 @@ When started, `tym` reads `$XDG_CONFIG_HOME/tym/config.lua` if it exists. Availa
 
 - `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground` and `color_0` ... `color_255`  
   you can specify standard color string like `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If set `''`(empty string), VTE default color will be used.  (default: `''`)
+
+
+### Integer fields
+
+- `width`  
+  Set prefered yours columns. (default: `80`)
+
+- `height`  
+  Set prefered yours rows. (default: `22`)
 
 
 ### Example confing
