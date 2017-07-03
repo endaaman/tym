@@ -89,7 +89,7 @@ static void start(GHashTable* c) {
 
   config_apply_all(c, vte);
 
-  char* argv[2] = {config_get(c, "shell"), NULL};
+  char* argv[2] = {config_get_str(c, "shell"), NULL};
   char** env = g_get_environ();
 
 #ifdef USE_ASYNC_SPAWN

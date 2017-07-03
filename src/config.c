@@ -87,12 +87,12 @@ static unsigned match_cjk_width(const char* str) {
   return VTE_CJK_WIDTH_NARROW;
 }
 
-char* config_get(GHashTable* c, const char* key) {
+char* config_get_str(GHashTable* c, const char* key) {
   return (char*) g_hash_table_lookup(c, key);
 }
 
 static bool config_has(GHashTable* c, const char* key) {
-  char* value = config_get(c, key);
+  char* value = config_get_str(c, key);
   if (!value) {
     return false;
   }
@@ -102,7 +102,7 @@ static bool config_has(GHashTable* c, const char* key) {
   return true;
 }
 
-void config_set(GHashTable* c, const char* key, const char* value) {
+void config_set_str(GHashTable* c, const char* key, const char* value) {
   char* old_key = NULL;
   bool has_value = g_hash_table_lookup_extended(c, key, (gpointer)&old_key, NULL);
   if (has_value) {
@@ -127,16 +127,16 @@ void config_close(GHashTable* config) {
 
 static void config_reset(GHashTable* c) {
   char* default_shell = get_default_shell();
-  config_set(c, "shell", default_shell);
+  config_set_str(c, "shell", default_shell);
   g_free(default_shell);
-  config_set(c, "font", "");
-  config_set(c, "cjk_width", CJK_WIDTH_NARROW);
-  config_set(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
+  config_set_str(c, "font", "");
+  config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
+  config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
   for(GList* li = config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     // set empty value if start with "color_"
     if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
-      config_set(c, key, "");
+      config_set_str(c, key, "");
     }
   }
 }
@@ -165,7 +165,7 @@ void config_load(GHashTable* c) {
   lua_newtable(l);
   for(GList* li = config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
-    const char* value = config_get(c, key);
+    const char* value = config_get_str(c, key);
     if (!value) {
       g_printerr("warining: key `%s` is not initailized.\n", key);
     }
@@ -190,7 +190,7 @@ void config_load(GHashTable* c) {
   for(GList* li = config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     lua_getfield(l, -1, key);
-    config_set(c, key, lua_tostring(l, -1));
+    config_set_str(c, key, lua_tostring(l, -1));
     lua_pop(l, 1);
   }
   lua_close(l);
@@ -206,7 +206,7 @@ static void config_apply_color(
     return;
   }
   GdkRGBA color;
-  const char* value = config_get(c, key);
+  const char* value = config_get_str(c, key);
   bool valid = gdk_rgba_parse(&color, value);
   if (valid) {
     vte_set_color_func(vte, &color);
@@ -219,7 +219,7 @@ static void config_apply_colors(GHashTable* c, VteTerminal* vte) {
   for (unsigned i = 0; i < 256; i++) {
     sprintf(key, "color_%d", i);
     if (config_has(c, key)) {
-      bool valid = gdk_rgba_parse(&palette[i], config_get(c, key));
+      bool valid = gdk_rgba_parse(&palette[i], config_get_str(c, key));
       if (valid) {
         continue;
       }
@@ -251,11 +251,11 @@ static void config_apply_colors(GHashTable* c, VteTerminal* vte) {
 }
 
 void config_apply_all(GHashTable* c, VteTerminal* vte) {
-  vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get(c, "cursor_blink_mode")));
-  vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get(c, "cjk_width")));
+  vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
+  vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
 
   if (config_has(c, "font")) {
-    PangoFontDescription* font_desc = pango_font_description_from_string(config_get(c, "font"));
+    PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(c, "font"));
     vte_terminal_set_font(vte, font_desc);
     pango_font_description_free(font_desc);
   }

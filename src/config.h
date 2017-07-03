@@ -26,7 +26,7 @@ void close_config_fields();
 GHashTable* config_init();
 void config_close(GHashTable* config);
 
-char* config_get(GHashTable* c, const char* key);
+char* config_get_str(GHashTable* c, const char* key);
 void config_load(GHashTable* c);
 void config_apply_all(GHashTable* c, VteTerminal* vte);
 
