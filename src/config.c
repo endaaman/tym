@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
+
 const unsigned VTE_CJK_WIDTH_NARROW = 1;
 const unsigned VTE_CJK_WIDTH_WIDE = 2;
 
@@ -72,7 +74,7 @@ void close_config_fields() {
   g_list_free(config_fields);
 }
 
-static char* get_default_shell() {
+char* get_default_shell() {
   const char* shell_env = g_getenv("SHELL");
   if (shell_env) {
     return g_strdup(shell_env);
@@ -84,7 +86,7 @@ static char* get_default_shell() {
   return g_strdup(FALL_BACK_SHELL);
 }
 
-static VteCursorBlinkMode match_cursor_blink_mode(const char* str) {
+VteCursorBlinkMode match_cursor_blink_mode(const char* str) {
   if (0 == g_strcmp0(str, CURSOR_BLINK_MODE_ON)) {
     return VTE_CURSOR_BLINK_ON;
   }
@@ -94,7 +96,7 @@ static VteCursorBlinkMode match_cursor_blink_mode(const char* str) {
   return VTE_CURSOR_BLINK_SYSTEM;
 }
 
-static unsigned match_cjk_width(const char* str) {
+unsigned match_cjk_width(const char* str) {
   if (0 == g_strcmp0(str, CJK_WIDTH_WIDE)) {
     return VTE_CJK_WIDTH_WIDE;
   }
@@ -162,7 +164,7 @@ void config_close(GHashTable* config) {
   g_hash_table_destroy(config);
 }
 
-static void config_reset(GHashTable* c) {
+void config_reset(GHashTable* c) {
   char* default_shell = get_default_shell();
   config_set_str(c, "shell", default_shell);
   g_free(default_shell);
@@ -250,7 +252,7 @@ void config_load(GHashTable* c) {
   lua_close(l);
 }
 
-static void config_apply_color(
+void config_apply_color(
   GHashTable* c,
   VteTerminal* vte,
   VteSetColorFunc vte_set_color_func,
@@ -267,7 +269,7 @@ static void config_apply_color(
   }
 }
 
-static void config_apply_colors(GHashTable* c, VteTerminal* vte) {
+void config_apply_colors(GHashTable* c, VteTerminal* vte) {
   GdkRGBA* palette = g_new0(GdkRGBA, 256);
   char key[10];
   for (unsigned i = 0; i < 256; i++) {
