@@ -99,7 +99,7 @@ $ yaourt -S tym
 Clone and do
 
 ```
-$ autoreconf --force -v --install
+$ autoreconf -fvi
 ```
 
 ## TODOs
