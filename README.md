@@ -72,6 +72,18 @@ All available options are shown below.
 | Ctrl +         | Increase font scale         |
 | Ctrl =         | Reset font scale            |
 
+## Compile
+
+Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and do
+
+```console
+$ ./configure
+$ make
+$ sudo make install   // if you want to intall
+```
+
+See [wiki](https://github.com/endaaman/tym/wiki) to check dependencies for other each distros.
+
 ## Install
 
 If you are an Arch linux user, just run
@@ -80,16 +92,14 @@ If you are an Arch linux user, just run
 $ yaourt -S tym
 ```
 
-[the AUR package](https://aur.archlinux.org/packages/tym/) is maintained by me.
+ [the AUR package](https://aur.archlinux.org/packages/tym/) is maintained by me.
 
-## Compile
+## Development
 
-Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and
+Clone and do
 
-```console
-$ ./configure
-$ make
-$ sudo make install
+```
+$ autoreconf --force -v --install
 ```
 
 ## TODOs
