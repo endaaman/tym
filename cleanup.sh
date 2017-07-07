@@ -4,9 +4,6 @@ rm -f Makefile
 rm -f Makefile.in
 rm -f aclocal.m4
 rm -f compile
-rm -f config.h
-rm -f config.h.in
-rm -f config.h.in~
 rm -f config.log
 rm -f config.status
 rm -f configure
@@ -31,5 +28,7 @@ rm -rf src/.deps
 rm -rf src/.libs
 rm -rf src/libtool
 rm -rf src/toollib/.deps
+
+rm -rf src/version.h
 
 echo 'Cleaned files.'

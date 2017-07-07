@@ -17,5 +17,6 @@
 #include <vte/vte.h>
 
 #include "config.h"
+#include "version.h"
 
 #endif

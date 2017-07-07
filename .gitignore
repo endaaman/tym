@@ -19,5 +19,6 @@ m4/
 missing
 stamp-h?
 
+src/version.h
 tym
 tym-*.tar.gz

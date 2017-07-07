@@ -142,6 +142,23 @@ static void start(GHashTable* c) {
 
 int main(int argc, char* argv[])
 {
+  bool version = false;
+  GOptionEntry entries[] = {
+    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show Version", NULL },
+    { NULL }
+  };
+  GOptionContext* context = g_option_context_new("");
+  GError *error = NULL;
+  g_option_context_add_main_entries(context, entries, NULL);
+  if (!g_option_context_parse(context, &argc, &argv, &error)) {
+    g_printerr ("option parsing failed: %s\n", error->message);
+    return 1;
+  }
+  if (version) {
+    g_print ("version %s\n", TYM_VERSION);
+    return 0;
+  }
+
   init_config_fields();
   GHashTable *config = config_init();
   config_load(config);
