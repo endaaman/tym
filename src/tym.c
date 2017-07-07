@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
     { NULL }
   };
   GOptionContext* context = g_option_context_new("");
-  GError *error = NULL;
+  GError*error = NULL;
   g_option_context_add_main_entries(context, entries, NULL);
   if (!g_option_context_parse(context, &argc, &argv, &error)) {
     g_printerr ("option parsing failed: %s\n", error->message);
