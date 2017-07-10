@@ -7,7 +7,6 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -16,24 +15,24 @@
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
-const unsigned VTE_CJK_WIDTH_NARROW = 1;
-const unsigned VTE_CJK_WIDTH_WIDE = 2;
+static const unsigned VTE_CJK_WIDTH_NARROW = 1;
+static const unsigned VTE_CJK_WIDTH_WIDE = 2;
 
-const char* APP_NAME = "tym";
-const char* CONFIG_FILE_NAME = "config.lua";
-const char* FALL_BACK_SHELL = "/bin/sh";
-const int DEFAULT_WIDTH = 80;
-const int DEFAULT_HEIGHT = 22;
+static const char* APP_NAME = "tym";
+static const char* CONFIG_FILE_NAME = "config.lua";
+static const char* FALL_BACK_SHELL = "/bin/sh";
+static const int DEFAULT_WIDTH = 80;
+static const int DEFAULT_HEIGHT = 22;
 
-const char* CURSOR_BLINK_MODE_SYSTEM = "system";
-const char* CURSOR_BLINK_MODE_ON = "on";
-const char* CURSOR_BLINK_MODE_OFF = "off";
+static const char* CURSOR_BLINK_MODE_SYSTEM = "system";
+static const char* CURSOR_BLINK_MODE_ON = "on";
+static const char* CURSOR_BLINK_MODE_OFF = "off";
 
-const char* CJK_WIDTH_NARROW = "narrow";
-const char* CJK_WIDTH_WIDE = "wide";
+static const char* CJK_WIDTH_NARROW = "narrow";
+static const char* CJK_WIDTH_WIDE = "wide";
 
-GList* str_config_fields = NULL;
-GList* int_config_fields = NULL;
+static GList* str_config_fields = NULL;
+static GList* int_config_fields = NULL;
 
 void init_config_fields() {
   const char* base_str_config_fields[] = {
