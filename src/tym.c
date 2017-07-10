@@ -7,7 +7,15 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <vte/vte.h>
+
+#include "config.h"
+#include "version.h"
+
 
 #define UNUSED(x) (void)(x)
 
