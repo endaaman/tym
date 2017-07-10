@@ -7,6 +7,11 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
 #include "config.h"
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
@@ -353,4 +358,14 @@ void config_apply_all(GHashTable* c, VteTerminal* vte, bool is_startup) {
   config_apply_color(c, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
 #endif
 #endif
+}
+
+__attribute__((constructor))
+static void initialization() {
+  init_config_fields();
+}
+
+__attribute__((destructor))
+static void finalization() {
+  close_config_fields();
 }

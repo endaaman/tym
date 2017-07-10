@@ -167,7 +167,6 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  init_config_fields();
   GHashTable *config = config_init();
   config_load(config);
 
@@ -175,6 +174,5 @@ int main(int argc, char* argv[])
   start(config);
 
   config_close(config);
-  close_config_fields();
   return EXIT_SUCCESS;
 }

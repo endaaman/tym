@@ -16,13 +16,6 @@
 #include <gtk/gtk.h>
 #include <vte/vte.h>
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
-void init_config_fields();
-void close_config_fields();
-
 GHashTable* config_init();
 void config_close(GHashTable* config);
 
