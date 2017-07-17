@@ -4,12 +4,15 @@
 
 ## Motivation
 
-[`termite`](https://github.com/thestinger/termite) is very good but `vte-ng` is conflict with `vte` and its selection mode feature is not needed for me because tmux has almost same (or a bit better) one. I wanted a terminal emulator that is
+[`termite`](https://github.com/thestinger/termite) is a very simple and wonderful terminal emulator. Unfortunately `vte-ng` on which terminite depends conflicts with `vte`, making it difficult to coexist with `GNOME Terminal` and other `vte` dependents.
 
+In the first place the feature that causes conflicts is not needed for me because tmux has similar one (copy mode). So I wanted a terminal emulator that is
+
+- Extremely simple (no menu bar, GUI setting window etc..)
 - original VTE-based
-- configurable with text file, which can be managed by personal so called `dotfiles` repository like [this](https://github.com/endaaman/dotfiles)
+- configurable by text file
 
-but could not find such a terminal did not exist so I created.
+but I could not find it, so I made it.
 
 ## Dependencies
 
