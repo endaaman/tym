@@ -29,7 +29,7 @@
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   VteTerminal* vte = VTE_TERMINAL(widget);
-  GHashTable* config = *((GHashTable **)user_data);
+  Config* config = *((Config **)user_data);
 
   const unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
   double scale;
@@ -80,7 +80,7 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
 }
 #endif
 
-static void start(GHashTable* c) {
+static void start(Config* c) {
   // setup window
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
@@ -150,30 +150,42 @@ static void start(GHashTable* c) {
 
 int main(int argc, char* argv[])
 {
+  int exit_code = EXIT_SUCCESS;
+
   bool version = false;
+  char* config_file_path = NULL;
   GOptionEntry entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show Version", NULL },
+    { "use", 'u', 0, G_OPTION_ARG_STRING, &config_file_path,  "Use <path> instead of default config file", "<path>"},
     { NULL }
   };
-
   GOptionContext* context = g_option_context_new("");
-  GError*error = NULL;
+  GError* error = NULL;
   g_option_context_add_main_entries(context, entries, NULL);
+
   if (!g_option_context_parse(context, &argc, &argv, &error)) {
-    g_printerr ("option parsing failed: %s\n", error->message);
-    return EXIT_FAILURE;
+    g_printerr("error: failed to parse options %s\n", error->message);
+    exit_code = EXIT_FAILURE;
+    g_error_free(error);
+    goto CLEANUP;
   }
   if (version) {
-    g_print ("version %s\n", TYM_VERSION);
-    return EXIT_SUCCESS;
+    g_print("version %s\n", TYM_VERSION);
+    goto CLEANUP;
   }
 
-  GHashTable *config = config_init();
+  Config *config = config_init(config_file_path);
   config_load(config);
 
   gtk_init(&argc, &argv);
   start(config);
 
   config_close(config);
-  return EXIT_SUCCESS;
+
+CLEANUP:
+  if (config_file_path) {
+    g_free(config_file_path);
+  }
+  g_option_context_free(context);
+  return exit_code;
 }

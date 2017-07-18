@@ -10,18 +10,22 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <stdlib.h>
 #include <stdbool.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <vte/vte.h>
 
-GHashTable* config_init();
-void config_close(GHashTable* config);
+typedef struct {
+  char* file_path;
+  GHashTable* context;
+} Config;
 
-char* config_get_str(GHashTable* c, const char* key);
+Config* config_init(const char* file_path);
+void config_close(Config* config);
 
-void config_load(GHashTable* c);
-void config_apply_all(GHashTable* c, VteTerminal* vte, bool is_startup);
+char* config_get_str(Config* c, const char* key);
+
+void config_load(Config* c);
+void config_apply_all(Config* c, VteTerminal* vte, bool is_startup);
 
 #endif
