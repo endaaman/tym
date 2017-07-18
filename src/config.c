@@ -337,24 +337,26 @@ void config_apply_all(Config* c, VteTerminal* vte, bool is_startup) {
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
 
-  int width = config_get_int(c, "width"); // Number of horizontal char
-  int height = config_get_int(c, "height"); // Number of vertical char
-  if (is_startup){
-    vte_terminal_set_size(vte, width, height);
-  } else {
-    GtkBorder border;
-    gtk_style_context_get_padding(
-      gtk_widget_get_style_context(GTK_WIDGET(vte)),
-      gtk_widget_get_state_flags(GTK_WIDGET(vte)),
-      &border
-    );
-    const int char_width = vte_terminal_get_char_width(vte);
-    const int char_height = vte_terminal_get_char_height(vte);
-    gtk_window_resize(
-      GTK_WINDOW(window),
-      width * char_width + border.left + border.right,
-      height * char_height + border.top + border.bottom
-    );
+  int width = config_get_int(c, "width");
+  int height = config_get_int(c, "height");
+  if (width > 0 && height > 0) {
+    if (is_startup){
+      vte_terminal_set_size(vte, width, height);
+    } else {
+      GtkBorder border;
+      gtk_style_context_get_padding(
+        gtk_widget_get_style_context(GTK_WIDGET(vte)),
+        gtk_widget_get_state_flags(GTK_WIDGET(vte)),
+        &border
+      );
+      const int char_width = vte_terminal_get_char_width(vte);
+      const int char_height = vte_terminal_get_char_height(vte);
+      gtk_window_resize(
+        GTK_WINDOW(window),
+        width * char_width + border.left + border.right,
+        height * char_height + border.top + border.bottom
+      );
+    }
   }
 
   if (config_has(c, "font")) {
