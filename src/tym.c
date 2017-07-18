@@ -76,7 +76,7 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
   if (!error) {
     return;
   }
-  g_printerr("warining: `%s`.\n", error->message);
+  g_printerr("warining: %s\n", error->message);
 }
 #endif
 
@@ -99,7 +99,7 @@ static void start(GHashTable* c) {
 
   config_apply_all(c, vte, true);
 
-  char* argv[2] = {config_get_str(c, "shell"), NULL};
+  char* argv[] = {config_get_str(c, "shell"), NULL};
   char** env = g_get_environ();
 
 #ifdef USE_ASYNC_SPAWN
