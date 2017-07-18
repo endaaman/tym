@@ -32,8 +32,8 @@ static const char* CURSOR_BLINK_MODE_OFF = "off";
 static const char* CJK_WIDTH_NARROW = "narrow";
 static const char* CJK_WIDTH_WIDE = "wide";
 
-static GList* str_config_fields = NULL;
-static GList* int_config_fields = NULL;
+static GSList* str_config_fields = NULL;
+static GSList* int_config_fields = NULL;
 
 void init_config_fields() {
   const char* base_str_config_fields[] = {
@@ -58,26 +58,26 @@ void init_config_fields() {
 
   // Initialize string fields
   for (unsigned i = 0; i < sizeof(base_str_config_fields) / sizeof(char*); i++) {
-    str_config_fields = g_list_append(str_config_fields, g_strdup(base_str_config_fields[i]));
+    str_config_fields = g_slist_append(str_config_fields, g_strdup(base_str_config_fields[i]));
   }
   // Append `color_123` field
   char numbered_color_key[10];
   for (unsigned i = 0; i < 256; i++) {
     sprintf(numbered_color_key, "color_%d", i);
-    str_config_fields = g_list_append(str_config_fields, g_strdup(numbered_color_key));
+    str_config_fields = g_slist_append(str_config_fields, g_strdup(numbered_color_key));
   }
 
   // Initialize integer fields
   for (unsigned i = 0; i < sizeof(base_int_config_fields) / sizeof(char*); i++) {
-    int_config_fields = g_list_append(int_config_fields, g_strdup(base_int_config_fields[i]));
+    int_config_fields = g_slist_append(int_config_fields, g_strdup(base_int_config_fields[i]));
   }
 }
 
 void close_config_fields() {
-  g_list_foreach(str_config_fields, (GFunc)g_free, NULL);
-  g_list_foreach(int_config_fields, (GFunc)g_free, NULL);
-  g_list_free(str_config_fields);
-  g_list_free(int_config_fields);
+  g_slist_foreach(str_config_fields, (GFunc)g_free, NULL);
+  g_slist_foreach(int_config_fields, (GFunc)g_free, NULL);
+  g_slist_free(str_config_fields);
+  g_slist_free(int_config_fields);
 }
 
 char* get_default_shell() {
@@ -198,7 +198,7 @@ void config_reset(Config* c) {
   config_set_str(c, "font", "");
   config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
   config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
-  for (GList* li = str_config_fields; li != NULL; li = li->next) {
+  for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     // Set empty value if start with "color_"
     if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
@@ -230,7 +230,7 @@ void config_load(Config* c) {
 
   lua_newtable(l);
   // Push string fields
-  for (GList* li = str_config_fields; li != NULL; li = li->next) {
+  for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
     const char* value = config_get_str(c, key);
     lua_pushstring(l, key);
@@ -238,7 +238,7 @@ void config_load(Config* c) {
     lua_settable(l, -3);
   }
   // Push int fields
-  for (GList* li = int_config_fields; li != NULL; li = li->next) {
+  for (GSList* li = int_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
     int value = config_get_int(c, key);
     lua_pushstring(l, key);
@@ -259,14 +259,14 @@ void config_load(Config* c) {
 
   lua_getglobal(l, "config");
   // Store string fields
-  for (GList* li = str_config_fields; li != NULL; li = li->next) {
+  for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     lua_getfield(l, -1, key);
     config_set_str(c, key, lua_tostring(l, -1));
     lua_pop(l, 1);
   }
   // Store int fields
-  for (GList* li = int_config_fields; li != NULL; li = li->next) {
+  for (GSList* li = int_config_fields; li != NULL; li = li->next) {
     const char* key = (char *)li->data;
     lua_getfield(l, -1, key);
     config_set_int(c, key, lua_tointeger(l, -1));
