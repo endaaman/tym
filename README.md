@@ -75,6 +75,14 @@ All available options are shown below.
 | Ctrl +         | Increase font scale         |
 | Ctrl =         | Reset font scale            |
 
+## Tips
+
+If you want to start with the default settings, try below
+
+```console
+$ tym -u NONE
+```
+
 ## Compilation
 
 Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and do
@@ -102,6 +110,8 @@ Clone and do
 ```console
 $ autoreconf -fvi
 ```
+
+, and you will get `configure` script.
 
 ## License
 
