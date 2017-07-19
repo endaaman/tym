@@ -293,9 +293,9 @@ void config_apply_color(
 }
 
 void config_apply_colors(Config* c, VteTerminal* vte) {
-  GdkRGBA* palette = g_new0(GdkRGBA, 256);
+  GdkRGBA* palette = g_new0(GdkRGBA, 16);
   char key[10];
-  for (unsigned i = 0; i < 256; i++) {
+  for (unsigned i = 0; i < 16; i++) {
     sprintf(key, "color_%d", i);
     if (config_has(c, key)) {
       bool valid = gdk_rgba_parse(&palette[i], config_get_str(c, key));
@@ -303,30 +303,13 @@ void config_apply_colors(Config* c, VteTerminal* vte) {
         continue;
       }
     }
-    if (i < 16) {
-      palette[i].blue = (((i & 4) ? 0xc000 : 0) + (i > 7 ? 0x3fff: 0)) / 65535.0;
-      palette[i].green = (((i & 2) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
-      palette[i].red = (((i & 1) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
-      palette[i].alpha = 0;
-      continue;
-    }
-    if (i < 232) {
-      const unsigned j = i - 16;
-      const unsigned r = j / 36, g = (j / 6) % 6, b = j % 6;
-      const unsigned red =   (r == 0) ? 0 : r * 40 + 55;
-      const unsigned green = (g == 0) ? 0 : g * 40 + 55;
-      const unsigned blue =  (b == 0) ? 0 : b * 40 + 55;
-      palette[i].red   = (red | red << 8) / 65535.0;
-      palette[i].green = (green | green << 8) / 65535.0;
-      palette[i].blue  = (blue | blue << 8) / 65535.0;
-      palette[i].alpha = 0;
-      continue;
-    }
-    const unsigned shade = 8 + (i - 232) * 10;
-    palette[i].red = palette[i].green = palette[i].blue = (shade | shade << 8) / 65535.0;
+    // calc default color
+    palette[i].blue = (((i & 4) ? 0xc000 : 0) + (i > 7 ? 0x3fff: 0)) / 65535.0;
+    palette[i].green = (((i & 2) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
+    palette[i].red = (((i & 1) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
     palette[i].alpha = 0;
   }
-  vte_terminal_set_colors(vte, NULL, NULL, palette, 256);
+  vte_terminal_set_colors(vte, NULL, NULL, palette, 16);
 }
 
 void config_apply_all(Config* c, VteTerminal* vte, bool is_startup) {
