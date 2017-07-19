@@ -1,10 +1,9 @@
+machine:
+  services:
+    - docker
 dependencies:
-  pre:
-    - sudo apt-get install build-essential autoconf libgtk-3-dev libvte-2.91-dev liblua5.3-dev
+    - docker info
+    - docker build --rm=false -t tym .
 test:
-  pre:
-    - autoreconf -fvi
-    - ./configure
-    - make
   override:
-    - make check
+    - docker run tym
