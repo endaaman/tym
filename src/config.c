@@ -165,7 +165,7 @@ Config* config_init(const char* file_path) {
     (GDestroyNotify)g_free
   );
 
-  if (g_strcmp0(file_path, WITHOUT_CONFIG_SYMBOL) == 0) {
+  if (0 == g_strcmp0(file_path, WITHOUT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
     c->file_path = NULL;
     g_print("info: started with the default config\n");
@@ -322,7 +322,7 @@ void config_apply_all(Config* c, VteTerminal* vte, bool is_startup) {
 
   int width = config_get_int(c, "width");
   int height = config_get_int(c, "height");
-  if (width > 0 && height > 0) {
+  if (0 < width && 0 < height) {
     if (is_startup){
       vte_terminal_set_size(vte, width, height);
     } else {
