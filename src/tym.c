@@ -73,10 +73,10 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
   UNUSED(pid);
   UNUSED(user_data);
 
-  if (!error) {
-    return;
+  if (error) {
+    g_printerr("error: %s\n", error->message);
+    gtk_main_quit();
   }
-  g_printerr("warining: %s\n", error->message);
 }
 #endif
 
@@ -116,7 +116,7 @@ static void start(Config* c) {
     1000,                // timeout
     NULL,                // cancel callback
     spawn_callback,      // callback
-    NULL                 // user_data
+    NULL                 // user_data */
   );
 #else
   GError* error = NULL;
@@ -136,7 +136,7 @@ static void start(Config* c) {
   );
 
   if (error) {
-    g_printerr("%s\n", error->message);
+    g_printerr("error: %s\n", error->message);
     g_error_free(error);
     return;
   }
@@ -160,10 +160,10 @@ int main(int argc, char* argv[])
     { NULL }
   };
   GOptionContext* context = g_option_context_new("");
-  GError* error = NULL;
   g_option_context_add_main_entries(context, entries, NULL);
+  GError* error = NULL;
   if (!g_option_context_parse(context, &argc, &argv, &error)) {
-    g_printerr("error: failed to parse options %s\n", error->message);
+    g_printerr("error: %s\n", error->message);
     exit_code = EXIT_FAILURE;
     g_error_free(error);
     goto CLEANUP;
