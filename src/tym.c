@@ -81,14 +81,11 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
 #endif
 
 static void start(Config* c) {
-  // setup window
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-  // setup vte widget
   GtkWidget* vte_widget = vte_terminal_new();
   gtk_container_add(GTK_CONTAINER(window), vte_widget);
 

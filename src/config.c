@@ -7,10 +7,6 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include "config.h"
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
@@ -158,12 +154,6 @@ void config_set_int(Config* c, const char* key, int value) {
 
 Config* config_init(const char* file_path) {
   Config* c = g_malloc0(sizeof(Config));
-  c->context = g_hash_table_new_full(
-    g_str_hash,
-    g_str_equal,
-    (GDestroyNotify)g_free,
-    (GDestroyNotify)g_free
-  );
 
   if (0 == g_strcmp0(file_path, WITHOUT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
@@ -181,12 +171,26 @@ Config* config_init(const char* file_path) {
   } else {
     c->file_path = g_strdup(file_path);
   }
+
+  lua_State* l = luaL_newstate();
+  luaL_openlibs(l);
+  lua_newtable(l);
+  lua_setglobal(l, "config");
+  c->lua = l;
+
+  c->context = g_hash_table_new_full(
+    g_str_hash,
+    g_str_equal,
+    (GDestroyNotify)g_free,
+    (GDestroyNotify)g_free
+  );
   return c;
 }
 
 void config_close(Config* c) {
-  g_hash_table_destroy(c->context);
   g_free(c->file_path);
+  lua_close(c->lua);
+  g_hash_table_destroy(c->context);
   g_free(c);
 }
 
@@ -199,7 +203,7 @@ void config_reset(Config* c) {
   config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
   config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
-    const char* key = (char *)li->data;
+    const char* key = (char*)li->data;
     // Set empty value if start with "color_"
     if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
       config_set_str(c, key, "");
@@ -225,10 +229,9 @@ void config_load(Config* c) {
     return;
   }
 
-  lua_State* l = luaL_newstate();
-  luaL_openlibs(l);
+  lua_State* l = c->lua;
+  lua_getglobal(l, "config");
 
-  lua_newtable(l);
   // Push string fields
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
@@ -260,19 +263,18 @@ void config_load(Config* c) {
   lua_getglobal(l, "config");
   // Store string fields
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
-    const char* key = (char *)li->data;
+    const char* key = (char*)li->data;
     lua_getfield(l, -1, key);
     config_set_str(c, key, lua_tostring(l, -1));
     lua_pop(l, 1);
   }
   // Store int fields
   for (GSList* li = int_config_fields; li != NULL; li = li->next) {
-    const char* key = (char *)li->data;
+    const char* key = (char*)li->data;
     lua_getfield(l, -1, key);
     config_set_int(c, key, lua_tointeger(l, -1));
     lua_pop(l, 1);
   }
-  lua_close(l);
 }
 
 void config_apply_color(

@@ -10,6 +10,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include <stdbool.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -17,6 +20,7 @@
 
 typedef struct {
   char* file_path;
+  lua_State* lua;
   GHashTable* context;
 } Config;
 
