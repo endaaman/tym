@@ -1,5 +1,7 @@
 # tym
 
+[![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym)
+
 `tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by lua.
 
 ## Motivation
