@@ -63,7 +63,7 @@ All available options are shown below.
 
 ## Color scheming
 
-Please refer to the Correspondence table of each color below.
+Please refer to the correspondence table of each color below.
 
 ```
 color_0  : black (background)
