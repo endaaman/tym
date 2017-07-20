@@ -10,26 +10,20 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#include <stdbool.h>
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <vte/vte.h>
+#include "common.h"
 
 typedef struct {
-  char* file_path;
-  lua_State* lua;
-  GHashTable* context;
+  GHashTable* data;
 } Config;
 
-Config* config_init(const char* file_path);
-void config_close(Config* config);
-
-char* config_get_str(Config* c, const char* key);
-
-void config_load(Config* c);
+Config* config_init();
+void config_close(Config* c);
+void config_reset(Config* c);
+void config_prepare_lua(Config* c, lua_State* l);
+void config_load_from_lua(Config* c, lua_State* l);
 void config_apply_all(Config* c, VteTerminal* vte, bool is_startup);
+char* config_get_shell(Config* c);
+bool config_get_use_default_keymap(Config* c);
+
 
 #endif

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-bash cleanup.sh
-autoreconf -fvi
-./configure
-make clean
-make
+bash cleanup.sh && \
+autoreconf -fvi && \
+./configure && \
+make clean && \
+make && \
 make dist

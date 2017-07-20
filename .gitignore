@@ -20,5 +20,6 @@ missing
 stamp-h?
 
 src/version.h
+conf.h
 tym
 tym-*.tar.gz

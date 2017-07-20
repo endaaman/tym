@@ -18,6 +18,7 @@ rm -rf m4/
 rm -rf missing
 rm -rf src/*.la
 rm -rf src/*.lo
+rm -rf src/*.o
 rm -rf src/.deps
 rm -rf src/.libs
 rm -rf src/Makefile
@@ -29,6 +30,7 @@ rm -rf src/toollib/.deps
 rm -rf src/toollib/.dirstamp
 rm -rf stamp-h1
 
+rm -rf conf.h
 rm -rf src/version.h
 
 echo 'Cleaned files.'

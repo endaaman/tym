@@ -7,17 +7,9 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <vte/vte.h>
+#include "common.h"
+#include "context.h"
 
-#include "config.h"
-#include "version.h"
-
-
-#define UNUSED(x) (void)(x)
 
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 48
@@ -25,50 +17,23 @@
 #endif
 #endif
 
-
-static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static bool on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
-  VteTerminal* vte = VTE_TERMINAL(widget);
-  Config* config = *((Config **)user_data);
+  UNUSED(widget);
+  Context* context = (Context*)user_data;
 
-  const unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
-  double scale;
-  if (mod & GDK_CONTROL_MASK) {
-    switch (gdk_keyval_to_lower(event->keyval)) {
-      case GDK_KEY_minus:
-        scale = vte_terminal_get_font_scale(vte) - 0.1;
-        vte_terminal_set_font_scale(vte, scale);
-        return true;
-      case GDK_KEY_plus:
-        scale = vte_terminal_get_font_scale(vte) + 0.1;
-        vte_terminal_set_font_scale(vte, scale);
-        return true;
-      case GDK_KEY_equal:
-        vte_terminal_set_font_scale(vte, 1.0);
-        return true;
-    }
-  }
+  unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
+  unsigned key = gdk_keyval_to_lower(event->keyval);
 
-  if ((mod & GDK_CONTROL_MASK) && (mod & GDK_SHIFT_MASK)) {
-    switch (gdk_keyval_to_lower(event->keyval)) {
-      case GDK_KEY_c:
-        vte_terminal_copy_clipboard(vte);
-        vte_terminal_unselect_all(vte);
-        return true;
-      case GDK_KEY_v:
-        vte_terminal_paste_clipboard(vte);
-        return true;
-      case GDK_KEY_r:
-        config_load(config);
-        config_apply_all(config, vte, false);
-        return true;
-    }
+  if (context_on_key(context, key, mod)) {
+    return true;
   }
   return false;
 }
 
 #ifdef USE_ASYNC_SPAWN
-static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpointer user_data) {
+static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpointer user_data)
+{
   UNUSED(terminal);
   UNUSED(pid);
   UNUSED(user_data);
@@ -80,23 +45,27 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpoin
 }
 #endif
 
-static void start(Config* c) {
-  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+static void activate(GtkApplication* app, gpointer user_data)
+{
+  Context* context = (Context*)user_data;
+
+  GtkWidget *window = gtk_application_window_new(app);
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-  GtkWidget* vte_widget = vte_terminal_new();
-  gtk_container_add(GTK_CONTAINER(window), vte_widget);
-
-  VteTerminal* vte = VTE_TERMINAL(vte_widget);
+  VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
   vte_terminal_set_rewrap_on_resize(vte, true);
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(gtk_main_quit), NULL);
-  g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), &c);
+  g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
 
-  config_apply_all(c, vte, true);
+  context_set_app(context, app);
+  context_set_vte(context, vte);
 
-  char* argv[] = {config_get_str(c, "shell"), NULL};
+  context_load_config(context, true);
+
+  char* argv[] = { config_get_shell(context->config), NULL };
   char** env = g_get_environ();
 
 #ifdef USE_ASYNC_SPAWN
@@ -139,8 +108,7 @@ static void start(Config* c) {
   }
 #endif
   g_strfreev(env);
-
-  gtk_widget_grab_focus(vte_widget);
+  gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(window);
   gtk_main();
 }
@@ -156,32 +124,34 @@ int main(int argc, char* argv[])
     { "use", 'u', 0, G_OPTION_ARG_STRING, &config_file_path,  "Use <path> instead of default config file", "<path>"},
     { NULL }
   };
-  GOptionContext* context = g_option_context_new("");
-  g_option_context_add_main_entries(context, entries, NULL);
+  GOptionContext* option_context = g_option_context_new("");
+  g_option_context_add_main_entries(option_context, entries, NULL);
   GError* error = NULL;
-  if (!g_option_context_parse(context, &argc, &argv, &error)) {
+  if (!g_option_context_parse(option_context, &argc, &argv, &error)) {
     g_printerr("error: %s\n", error->message);
     exit_code = EXIT_FAILURE;
     g_error_free(error);
     goto CLEANUP;
   }
   if (version) {
-    g_print("version %s\n", TYM_VERSION);
+    g_print("version %s\n", PACKAGE_VERSION);
     goto CLEANUP;
   }
 
-  Config *config = config_init(config_file_path);
-  config_load(config);
+  Context* context = context_init(config_file_path);
 
-  gtk_init(&argc, &argv);
-  start(config);
+  GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_FLAGS_NONE);;
+  g_signal_connect(app, "activate", G_CALLBACK(activate), context);
+  exit_code = g_application_run(G_APPLICATION(app), argc, argv);
+  g_object_unref(app);
 
-  config_close(config);
+  context_close(context);
 
 CLEANUP:
   if (config_file_path) {
     g_free(config_file_path);
   }
-  g_option_context_free(context);
+  g_option_context_free(option_context);
   return exit_code;
 }
+
