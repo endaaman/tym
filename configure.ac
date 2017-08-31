@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-m4_define([tym_major_version],[0])
-m4_define([tym_minor_version],[2])
-m4_define([tym_micro_version],[4])
+m4_define([tym_major_version],[1])
+m4_define([tym_minor_version],[0])
+m4_define([tym_micro_version],[0])
 m4_define([tym_version],[tym_major_version().tym_minor_version().tym_micro_version()])
 
 AC_PREREQ([2.69])
