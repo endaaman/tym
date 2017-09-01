@@ -87,17 +87,17 @@ static int paste_clipboard(lua_State* l)
   return 0;
 }
 
-static int increment_font_scale(lua_State* l)
+static int increase_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_increment_font_scale(context);
+  builtin_increase_font_scale(context);
   return 0;
 }
 
-static int decrement_font_scale(lua_State* l)
+static int decrease_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_decrement_font_scale(context);
+  builtin_decrease_font_scale(context);
   return 0;
 }
 
@@ -116,8 +116,8 @@ void context_embed_functions(Context* context)
     { "notify", notify },
     { "put", put },
     { "reload", reload },
-    { "increment_font_scale", increment_font_scale },
-    { "decrement_font_scale", decrement_font_scale },
+    { "increase_font_scale", increase_font_scale },
+    { "decrease_font_scale", decrease_font_scale },
     { "reset_font_scale", reset_font_scale },
     { "copy_clipboard", copy_clipboard },
     { "paste_clipboard", paste_clipboard },

@@ -16,8 +16,8 @@
 void builtin_reload(Context* context);
 void builtin_copy_clipboard(Context* context);
 void builtin_paste_clipboard(Context* context);
-void builtin_increment_font_scale(Context* context);
-void builtin_decrement_font_scale(Context* context);
+void builtin_increase_font_scale(Context* context);
+void builtin_decrease_font_scale(Context* context);
 void builtin_reset_font_scale(Context* context);
 
 #endif

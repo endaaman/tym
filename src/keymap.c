@@ -36,8 +36,8 @@ static GSList* default_key_pairs;
 
 static DefaultKeyPairDefinition default_key_pair_definition[] = {
   { "<Ctrl><Shift>r", builtin_reload },
-  { "<Ctrl>plus", builtin_increment_font_scale },
-  { "<Ctrl>minus", builtin_decrement_font_scale },
+  { "<Ctrl>plus", builtin_increase_font_scale },
+  { "<Ctrl>minus", builtin_decrease_font_scale },
   { "<Ctrl>equal", builtin_reset_font_scale, },
   { "<Ctrl><Shift>c", builtin_copy_clipboard },
   { "<Ctrl><Shift>v", builtin_paste_clipboard },

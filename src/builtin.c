@@ -29,18 +29,18 @@ void builtin_paste_clipboard(Context* context)
   vte_terminal_paste_clipboard(context->vte);
 }
 
-void builtin_increment_font_scale(Context* context)
+void builtin_increase_font_scale(Context* context)
 {
-  dd("builtin_increment_font_scale");
+  dd("builtin_increase_font_scale");
   VteTerminal* vte = context->vte;
 
   double scale = vte_terminal_get_font_scale(vte) + 0.1;
   vte_terminal_set_font_scale(vte, scale);
 }
 
-void builtin_decrement_font_scale(Context* context)
+void builtin_decrease_font_scale(Context* context)
 {
-  dd("builtin_decrement_font_scale");
+  dd("builtin_decrease_font_scale");
   VteTerminal* vte = context->vte;
 
   double scale = vte_terminal_get_font_scale(vte) - 0.1;
