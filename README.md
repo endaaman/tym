@@ -87,7 +87,7 @@ color_14 : light cyan
 color_15 : white
 ```
 
-## Key bindings
+## Keymap
 
 ### Default
 
@@ -102,7 +102,7 @@ color_15 : white
 
 ### Customize
 
-Please register the functions in a table named `keymap` in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse)
+You can register functions in a table named `keymap` in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
 
 ```lua
 -- Since an empty `keymap` table is automatically created globally, it will work without this description.
@@ -110,7 +110,7 @@ Please register the functions in a table named `keymap` in a format parsable by 
 keymap = {}
 
 keymap['<Shift><Ctrl>u'] = function()
-  tym.notify('Pressed C-U')
+  tym.notify('Pressed C-S-u')
 end
 
 -- Override default keymap
