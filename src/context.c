@@ -29,6 +29,7 @@ Context* context_init(const char* config_file_path)
     g_print("info: started with the default config\n");
   } else if (!config_file_path) {
     // If NULL
+    context->use_default_config_file = true;
     context->config_file_path = g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -75,11 +76,15 @@ void context_load_config(Context* context, bool is_startup)
   keymap_reset(context->keymap);
 
   if (!context->config_file_path) {
+    // Running without config
     return;
   }
 
   if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
-    g_print("warning: `%s` does not exist\n", context->config_file_path);
+    // Assert only if user config file provided
+    if (!context->use_default_config_file) {
+      g_print("warning: `%s` does not exist\n", context->config_file_path);
+    }
     return;
   }
 
