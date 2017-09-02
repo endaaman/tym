@@ -73,7 +73,7 @@ static void init_config_fields()
     int_config_fields = g_slist_append(int_config_fields, g_strdup(int_config_field_names[i]));
   }
 
-  for (unsigned i = 0; i < sizeof(int_config_field_names) / sizeof(char*); i++) {
+  for (unsigned i = 0; i < sizeof(bool_config_field_names) / sizeof(char*); i++) {
     bool_config_fields = g_slist_append(bool_config_fields, g_strdup(bool_config_field_names[i]));
   }
 }
@@ -131,9 +131,6 @@ Config* config_init()
     (GDestroyNotify)g_free,
     (GDestroyNotify)g_free
   );
-
-  config_reset(c);
-
   return c;
 }
 
@@ -206,6 +203,8 @@ static void config_set_bool(Config* c, const char* key, bool value)
 
 void config_reset(Config* c)
 {
+  dd("config reset");
+
   char* default_shell = get_default_shell();
   config_set_str(c, "shell", default_shell);
   g_free(default_shell);
@@ -228,7 +227,8 @@ void config_reset(Config* c)
 
 void config_prepare_lua(Config* c, lua_State* l)
 {
-  // Push config table
+  dd("config prepare lua");
+
   lua_newtable(l);
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
@@ -237,7 +237,7 @@ void config_prepare_lua(Config* c, lua_State* l)
     lua_pushstring(l, value ? value : "");
     lua_settable(l, -3);
   }
-  // Push int fields
+
   for (GSList* li = int_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
     int value = config_get_int(c, key);
@@ -245,11 +245,21 @@ void config_prepare_lua(Config* c, lua_State* l)
     lua_pushinteger(l, value);
     lua_settable(l, -3);
   }
+
+  for (GSList* li = bool_config_fields; li != NULL; li = li->next) {
+    const char* key = (char*)li->data;
+    bool value = config_get_bool(c, key);
+    lua_pushstring(l, key);
+    lua_pushboolean(l, value);
+    lua_settable(l, -3);
+  }
   lua_setglobal(l, CONFIG_TABLE_NAME);
 }
 
 void config_load_from_lua(Config* c, lua_State* l)
 {
+  dd("config load from lua");
+
   lua_getglobal(l, CONFIG_TABLE_NAME);
 
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {

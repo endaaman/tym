@@ -31,16 +31,19 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
   return false;
 }
 
-static bool quit(VteTerminal *vteterminal, int status, void* user_data)
+static void quit(VteTerminal *vte, int status, void* user_data)
 {
+  UNUSED(vte);
+  UNUSED(status);
+
   GApplication* app = G_APPLICATION(user_data);
   g_application_quit(app);
 }
 
 #ifdef USE_ASYNC_SPAWN
-static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, void* user_data)
+static void spawn_callback(VteTerminal *vte, GPid pid, GError *error, void* user_data)
 {
-  UNUSED(terminal);
+  UNUSED(vte);
   UNUSED(pid);
   UNUSED(user_data);
   if (error) {
@@ -51,6 +54,7 @@ static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, void*
 
 static void activate(GtkApplication* app, void* user_data)
 {
+  dd("activate");
   Context* context = (Context*)user_data;
 
   GList* list = gtk_application_get_windows(app);

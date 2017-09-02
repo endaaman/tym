@@ -28,8 +28,6 @@ typedef struct {
 
 Context* context_init(const char* config_file_path);
 void context_close(Context* context);
-
-char* context_get_shell(Context* context);
 void context_set_app(Context* context, GtkApplication* app);
 void context_set_vte(Context* context, VteTerminal* vte);
 

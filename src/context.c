@@ -70,7 +70,7 @@ void context_set_vte(Context* context, VteTerminal* vte)
 
 void context_load_config(Context* context, bool is_startup)
 {
-  lua_State* l = context->lua;
+  dd("context load config");
 
   config_reset(context->config);
   keymap_reset(context->keymap);
@@ -88,6 +88,7 @@ void context_load_config(Context* context, bool is_startup)
     return;
   }
 
+  lua_State* l = context->lua;
   config_prepare_lua(context->config, l);
   keymap_prepare_lua(context->keymap, l);
 
