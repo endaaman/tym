@@ -81,7 +81,7 @@ void context_load_config(Context* context, bool is_startup)
   }
 
   if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
-    // Assert only if user config file provided
+    // Warn only if user config file provided
     if (!context->use_default_config_file) {
       g_print("warning: `%s` does not exist\n", context->config_file_path);
     }

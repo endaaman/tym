@@ -32,5 +32,6 @@ rm -rf stamp-h1
 
 rm -rf conf.h
 rm -rf src/version.h
+rm -rf src/tym
 
 echo 'Cleaned files.'
