@@ -28,19 +28,10 @@ enable_debug=no)
 if test x"${enable_debug}" = x"yes"; then
   AC_DEFINE(DEBUG, 1, [Define to 1 if you want to debug])
 fi
-
 AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 
-# Checks for programs.
 AC_PROG_CC
 
-# Checks for libraries.
-
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
-
-# Checks for library functions.
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 ])
 
