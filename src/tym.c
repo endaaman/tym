@@ -17,7 +17,7 @@
 #endif
 #endif
 
-static bool on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
 {
   UNUSED(widget);
   Context* context = (Context*)user_data;
@@ -31,38 +31,45 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_da
   return false;
 }
 
+static bool quit(VteTerminal *vteterminal, int status, void* user_data)
+{
+  GApplication* app = G_APPLICATION(user_data);
+  g_application_quit(app);
+}
+
 #ifdef USE_ASYNC_SPAWN
-static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, gpointer user_data)
+static void spawn_callback(VteTerminal *terminal, GPid pid, GError *error, void* user_data)
 {
   UNUSED(terminal);
   UNUSED(pid);
   UNUSED(user_data);
-
   if (error) {
     g_printerr("error: %s\n", error->message);
-    gtk_main_quit();
   }
 }
 #endif
 
-static void activate(GtkApplication* app, gpointer user_data)
+static void activate(GtkApplication* app, void* user_data)
 {
   Context* context = (Context*)user_data;
+
+  GList* list = gtk_application_get_windows(app);
+  if (list) {
+    gtk_window_present(GTK_WINDOW(list->data));
+    return;
+  }
 
   GtkWidget *window = gtk_application_window_new(app);
   gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-  g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
   VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
   vte_terminal_set_rewrap_on_resize(vte, true);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(quit), app);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
-
   context_set_app(context, app);
   context_set_vte(context, vte);
-
   context_load_config(context, true);
 
   char* argv[] = { config_get_shell(context->config), NULL };
@@ -107,10 +114,11 @@ static void activate(GtkApplication* app, gpointer user_data)
     return;
   }
 #endif
+
   g_strfreev(env);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(window);
-  gtk_main();
+  gtk_widget_show(window);
 }
 
 int main(int argc, char* argv[])
@@ -140,7 +148,7 @@ int main(int argc, char* argv[])
 
   Context* context = context_init(config_file_path);
 
-  GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_FLAGS_NONE);;
+  GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_NON_UNIQUE);
   g_signal_connect(app, "activate", G_CALLBACK(activate), context);
   exit_code = g_application_run(G_APPLICATION(app), argc, argv);
   g_object_unref(app);
@@ -154,4 +162,3 @@ CLEANUP:
   g_option_context_free(option_context);
   return exit_code;
 }
-
