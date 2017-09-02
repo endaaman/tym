@@ -30,6 +30,7 @@ rm -rf src/toollib/.deps
 rm -rf src/toollib/.dirstamp
 rm -rf stamp-h1
 
+rm -rf conf.h.in
 rm -rf conf.h
 rm -rf src/version.h
 rm -rf src/tym
