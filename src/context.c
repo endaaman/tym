@@ -33,20 +33,29 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
   if (0 == g_strcmp0(config_file_path, USE_DEFAULT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
     context->config_file_path = NULL;
-    g_print("info: started with the default config\n");
-  } else if (!config_file_path) {
-    // If NULL
-    context->use_default_config_file = true;
-    context->config_file_path = g_build_path(
-      G_DIR_SEPARATOR_S,
-      g_get_user_config_dir(),
-      CONFIG_DIR_NAME,
-      CONFIG_FILE_NAME,
-      NULL
-    );
+    g_print("info: starting with default config\n");
   } else {
-    context->config_file_path = g_strdup(config_file_path);
+    char* challenging_config_file_path = NULL;
+    if (!config_file_path) {
+      challenging_config_file_path = g_build_path(
+        G_DIR_SEPARATOR_S,
+        g_get_user_config_dir(),
+        CONFIG_DIR_NAME,
+        CONFIG_FILE_NAME,
+        NULL
+      );
+    } else {
+      challenging_config_file_path = g_strdup(config_file_path);
+    }
+
+    if (g_file_test(challenging_config_file_path, G_FILE_TEST_EXISTS)) {
+      context->config_file_path = challenging_config_file_path;
+    } else {
+      g_print("warning: `%s` does not exist. starting with default config\n", challenging_config_file_path);
+      g_free(challenging_config_file_path);
+    }
   }
+
 
   context->app = app;
   context->vte = vte;
@@ -84,9 +93,7 @@ void context_load_config(Context* context, bool is_startup)
 
   if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
     // Warn only if user config file provided
-    if (!context->use_default_config_file) {
-      g_print("warning: `%s` does not exist\n", context->config_file_path);
-    }
+    g_print("warning: `%s` does not exist. skipping loading\n", context->config_file_path);
     return;
   }
 
@@ -98,9 +105,12 @@ void context_load_config(Context* context, bool is_startup)
 
   if (lua_pcall(l, 0, 0, 0)) {
     const char* error = lua_tostring(l, -1);
-    g_print("warning: config error %s\n", error);
-    g_print("warning: start with default configuration...\n");
-    command_notify(context, error, "tym: config load error");
+    g_print("warning: encoutered lua error in `%s`\n", context->config_file_path);
+    g_print("warning: message is `%s`\n", error);
+    g_print("warning: starting with default config\n");
+    char* body = g_strdup_printf("tym: config error `%s`", error);
+    command_notify(context, error, body);
+    g_free(body);
     return;
   }
 
