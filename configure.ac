@@ -10,7 +10,7 @@ AC_PREREQ([2.69])
 AC_INIT([tym], [tym_version()])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/tym.c])
-AC_CONFIG_HEADERS([conf.h:conf.h.in])
+AC_CONFIG_HEADERS([config.h:config.h.in])
 AC_CONFIG_FILES([
   Makefile
   src/Makefile

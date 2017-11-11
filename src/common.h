@@ -18,7 +18,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <vte/vte.h>
-#include "conf.h"
+#include "../config.h"
 
 #define UNUSED(x) (void)(x)
 
