@@ -59,9 +59,9 @@ static void spawn_callback(VteTerminal *vte, GPid pid, GError *error, void* user
 }
 #endif
 
-static void activate(GtkApplication* app, void* user_data)
+static void on_activate(GtkApplication* app, void* user_data)
 {
-  dd("activate");
+  dd("app activate");
 
   BootOption* boot_option = (BootOption*) user_data;
 
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
   }
 
   GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_NON_UNIQUE);
-  g_signal_connect(app, "activate", G_CALLBACK(activate), boot_option);
+  g_signal_connect(app, "activate", G_CALLBACK(on_activate), boot_option);
   exit_code = g_application_run(G_APPLICATION(app), argc, argv);
   g_object_unref(app);
 

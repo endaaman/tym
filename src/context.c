@@ -81,7 +81,7 @@ void context_close(Context* context)
 
 void context_load_config(Context* context, bool is_startup)
 {
-  dd("context load config");
+  dd("context load config start");
 
   config_reset(context->config);
   keymap_reset(context->keymap);
@@ -118,6 +118,7 @@ void context_load_config(Context* context, bool is_startup)
   keymap_load_from_lua(context->keymap);
 
   config_apply_all(context->config, context->vte, is_startup);
+  dd("context load config end");
 }
 
 

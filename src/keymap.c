@@ -62,7 +62,6 @@ Keymap* keymap_init(lua_State* lua)
 
 void keymap_reset(Keymap* keymap)
 {
-  dd("keymap reset");
   g_slist_foreach(keymap->custom_key_pairs, (GFunc)custom_key_pair_free, NULL);
   g_slist_free(keymap->custom_key_pairs);
   keymap->custom_key_pairs = NULL;
@@ -78,8 +77,6 @@ void keymap_close(Keymap* keymap)
 
 void keymap_prepare_lua(Keymap* keymap)
 {
-  dd("keymap prepare lua");
-
   lua_State* l = keymap->lua;
   lua_newtable(l);
   lua_setglobal(l, KEYMAP_TABLE_NAME);
@@ -92,8 +89,6 @@ void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
 
 void keymap_load_from_lua(Keymap* keymap)
 {
-  dd("keymap load from lua");
-
   lua_State* l = keymap->lua;
   lua_getglobal(l, KEYMAP_TABLE_NAME);
 

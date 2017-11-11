@@ -203,8 +203,6 @@ static void config_set_bool(Config* c, const char* key, bool value)
 
 void config_reset(Config* c)
 {
-  dd("config reset");
-
   char* default_shell = get_default_shell();
   config_set_str(c, "shell", default_shell);
   g_free(default_shell);
@@ -227,7 +225,6 @@ void config_reset(Config* c)
 
 void config_prepare_lua(Config* c)
 {
-  dd("config prepare lua");
   lua_State* l = c->lua;
 
   lua_newtable(l);
@@ -259,7 +256,6 @@ void config_prepare_lua(Config* c)
 
 void config_load_from_lua(Config* c)
 {
-  dd("config load from lua");
   lua_State* l = c->lua;
 
   lua_getglobal(l, CONFIG_TABLE_NAME);
