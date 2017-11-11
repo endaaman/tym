@@ -1,5 +1,5 @@
 /**
- * embeded.c
+ * builtin.c
  *
  * Copyright (c) 2017 endaaman
  *
@@ -7,20 +7,17 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "embedded.h"
+#include "builtin.h"
 #include "command.h"
 
 
-static const char* LIB_NAME = "tym";
-static const char* DEFAULT_NOTIFICATION_TITLE = "tym";
-
-static int get_version(lua_State* l)
+int builtin_get_version(lua_State* l)
 {
   lua_pushstring(l, PACKAGE_VERSION);
   return 1;
 }
 
-static int get_config_file_path(lua_State* l)
+int builtin_get_config_file_path(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
 
@@ -28,28 +25,17 @@ static int get_config_file_path(lua_State* l)
   return 1;
 }
 
-static int notify(lua_State* l)
+int builtin_notify(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  GtkApplication* app = context->app;
 
   const char* body = luaL_checkstring(l, 1);
   const char* title = lua_tostring(l, 2);
-
-  GNotification* notification = g_notification_new(title ? title : DEFAULT_NOTIFICATION_TITLE);
-  GIcon* icon = g_themed_icon_new("terminal");
-
-  g_notification_set_icon (notification, G_ICON (icon));
-  g_notification_set_body(notification, body);
-  g_application_send_notification(G_APPLICATION(app), "lunch-is-ready", notification);
-
-  g_object_unref(notification);
-  g_object_unref(icon);
-
+  command_notify(context, body, title);
   return 0;
 }
 
-static int put(lua_State* l)
+int builtin_put(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   VteTerminal* vte = context->vte;
@@ -59,7 +45,7 @@ static int put(lua_State* l)
   return 1;
 }
 
-static int reload(lua_State* l)
+int builtin_reload(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   if (!context->config_file_path) {
@@ -73,60 +59,37 @@ static int reload(lua_State* l)
   return 0;
 }
 
-static int copy_clipboard(lua_State* l)
+int builtin_copy_clipboard(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   command_reload(context);
   return 0;
 }
 
-static int paste_clipboard(lua_State* l)
+int builtin_paste_clipboard(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   command_paste_clipboard(context);
   return 0;
 }
 
-static int increase_font_scale(lua_State* l)
+int builtin_increase_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   command_increase_font_scale(context);
   return 0;
 }
 
-static int decrease_font_scale(lua_State* l)
+int builtin_decrease_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   command_decrease_font_scale(context);
   return 0;
 }
 
-static int reset_font_scale(lua_State* l)
+int builtin_reset_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
   command_reset_font_scale(context);
   return 0;
-}
-
-void context_embed_functions(Context* context)
-{
-  const luaL_Reg command_FUNCTIONS[] = {
-    { "get_version", get_version },
-    { "get_config_file_path", get_config_file_path },
-    { "notify", notify },
-    { "put", put },
-    { "reload", reload },
-    { "increase_font_scale", increase_font_scale },
-    { "decrease_font_scale", decrease_font_scale },
-    { "reset_font_scale", reset_font_scale },
-    { "copy_clipboard", copy_clipboard },
-    { "paste_clipboard", paste_clipboard },
-    { NULL, NULL },
-  };
-
-  lua_State* l = context->lua;
-  luaL_newlibtable(l, command_FUNCTIONS);
-  lua_pushlightuserdata(l, context);
-  luaL_setfuncs(l, command_FUNCTIONS, 1);
-  lua_setglobal(l, LIB_NAME);
 }

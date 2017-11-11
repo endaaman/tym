@@ -8,12 +8,17 @@
  */
 
 #include "context.h"
-#include "embedded.h"
+#include "command.h"
+#include "builtin.h"
 
 
 static const char* CONFIG_FILE_NAME = "config.lua";
 static const char* USE_DEFAULT_CONFIG_SYMBOL = "NONE";
 static const char* CONFIG_DIR_NAME = "tym";
+static const char* LIB_NAME = "tym";
+
+static void context_embed_builtin_functions(Context* context); // declare forward
+
 
 Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte)
 {
@@ -49,7 +54,7 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
   context->config = config_init(l);
   context->keymap = keymap_init(l);
 
-  context_embed_functions(context);
+  context_embed_builtin_functions(context);
 
   return context;
 }
@@ -92,9 +97,10 @@ void context_load_config(Context* context, bool is_startup)
   luaL_loadfile(l, context->config_file_path);
 
   if (lua_pcall(l, 0, 0, 0)) {
-    g_print("warning: config error %s\n", lua_tostring(l, -1));
+    const char* error = lua_tostring(l, -1);
+    g_print("warning: config error %s\n", error);
     g_print("warning: start with default configuration...\n");
-    // TODO: show desktop notification
+    command_notify(context, error, "tym: config load error");
     return;
   }
 
@@ -102,6 +108,30 @@ void context_load_config(Context* context, bool is_startup)
   keymap_load_from_lua(context->keymap);
 
   config_apply_all(context->config, context->vte, is_startup);
+}
+
+
+static void context_embed_builtin_functions(Context* context)
+{
+  const luaL_Reg table[] = {
+    { "get_version",          builtin_get_version },
+    { "get_config_file_path", builtin_get_config_file_path },
+    { "notify",               builtin_notify },
+    { "put",                  builtin_put },
+    { "reload",               builtin_reload },
+    { "increase_font_scale",  builtin_increase_font_scale },
+    { "decrease_font_scale",  builtin_decrease_font_scale },
+    { "reset_font_scale",     builtin_reset_font_scale },
+    { "copy_clipboard",       builtin_copy_clipboard },
+    { "paste_clipboard",      builtin_paste_clipboard },
+    { NULL, NULL },
+  };
+
+  lua_State* l = context->lua;
+  luaL_newlibtable(l, table);
+  lua_pushlightuserdata(l, context);
+  luaL_setfuncs(l, table, 1);
+  lua_setglobal(l, LIB_NAME);
 }
 
 bool context_on_key(Context* context, unsigned key, GdkModifierType mod)

@@ -13,6 +13,7 @@
 #include "common.h"
 #include "context.h"
 
+void command_notify(Context* context, const char* body, const char* title);
 void command_reload(Context* context);
 void command_copy_clipboard(Context* context);
 void command_paste_clipboard(Context* context);

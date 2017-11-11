@@ -10,6 +10,25 @@
 #include "command.h"
 
 
+static const char* DEFAULT_NOTIFICATION_TITLE = "tym";
+
+void command_notify(Context* context, const char* body, const char* title)
+{
+  dd("command_notify");
+
+  GtkApplication* app = context->app;
+
+  GNotification* notification = g_notification_new(title ? title : DEFAULT_NOTIFICATION_TITLE);
+  GIcon* icon = g_themed_icon_new("terminal");
+
+  g_notification_set_icon (notification, G_ICON (icon));
+  g_notification_set_body(notification, body);
+  g_application_send_notification(G_APPLICATION(app), "lunch-is-ready", notification);
+
+  g_object_unref(notification);
+  g_object_unref(icon);
+}
+
 void command_reload(Context* context)
 {
   dd("command_reload");
