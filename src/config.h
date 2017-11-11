@@ -13,14 +13,15 @@
 #include "common.h"
 
 typedef struct {
+  lua_State* lua;
   GHashTable* data;
 } Config;
 
-Config* config_init();
+Config* config_init(lua_State* lua);
 void config_close(Config* c);
 void config_reset(Config* c);
-void config_prepare_lua(Config* c, lua_State* l);
-void config_load_from_lua(Config* c, lua_State* l);
+void config_prepare_lua(Config* c);
+void config_load_from_lua(Config* c);
 void config_apply_all(Config* c, VteTerminal* vte, bool is_startup);
 char* config_get_shell(Config* c);
 bool config_get_use_default_keymap(Config* c);

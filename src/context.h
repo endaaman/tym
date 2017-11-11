@@ -26,11 +26,8 @@ typedef struct {
 } Context;
 
 
-Context* context_init(const char* config_file_path);
+Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte);
 void context_close(Context* context);
-void context_set_app(Context* context, GtkApplication* app);
-void context_set_vte(Context* context, VteTerminal* vte);
-
 void context_load_config(Context* context, bool is_startup);
 bool context_on_key(Context* context, unsigned key, GdkModifierType mod);
 

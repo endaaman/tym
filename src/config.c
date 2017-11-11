@@ -121,10 +121,10 @@ static unsigned match_cjk_width(const char* str)
   return VTE_CJK_WIDTH_NARROW;
 }
 
-Config* config_init()
+Config* config_init(lua_State* lua)
 {
   Config* c = g_malloc0(sizeof(Config));
-
+  c->lua = lua;
   c->data = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,
@@ -225,9 +225,10 @@ void config_reset(Config* c)
   config_set_bool(c, "use_default_keymap", true);
 }
 
-void config_prepare_lua(Config* c, lua_State* l)
+void config_prepare_lua(Config* c)
 {
   dd("config prepare lua");
+  lua_State* l = c->lua;
 
   lua_newtable(l);
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
@@ -256,9 +257,10 @@ void config_prepare_lua(Config* c, lua_State* l)
   lua_setglobal(l, CONFIG_TABLE_NAME);
 }
 
-void config_load_from_lua(Config* c, lua_State* l)
+void config_load_from_lua(Config* c)
 {
   dd("config load from lua");
+  lua_State* l = c->lua;
 
   lua_getglobal(l, CONFIG_TABLE_NAME);
 

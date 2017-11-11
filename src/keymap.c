@@ -51,9 +51,10 @@ void custom_key_pair_free(CustomKeyPair* pair)
 }
 
 
-Keymap* keymap_init()
+Keymap* keymap_init(lua_State* lua)
 {
   Keymap* keymap = g_malloc0(sizeof(Keymap));
+  keymap->lua = lua;
   keymap->custom_key_pairs = NULL;
   keymap->has_custom = false;
   return keymap;
@@ -75,10 +76,11 @@ void keymap_close(Keymap* keymap)
 }
 
 
-void keymap_prepare_lua(Keymap* keymap, lua_State* l)
+void keymap_prepare_lua(Keymap* keymap)
 {
   dd("keymap prepare lua");
-  UNUSED(keymap);
+
+  lua_State* l = keymap->lua;
   lua_newtable(l);
   lua_setglobal(l, KEYMAP_TABLE_NAME);
 }
@@ -88,10 +90,11 @@ void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
   keymap->custom_key_pairs = g_slist_append(keymap->custom_key_pairs, pair);
 }
 
-void keymap_load_from_lua(Keymap* keymap, lua_State* l)
+void keymap_load_from_lua(Keymap* keymap)
 {
   dd("keymap load from lua");
 
+  lua_State* l = keymap->lua;
   lua_getglobal(l, KEYMAP_TABLE_NAME);
 
   if (lua_isnil(l, -1)) {
@@ -119,7 +122,7 @@ void keymap_load_from_lua(Keymap* keymap, lua_State* l)
       pair->mod = mod;
       pair->func_key = g_strdup(lua_tostring(l, -1));
       keymap_add_custom(keymap, pair);
-      dd("loaded: %s", accelator);
+      dd("loaded: %s mod: %x key: %x", accelator, mod, key);
     } else {
       g_print("warning: `%s` is invalid accelator.\n", accelator);
     }
@@ -131,12 +134,13 @@ void keymap_load_from_lua(Keymap* keymap, lua_State* l)
 }
 
 
-bool keymap_perform_custom(Keymap* keymap, lua_State* l, unsigned key, GdkModifierType mod)
+bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod)
 {
   if (!keymap->has_custom) {
     return false;
   }
 
+  lua_State* l = keymap->lua;
   for (GSList* li = keymap->custom_key_pairs; li != NULL; li = li->next) {
     CustomKeyPair* pair = (CustomKeyPair*)li->data;
     if ((key == pair->key) && !(~mod & pair->mod)) {

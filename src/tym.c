@@ -11,6 +11,10 @@
 #include "context.h"
 
 
+typedef struct {
+  char* config_file_path;
+} BootOption;
+
 static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
 {
   UNUSED(widget);
@@ -25,7 +29,16 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
   return false;
 }
 
-static void quit(VteTerminal *vte, int status, void* user_data)
+
+static void on_shutdown(GApplication* app, void* user_data)
+{
+  UNUSED(app);
+
+  Context* context = (Context*) user_data;
+  context_close(context);
+}
+
+static void on_child_exited(VteTerminal *vte, int status, void* user_data)
 {
   UNUSED(vte);
   UNUSED(status);
@@ -49,7 +62,8 @@ static void spawn_callback(VteTerminal *vte, GPid pid, GError *error, void* user
 static void activate(GtkApplication* app, void* user_data)
 {
   dd("activate");
-  Context* context = (Context*)user_data;
+
+  BootOption* boot_option = (BootOption*) user_data;
 
   GList* list = gtk_application_get_windows(app);
   if (list) {
@@ -64,11 +78,13 @@ static void activate(GtkApplication* app, void* user_data)
   VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
   vte_terminal_set_rewrap_on_resize(vte, true);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(quit), app);
-  g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
-  context_set_app(context, app);
-  context_set_vte(context, vte);
+
+  Context* context = context_init(boot_option->config_file_path, app, vte);
   context_load_config(context, true);
+
+  g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
+  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), app);
+  g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
 
   char* argv[] = { config_get_shell(context->config), NULL };
   char** env = g_get_environ();
@@ -124,10 +140,10 @@ int main(int argc, char* argv[])
   int exit_code = EXIT_SUCCESS;
 
   bool version = false;
-  char* config_file_path = NULL;
+  BootOption* boot_option = g_malloc0(sizeof(BootOption));
   GOptionEntry entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show Version", NULL },
-    { "use", 'u', 0, G_OPTION_ARG_STRING, &config_file_path,  "Use <path> instead of default config file", "<path>"},
+    { "use", 'u', 0, G_OPTION_ARG_STRING, &boot_option->config_file_path,  "Use <path> instead of default config file", "<path>"},
     { NULL }
   };
   GOptionContext* option_context = g_option_context_new("");
@@ -144,19 +160,14 @@ int main(int argc, char* argv[])
     goto CLEANUP;
   }
 
-  Context* context = context_init(config_file_path);
-
   GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_NON_UNIQUE);
-  g_signal_connect(app, "activate", G_CALLBACK(activate), context);
+  g_signal_connect(app, "activate", G_CALLBACK(activate), boot_option);
   exit_code = g_application_run(G_APPLICATION(app), argc, argv);
   g_object_unref(app);
 
-  context_close(context);
-
 CLEANUP:
-  if (config_file_path) {
-    g_free(config_file_path);
-  }
+  dd("cleanup");
+  g_free(boot_option);
   g_option_context_free(option_context);
   return exit_code;
 }

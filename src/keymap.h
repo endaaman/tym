@@ -13,18 +13,19 @@
 #include "common.h"
 
 typedef struct {
+  lua_State* lua;
   bool has_custom;
   GSList* custom_key_pairs;
 } Keymap;
 
-Keymap* keymap_init();
+Keymap* keymap_init(lua_State* l);
 void keymap_close(Keymap* keymap);
 void keymap_reset(Keymap* keymap);
 
-void keymap_prepare_lua(Keymap* keymap, lua_State* l);
-void keymap_load_from_lua(Keymap* keymap, lua_State* l);
+void keymap_prepare_lua(Keymap* keymap);
+void keymap_load_from_lua(Keymap* keymap);
 
-bool keymap_perform_custom(Keymap* keymap, lua_State* l, unsigned key, GdkModifierType mod);
+bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod);
 bool keymap_perform_default(Keymap* keymap, void* context, unsigned key, GdkModifierType mod);
 
 #endif
