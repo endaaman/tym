@@ -22,6 +22,18 @@
 
 #define UNUSED(x) (void)(x)
 
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 48
+#define USE_ASYNC_SPAWN
+#endif
+#endif
+
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 50
+#define USE_COPY_CLIPBOARD_FORMAT
+#endif
+#endif
+
 #ifdef DEBUG
   #define dd( fmt, ... ) \
     g_print("[%s:%u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)

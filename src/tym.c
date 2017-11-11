@@ -11,12 +11,6 @@
 #include "context.h"
 
 
-#if VTE_MAJOR_VERSION == 0
-#if VTE_MINOR_VERSION >= 48
-#define USE_ASYNC_SPAWN
-#endif
-#endif
-
 static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
 {
   UNUSED(widget);
