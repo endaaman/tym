@@ -8,7 +8,7 @@
  */
 
 #include "embedded.h"
-#include "builtin.h"
+#include "command.h"
 
 
 static const char* LIB_NAME = "tym";
@@ -69,48 +69,48 @@ static int reload(lua_State* l)
     g_print("warning: this function must be called by shortcut key event.");
     return 0;
   }
-  builtin_reload(context);
+  command_reload(context);
   return 0;
 }
 
 static int copy_clipboard(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_reload(context);
+  command_reload(context);
   return 0;
 }
 
 static int paste_clipboard(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_paste_clipboard(context);
+  command_paste_clipboard(context);
   return 0;
 }
 
 static int increase_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_increase_font_scale(context);
+  command_increase_font_scale(context);
   return 0;
 }
 
 static int decrease_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_decrease_font_scale(context);
+  command_decrease_font_scale(context);
   return 0;
 }
 
 static int reset_font_scale(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  builtin_reset_font_scale(context);
+  command_reset_font_scale(context);
   return 0;
 }
 
 void context_embed_functions(Context* context)
 {
-  const luaL_Reg BUILTIN_FUNCTIONS[] = {
+  const luaL_Reg command_FUNCTIONS[] = {
     { "get_version", get_version },
     { "get_config_file_path", get_config_file_path },
     { "notify", notify },
@@ -125,8 +125,8 @@ void context_embed_functions(Context* context)
   };
 
   lua_State* l = context->lua;
-  luaL_newlibtable(l, BUILTIN_FUNCTIONS);
+  luaL_newlibtable(l, command_FUNCTIONS);
   lua_pushlightuserdata(l, context);
-  luaL_setfuncs(l, BUILTIN_FUNCTIONS, 1);
+  luaL_setfuncs(l, command_FUNCTIONS, 1);
   lua_setglobal(l, LIB_NAME);
 }

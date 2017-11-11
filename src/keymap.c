@@ -9,20 +9,20 @@
 
 #include "keymap.h"
 #include "context.h"
-#include "builtin.h"
+#include "command.h"
 
-typedef void (*TymBuiltinFunc)(Context* context);
+typedef void (*TymcommandFunc)(Context* context);
 
 
 typedef struct {
   const char* accel_name;
-  TymBuiltinFunc func;
+  TymcommandFunc func;
 } DefaultKeyPairDefinition;
 
 typedef struct {
   unsigned key;
   GdkModifierType mod;
-  TymBuiltinFunc func;
+  TymcommandFunc func;
 } DefaultKeyPair;
 
 typedef struct {
@@ -35,12 +35,12 @@ static const char* KEYMAP_TABLE_NAME = "keymap";
 static GSList* default_key_pairs;
 
 static DefaultKeyPairDefinition default_key_pair_definition[] = {
-  { "<Ctrl><Shift>r", builtin_reload },
-  { "<Ctrl>plus", builtin_increase_font_scale },
-  { "<Ctrl>minus", builtin_decrease_font_scale },
-  { "<Ctrl>equal", builtin_reset_font_scale, },
-  { "<Ctrl><Shift>c", builtin_copy_clipboard },
-  { "<Ctrl><Shift>v", builtin_paste_clipboard },
+  { "<Ctrl><Shift>r", command_reload },
+  { "<Ctrl>plus", command_increase_font_scale },
+  { "<Ctrl>minus", command_decrease_font_scale },
+  { "<Ctrl>equal", command_reset_font_scale, },
+  { "<Ctrl><Shift>c", command_copy_clipboard },
+  { "<Ctrl><Shift>v", command_paste_clipboard },
   { NULL, NULL },
 };
 
