@@ -16,6 +16,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <gtk/gtk.h>
 #include <vte/vte.h>
 #include "../config.h"

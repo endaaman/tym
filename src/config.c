@@ -65,7 +65,7 @@ static void init_config_fields()
   // Append `color_123` field
   char numbered_color_key[10];
   for (unsigned i = 0; i < 256; i++) {
-    sprintf(numbered_color_key, "color_%d", i);
+    g_sprintf(numbered_color_key, "color_%d", i);
     str_config_fields = g_slist_append(str_config_fields, g_strdup(numbered_color_key));
   }
 
@@ -310,7 +310,7 @@ void config_apply_colors(Config* c, VteTerminal* vte)
   GdkRGBA* palette = g_new0(GdkRGBA, 16);
   char key[10];
   for (unsigned i = 0; i < 16; i++) {
-    sprintf(key, "color_%d", i);
+    g_sprintf(key, "color_%d", i);
     if (config_has_str(c, key)) {
       bool valid = gdk_rgba_parse(&palette[i], config_get_str(c, key));
       if (valid) {
