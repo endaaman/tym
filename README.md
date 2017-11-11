@@ -6,15 +6,13 @@
 
 ## Motivation
 
-[`termite`](https://github.com/thestinger/termite) is a very simple and wonderful terminal emulator. Unfortunately `vte-ng` on which terminite depends conflicts with `vte`, making it difficult to coexist with `GNOME Terminal` and other `vte` dependents.
+I wanted a teminal emulator that is
 
-In the first place the feature that causes conflicts is not needed for me because tmux has similar one (copy mode). So I wanted a terminal emulator that is
-
-- simple (no menu bar, GUI setting window etc..)
 - original VTE-based
-- configurable by text file
+- simple (no menu bar, GUI setting window etc..)
+- well configurable
 
-, but I could not find it, so I made it.
+but I could not find it so I made it.
 
 ## Dependencies
 
@@ -24,7 +22,7 @@ In the first place the feature that causes conflicts is not needed for me becaus
 
 ## Configration
 
-When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed with the global table variable `config` defined. You can do configuration by modifying `config`. For example you can write for
+When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed with the table `config` defined. You can do configuration by modifying `config`. For example you can write for
 
 ```lua
 config.height = 30
@@ -102,13 +100,9 @@ color_15 : white
 
 ### Customize
 
-You can register functions in a table named `keymap` in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
+You can register functions in a table named `keymap` (defaultly defined the same `config`) in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
 
 ```lua
--- Since an empty `keymap` table is automatically created globally, it will work without this description.
--- But it is necessary to have compatibility with versions older than 1.0.0
-keymap = {}
-
 keymap['<Shift><Ctrl>u'] = function()
   tym.notify('Pressed C-S-u')
 end
@@ -136,9 +130,17 @@ end
 | `tym.reset_font_scale()`             | void           | Reset font scale.                               |
 
 
-## Tips
+## Options
 
-If you want to start with the default settings, try below
+### `--use, -u`
+
+You can load preferred config file using `--use, -u`.
+
+```console
+$ tym --use /path/to/config.lua
+```
+
+You can also start without loading default `config.lua`.
 
 ```console
 $ tym -u NONE
@@ -151,7 +153,6 @@ Download source code from [release page](https://github.com/endaaman/tym/release
 ```console
 $ ./configure
 $ make
-$ sudo make install   // if you want to intall
 ```
 
 Check [wiki](https://github.com/endaaman/tym/wiki) for build dependencies in other distros.
@@ -164,6 +165,8 @@ If you are an Arch linux user, just do
 $ yaourt -S tym
 ```
 
+or compile and do `sudo make install`.
+
 ## Development
 
 Clone and do
@@ -172,7 +175,11 @@ Clone and do
 $ autoreconf -fvi
 ```
 
-, and you will get `configure` script.
+Then you will get `configure` script.
+
+## Tips
+
+If you want to know more about configuration, see my [config.lua](https://github.com/endaaman/dotfiles/blob/master/tym/config.lua)
 
 ## License
 
