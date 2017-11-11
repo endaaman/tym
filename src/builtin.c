@@ -19,7 +19,12 @@ void builtin_reload(Context* context)
 void builtin_copy_clipboard(Context* context)
 {
   dd("builtin_copy_clipboard");
+#ifdef USE_COPY_CLIPBOARD_FORMAT
+  vte_terminal_copy_clipboard_format(context->vte, VTE_FORMAT_TEXT);
+#else
   vte_terminal_copy_clipboard(context->vte);
+#endif
+
   vte_terminal_unselect_all(context->vte);
 }
 
