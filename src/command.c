@@ -14,8 +14,6 @@ static const char* DEFAULT_NOTIFICATION_TITLE = "tym";
 
 void command_notify(Context* context, const char* body, const char* title)
 {
-  dd("command_notify");
-
   GtkApplication* app = context->app;
 
   GNotification* notification = g_notification_new(title ? title : DEFAULT_NOTIFICATION_TITLE);
@@ -31,13 +29,11 @@ void command_notify(Context* context, const char* body, const char* title)
 
 void command_reload(Context* context)
 {
-  dd("command_reload");
   context_load(context);
 }
 
 void command_copy_clipboard(Context* context)
 {
-  dd("command_copy_clipboard");
 #ifdef USE_COPY_CLIPBOARD_FORMAT
   vte_terminal_copy_clipboard_format(context->vte, VTE_FORMAT_TEXT);
 #else
@@ -49,13 +45,11 @@ void command_copy_clipboard(Context* context)
 
 void command_paste_clipboard(Context* context)
 {
-  dd("command_paste_clipboard");
   vte_terminal_paste_clipboard(context->vte);
 }
 
 void command_increase_font_scale(Context* context)
 {
-  dd("command_increase_font_scale");
   VteTerminal* vte = context->vte;
 
   double scale = vte_terminal_get_font_scale(vte) + 0.1;
@@ -64,7 +58,6 @@ void command_increase_font_scale(Context* context)
 
 void command_decrease_font_scale(Context* context)
 {
-  dd("command_decrease_font_scale");
   VteTerminal* vte = context->vte;
 
   double scale = vte_terminal_get_font_scale(vte) - 0.1;
@@ -73,6 +66,5 @@ void command_decrease_font_scale(Context* context)
 
 void command_reset_font_scale(Context* context)
 {
-  dd("command_reset_font_scale");
   vte_terminal_set_font_scale(context->vte, 1.0);
 }
