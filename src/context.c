@@ -22,7 +22,7 @@ static void context_embed_builtin_functions(Context* context); // declare forwar
 
 Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte)
 {
-  dd("context init");
+  dd("init");
 
   Context* context = g_malloc0(sizeof(Context));
 
@@ -33,7 +33,7 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
   if (0 == g_strcmp0(config_file_path, USE_DEFAULT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
     context->config_file_path = NULL;
-    g_print("info: starting with default config\n");
+    g_message("starting with default config");
   } else {
     char* challenging_config_file_path = NULL;
     if (!config_file_path) {
@@ -48,10 +48,10 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
       challenging_config_file_path = g_strdup(config_file_path);
     }
 
-    if (g_file_test(challenging_config_file_path, G_FILE_TEST_EXISTS)) {
+    if (g_file_test(challenging_config_file_path, G_FILE_TEST_IS_REGULAR)) {
       context->config_file_path = challenging_config_file_path;
     } else {
-      g_print("warning: `%s` does not exist. starting with default config\n", challenging_config_file_path);
+      g_warning("`%s` is not regular file. starting with default config", challenging_config_file_path);
       g_free(challenging_config_file_path);
     }
   }
@@ -67,7 +67,7 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
 
 void context_close(Context* context)
 {
-  dd("context close");
+  dd("close");
 
   lua_close(context->lua);
   g_free(context->config_file_path);
@@ -76,17 +76,28 @@ void context_close(Context* context)
   g_free(context);
 }
 
-void context_load_config(Context* context)
+
+static void context_on_load_error(Context* context, const char* error)
 {
-  dd("context load config start");
+  char* message = g_strdup_printf("error in %s: %s", context->config_file_path, error);
+  g_warning(message);
+  command_notify(context, message, NULL);
+  g_free(message);
+}
+
+void context_load(Context* context)
+{
+  dd("load start");
 
   if (!context->config_file_path) {
     // Running without config
+    dd("load exit for running with out config");
     return;
   }
 
   if (context->loading) {
-    g_print("warning: tried to load config recursively\n");
+    dd("load exit for recursive loading");
+    g_warning("tried to load config recursively");
     return;
   }
 
@@ -96,33 +107,48 @@ void context_load_config(Context* context)
   keymap_reset(context->keymap);
 
   if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
+    dd("load exit for the file(%s) does not exists", context->config_file_path);
     // Warn only if user config file provided
-    g_print("warning: `%s` does not exist. skipping loading\n", context->config_file_path);
+    g_warning("`%s` does not exist. skipping loading", context->config_file_path);
     goto EXIT;
   }
 
-  config_prepare_lua(context->config);
-  keymap_prepare_lua(context->keymap);
+  config_prepare(context->config);
+  keymap_prepare(context->keymap);
 
   lua_State* l = context->lua;
   luaL_loadfile(l, context->config_file_path);
 
   if (lua_pcall(l, 0, 0, 0)) {
     const char* error = lua_tostring(l, -1);
-    g_print("warning: encoutered lua error in `%s`\n", context->config_file_path);
-    g_print("warning: message is `%s`\n", error);
-    g_print("warning: starting with default config\n");
-    char* body = g_strdup_printf("tym: config error `%s`", error);
-    command_notify(context, error, body);
-    g_free(body);
+    dd("load exit for lua error: %s", error);
+    context_on_load_error(context, error);
+    g_message("starting with default config and keymap");
     goto EXIT;
   }
 
-  config_load_from_lua(context->config);
-  keymap_load_from_lua(context->keymap);
+  char* error = NULL;
 
-  config_apply_all(context->config, context->vte);
-  dd("context load config end");
+  config_load(context->config, &error);
+  if (error) {
+    dd("load exit for config load error: %s", error);
+    context_on_load_error(context, error);
+    g_message("starting with default config");
+    g_free(error);
+    goto EXIT;
+  }
+
+  keymap_load(context->keymap, &error);
+  if (error) {
+    dd("load exit for keymap load error: %s", error);
+    context_on_load_error(context, error);
+    g_message("starting without custom keymap");
+    g_free(error);
+    goto EXIT;
+  }
+
+  config_apply(context->config, context->vte);
+  dd("load successfully finished");
 
 EXIT:
   context->loading = false;

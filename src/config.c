@@ -131,6 +131,7 @@ Config* config_init(lua_State* lua)
     (GDestroyNotify)g_free,
     (GDestroyNotify)g_free
   );
+  config_reset(c);
   return c;
 }
 
@@ -144,7 +145,7 @@ static void* config_get_raw(Config* c, const char* key)
 {
   void* ptr = g_hash_table_lookup(c->data, key);
   if (!ptr) {
-    g_print("warning: tried to refer null field: `%s`.\n", key);
+    g_warning("tried to refer null field: `%s`", key);
   }
   return g_hash_table_lookup(c->data, key);
 }
@@ -223,7 +224,7 @@ void config_reset(Config* c)
   config_set_bool(c, "use_default_keymap", true);
 }
 
-void config_prepare_lua(Config* c)
+void config_prepare(Config* c)
 {
   lua_State* l = c->lua;
 
@@ -254,11 +255,23 @@ void config_prepare_lua(Config* c)
   lua_setglobal(l, CONFIG_TABLE_NAME);
 }
 
-void config_load_from_lua(Config* c)
+void config_load(Config* c, char** error)
 {
   lua_State* l = c->lua;
 
   lua_getglobal(l, CONFIG_TABLE_NAME);
+
+  if (lua_isnil(l, -1)) {
+    // no error for nil
+    lua_pop(l, 1);
+    return;
+  }
+
+  if (!lua_istable(l, -1)) {
+    *error = g_strdup_printf("`%s` is not table", CONFIG_TABLE_NAME);
+    lua_pop(l, 1);
+    return;
+  }
 
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
@@ -322,7 +335,7 @@ void config_apply_colors(Config* c, VteTerminal* vte)
   vte_terminal_set_colors(vte, NULL, NULL, palette, 16);
 }
 
-void config_apply_all(Config* c, VteTerminal* vte)
+void config_apply(Config* c, VteTerminal* vte)
 {
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
 

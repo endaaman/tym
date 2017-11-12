@@ -80,7 +80,7 @@ static void on_activate(GtkApplication* app, void* user_data)
   vte_terminal_set_rewrap_on_resize(vte, true);
 
   Context* context = context_init(boot_option->config_file_path, app, vte);
-  context_load_config(context);
+  context_load(context);
 
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), app);

@@ -20,9 +20,9 @@ typedef struct {
 Config* config_init(lua_State* lua);
 void config_close(Config* c);
 void config_reset(Config* c);
-void config_prepare_lua(Config* c);
-void config_load_from_lua(Config* c);
-void config_apply_all(Config* c, VteTerminal* vte);
+void config_prepare(Config* c);
+void config_load(Config* c, char** error);
+void config_apply(Config* c, VteTerminal* vte);
 char* config_get_shell(Config* c);
 bool config_get_use_default_keymap(Config* c);
 

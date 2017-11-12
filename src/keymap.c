@@ -57,6 +57,8 @@ Keymap* keymap_init(lua_State* lua)
   keymap->lua = lua;
   keymap->custom_key_pairs = NULL;
   keymap->has_custom = false;
+
+  keymap_reset(keymap);
   return keymap;
 }
 
@@ -75,7 +77,7 @@ void keymap_close(Keymap* keymap)
 }
 
 
-void keymap_prepare_lua(Keymap* keymap)
+void keymap_prepare(Keymap* keymap)
 {
   lua_State* l = keymap->lua;
   lua_newtable(l);
@@ -87,18 +89,19 @@ void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
   keymap->custom_key_pairs = g_slist_append(keymap->custom_key_pairs, pair);
 }
 
-void keymap_load_from_lua(Keymap* keymap)
+void keymap_load(Keymap* keymap, char** error)
 {
   lua_State* l = keymap->lua;
   lua_getglobal(l, KEYMAP_TABLE_NAME);
 
   if (lua_isnil(l, -1)) {
+    // no error for nil
     lua_pop(l, 1);
     return;
   }
 
   if (!lua_istable(l, -1)) {
-    g_print("warning: `%s` is not table.\n", KEYMAP_TABLE_NAME);
+    *error = g_strdup_printf("`%s` is not table", KEYMAP_TABLE_NAME);
     lua_pop(l, 1);
     return;
   }
@@ -119,7 +122,7 @@ void keymap_load_from_lua(Keymap* keymap)
       keymap_add_custom(keymap, pair);
       dd("loaded: %s mod: %x key: %x", accelator, mod, key);
     } else {
-      g_print("warning: `%s` is invalid accelator.\n", accelator);
+      g_warning("`%s` is invalid accelator", accelator);
     }
     lua_pop(l, 2);
   }
@@ -142,7 +145,7 @@ bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod)
       lua_getglobal(l, KEYMAP_TABLE_NAME);
       lua_getfield(l, -1, pair->func_key);
       if (0 != lua_pcall(l, 0, 0, 0)) {
-        g_print("error: %s\n", lua_tostring(l, -1));
+        g_warning("lua error: %s", lua_tostring(l, -1));
         lua_pop(l, 1);
       }
       lua_pop(l, 1);

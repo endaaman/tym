@@ -36,16 +36,16 @@
 #endif
 
 #ifdef DEBUG
-  #define dd( fmt, ... ) \
-    g_print("[%s:%u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define dd( fmt, ... ) \
+  g_print("[%s:%u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-  #define dd( ... ) ((void)0)
+#define dd( ... ) ((void)0)
 #endif
 
 #ifdef DEBUG
-  #define dump_stack(x) debug_dump_stack(x)
+#define dump_stack(x) debug_dump_stack(x)
 #else
-  #define dump_stack(...) ((void)0)
+#define dump_stack(...) ((void)0)
 #endif
 
 #endif
