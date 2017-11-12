@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 rm -rf Makefile
 rm -rf Makefile.in
 rm -rf aclocal.m4
