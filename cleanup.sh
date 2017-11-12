@@ -8,8 +8,6 @@ rm -rf aclocal.m4
 rm -rf autom4te.cache/
 rm -rf aux-dist/
 rm -rf compile
-rm -rf config.h.in
-rm -rf config.h
 rm -rf config.log
 rm -rf config.status
 rm -rf configure
@@ -34,6 +32,8 @@ rm -rf src/toollib/.deps
 rm -rf src/toollib/.dirstamp
 rm -rf stamp-h1
 
+rm -rf config.h.in
+rm -rf config.h
 rm -rf src/version.h
 rm -rf src/tym
 

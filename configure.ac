@@ -7,7 +7,7 @@ m4_define([tym_micro_version],[3])
 m4_define([tym_version],[tym_major_version().tym_minor_version().tym_micro_version()])
 
 AC_PREREQ([2.69])
-AC_INIT([tym], [tym_version()])
+AC_INIT([tym], [tym_version()], [], [tym], [https://github.com/endaaman/tym])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/tym.c])
 AC_CONFIG_HEADERS([config.h:config.h.in])
