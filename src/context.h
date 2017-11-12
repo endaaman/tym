@@ -19,10 +19,9 @@ typedef struct {
   VteTerminal* vte;
   lua_State* lua;
   char* config_file_path;
-  bool use_default_config_file;
   Config* config;
   Keymap* keymap;
-  bool running_in_keybinding;
+  bool loading;
 } Context;
 
 

@@ -56,15 +56,12 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
     }
   }
 
-
   context->app = app;
   context->vte = vte;
-
   context->config = config_init(l);
   context->keymap = keymap_init(l);
 
   context_embed_builtin_functions(context);
-
   return context;
 }
 
@@ -83,18 +80,25 @@ void context_load_config(Context* context)
 {
   dd("context load config start");
 
-  config_reset(context->config);
-  keymap_reset(context->keymap);
-
   if (!context->config_file_path) {
     // Running without config
     return;
   }
 
+  if (context->loading) {
+    g_print("warning: tried to load config recursively\n");
+    return;
+  }
+
+  context->loading = true;
+
+  config_reset(context->config);
+  keymap_reset(context->keymap);
+
   if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
     // Warn only if user config file provided
     g_print("warning: `%s` does not exist. skipping loading\n", context->config_file_path);
-    return;
+    goto EXIT;
   }
 
   config_prepare_lua(context->config);
@@ -111,7 +115,7 @@ void context_load_config(Context* context)
     char* body = g_strdup_printf("tym: config error `%s`", error);
     command_notify(context, error, body);
     g_free(body);
-    return;
+    goto EXIT;
   }
 
   config_load_from_lua(context->config);
@@ -119,6 +123,10 @@ void context_load_config(Context* context)
 
   config_apply_all(context->config, context->vte);
   dd("context load config end");
+
+EXIT:
+  context->loading = false;
+  return;
 }
 
 

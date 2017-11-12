@@ -51,10 +51,6 @@ int builtin_reload(lua_State* l)
   if (!context->config_file_path) {
     return 0;
   }
-  if (context->running_in_keybinding) {
-    g_print("warning: this function must be called by shortcut key event.");
-    return 0;
-  }
   command_reload(context);
   return 0;
 }

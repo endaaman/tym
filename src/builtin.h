@@ -11,7 +11,6 @@
 #define EMBEDDED_H
 
 #include "common.h"
-#include "context.h"
 
 
 int builtin_get_version(lua_State* l);
