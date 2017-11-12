@@ -22,7 +22,7 @@ void config_close(Config* c);
 void config_reset(Config* c);
 void config_prepare_lua(Config* c);
 void config_load_from_lua(Config* c);
-void config_apply_all(Config* c, VteTerminal* vte, bool is_startup);
+void config_apply_all(Config* c, VteTerminal* vte);
 char* config_get_shell(Config* c);
 bool config_get_use_default_keymap(Config* c);
 

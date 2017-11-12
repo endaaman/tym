@@ -32,7 +32,7 @@ void command_notify(Context* context, const char* body, const char* title)
 void command_reload(Context* context)
 {
   dd("command_reload");
-  context_load_config(context, false);
+  context_load_config(context);
 }
 
 void command_copy_clipboard(Context* context)

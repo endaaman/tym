@@ -322,7 +322,7 @@ void config_apply_colors(Config* c, VteTerminal* vte)
   vte_terminal_set_colors(vte, NULL, NULL, palette, 16);
 }
 
-void config_apply_all(Config* c, VteTerminal* vte, bool is_startup)
+void config_apply_all(Config* c, VteTerminal* vte)
 {
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
 
@@ -334,23 +334,19 @@ void config_apply_all(Config* c, VteTerminal* vte, bool is_startup)
   int width = config_get_int(c, "width");
   int height = config_get_int(c, "height");
   if (0 < width && 0 < height) {
-    if (is_startup){
-      vte_terminal_set_size(vte, width, height);
-    } else {
-      GtkBorder border;
-      gtk_style_context_get_padding(
-        gtk_widget_get_style_context(GTK_WIDGET(vte)),
-        gtk_widget_get_state_flags(GTK_WIDGET(vte)),
-        &border
-      );
-      const int char_width = vte_terminal_get_char_width(vte);
-      const int char_height = vte_terminal_get_char_height(vte);
-      gtk_window_resize(
-        window,
-        width * char_width + border.left + border.right,
-        height * char_height + border.top + border.bottom
-      );
-    }
+    GtkBorder border;
+    gtk_style_context_get_padding(
+      gtk_widget_get_style_context(GTK_WIDGET(vte)),
+      gtk_widget_get_state_flags(GTK_WIDGET(vte)),
+      &border
+    );
+    const int char_width = vte_terminal_get_char_width(vte);
+    const int char_height = vte_terminal_get_char_height(vte);
+    gtk_window_resize(
+      window,
+      width * char_width + border.left + border.right,
+      height * char_height + border.top + border.bottom
+    );
   }
 
   if (config_has_str(c, "font")) {

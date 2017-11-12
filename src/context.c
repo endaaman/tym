@@ -79,7 +79,7 @@ void context_close(Context* context)
   g_free(context);
 }
 
-void context_load_config(Context* context, bool is_startup)
+void context_load_config(Context* context)
 {
   dd("context load config start");
 
@@ -117,7 +117,7 @@ void context_load_config(Context* context, bool is_startup)
   config_load_from_lua(context->config);
   keymap_load_from_lua(context->keymap);
 
-  config_apply_all(context->config, context->vte, is_startup);
+  config_apply_all(context->config, context->vte);
   dd("context load config end");
 }
 
