@@ -173,7 +173,6 @@ EXIT:
   return;
 }
 
-
 static void context_embed_builtin_functions(Context* context)
 {
   const luaL_Reg table[] = {
@@ -197,7 +196,7 @@ static void context_embed_builtin_functions(Context* context)
   lua_setglobal(l, LIB_NAME);
 }
 
-bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
+static bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
 {
   unsigned i = 0;
   while (default_key_pairs[i].func) {
@@ -210,7 +209,7 @@ bool context_perform_default(Context* context, unsigned key, GdkModifierType mod
   return false;
 }
 
-bool context_on_key(Context* context, unsigned key, GdkModifierType mod)
+bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 {
   char* error;
   if (keymap_perform_custom(context->keymap, key, mod, &error)) {

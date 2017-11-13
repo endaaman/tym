@@ -28,6 +28,6 @@ typedef struct {
 Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte);
 void context_close(Context* context);
 void context_load(Context* context);
-bool context_on_key(Context* context, unsigned key, GdkModifierType mod);
+bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
 
 #endif

@@ -61,7 +61,7 @@ void keymap_prepare(Keymap* keymap)
   lua_setglobal(l, KEYMAP_TABLE_NAME);
 }
 
-void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
+static void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
 {
   keymap->custom_key_pairs = g_slist_append(keymap->custom_key_pairs, pair);
 }

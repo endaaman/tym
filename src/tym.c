@@ -23,7 +23,7 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
   unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
   unsigned key = gdk_keyval_to_lower(event->keyval);
 
-  if (context_on_key(context, key, mod)) {
+  if (context_perform_keymap(context, key, mod)) {
     return true;
   }
   return false;
@@ -48,7 +48,7 @@ static void on_child_exited(VteTerminal *vte, int status, void* user_data)
 }
 
 #ifdef USE_ASYNC_SPAWN
-static void spawn_callback(VteTerminal *vte, GPid pid, GError *error, void* user_data)
+static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
 {
   UNUSED(vte);
   UNUSED(pid);
@@ -102,7 +102,7 @@ static void on_activate(GtkApplication* app, void* user_data)
     NULL,                // child_setup_data_destroy
     1000,                // timeout
     NULL,                // cancel callback
-    spawn_callback,      // callback
+    on_spawn,            // callback
     NULL                 // user_data */
   );
 #else
