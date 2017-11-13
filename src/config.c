@@ -9,24 +9,26 @@
 
 #include "config.h"
 
+#define CURSOR_BLINK_MODE_SYSTEM "system"
+#define CURSOR_BLINK_MODE_ON "on"
+#define CURSOR_BLINK_MODE_OFF "off"
+#define CJK_WIDTH_NARROW "narrow"
+#define CJK_WIDTH_WIDE "wide"
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
+typedef enum {
+  VTE_CJK_WIDTH_NARROW = 1,
+  VTE_CJK_WIDTH_WIDE = 2
+} VteCjkWidth;
 
 static const char* CONFIG_TABLE_NAME = "config";
+static const char* FALL_BACK_SHELL = "/bin/sh";
 
-static const char* DEFAULT_TITLE = "tym";
 static const int DEFAULT_WIDTH = 80;
 static const int DEFAULT_HEIGHT = 22;
-static const char* FALL_BACK_SHELL = "/bin/sh";
-static const char* CURSOR_BLINK_MODE_SYSTEM = "system";
-static const char* CURSOR_BLINK_MODE_ON = "on";
-static const char* CURSOR_BLINK_MODE_OFF = "off";
-
-static const unsigned VTE_CJK_WIDTH_NARROW = 1;
-static const unsigned VTE_CJK_WIDTH_WIDE = 2;
-
-static const char* CJK_WIDTH_NARROW = "narrow";
-static const char* CJK_WIDTH_WIDE = "wide";
+static const char* DEFAULT_TITLE = "tym";
+static const char* DEFAULT_BLINK_MODE = CURSOR_BLINK_MODE_SYSTEM;
+static const char* DEFAULT_CJK = CJK_WIDTH_NARROW;
 
 static GSList* str_config_fields = NULL;
 static GSList* int_config_fields = NULL;
@@ -209,8 +211,8 @@ void config_reset(Config* c)
   g_free(default_shell);
   config_set_str(c, "title", DEFAULT_TITLE);
   config_set_str(c, "font", "");
-  config_set_str(c, "cjk_width", CJK_WIDTH_NARROW);
-  config_set_str(c, "cursor_blink_mode", CURSOR_BLINK_MODE_SYSTEM);
+  config_set_str(c, "cjk_width", DEFAULT_CJK);
+  config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
   for (GSList* li = str_config_fields; li != NULL; li = li->next) {
     const char* key = (char*)li->data;
     // Set empty value if start with "color_"
