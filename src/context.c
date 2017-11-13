@@ -12,6 +12,14 @@
 #include "builtin.h"
 
 
+typedef void (*TymCommandFunc)(Context* context);
+
+typedef struct {
+  unsigned key;
+  GdkModifierType mod;
+  TymCommandFunc func;
+} KeyPair;
+
 static const char* CONFIG_FILE_NAME = "config.lua";
 static const char* USE_DEFAULT_CONFIG_SYMBOL = "NONE";
 static const char* CONFIG_DIR_NAME = "tym";
@@ -19,6 +27,16 @@ static const char* LIB_NAME = "tym";
 
 static void context_embed_builtin_functions(Context* context); // declare forward
 
+
+static KeyPair default_key_pairs[] = {
+  { GDK_KEY_plus,  GDK_CONTROL_MASK                 , command_increase_font_scale },
+  { GDK_KEY_minus, GDK_CONTROL_MASK                 , command_decrease_font_scale },
+  { GDK_KEY_equal, GDK_CONTROL_MASK                 , command_reset_font_scale    },
+  { GDK_KEY_c,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
+  { GDK_KEY_v,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
+  { GDK_KEY_r,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
+  { 0,             0                                , NULL                        },
+};
 
 Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte)
 {
@@ -179,12 +197,29 @@ static void context_embed_builtin_functions(Context* context)
   lua_setglobal(l, LIB_NAME);
 }
 
+bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
+{
+  unsigned i = 0;
+  while (default_key_pairs[i].func) {
+    if ((key == default_key_pairs[i].key) && !(~mod & default_key_pairs[i].mod)) {
+      default_key_pairs[i].func(context);
+      return true;
+    }
+    i++;
+  }
+  return false;
+}
+
 bool context_on_key(Context* context, unsigned key, GdkModifierType mod)
 {
   if (keymap_perform_custom(context->keymap, key, mod)) {
     return true;
   }
-  if (config_get_use_default_keymap(context->config) && keymap_perform_default(context->keymap, context, key, mod)) {
+
+  if (
+    config_get_use_default_keymap(context->config) &&
+    context_perform_default(context, key, mod)
+  ) {
     return true;
   }
   return false;

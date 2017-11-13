@@ -11,19 +11,6 @@
 #include "context.h"
 #include "command.h"
 
-typedef void (*TymcommandFunc)(Context* context);
-
-
-typedef struct {
-  const char* accel_name;
-  TymcommandFunc func;
-} DefaultKeyPairDefinition;
-
-typedef struct {
-  unsigned key;
-  GdkModifierType mod;
-  TymcommandFunc func;
-} DefaultKeyPair;
 
 typedef struct {
   unsigned key;
@@ -31,18 +18,8 @@ typedef struct {
   char* func_key;
 } CustomKeyPair;
 
-static const char* KEYMAP_TABLE_NAME = "keymap";
-static GSList* default_key_pairs;
 
-static DefaultKeyPairDefinition default_key_pair_definition[] = {
-  { "<Ctrl><Shift>r", command_reload },
-  { "<Ctrl>plus", command_increase_font_scale },
-  { "<Ctrl>minus", command_decrease_font_scale },
-  { "<Ctrl>equal", command_reset_font_scale, },
-  { "<Ctrl><Shift>c", command_copy_clipboard },
-  { "<Ctrl><Shift>v", command_paste_clipboard },
-  { NULL, NULL },
-};
+static const char* KEYMAP_TABLE_NAME = "keymap";
 
 void custom_key_pair_free(CustomKeyPair* pair)
 {
@@ -153,36 +130,4 @@ bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod)
     }
   }
   return false;
-}
-
-bool keymap_perform_default(Keymap* keymap, void* context, unsigned key, GdkModifierType mod)
-{
-  UNUSED(keymap);
-  for (GSList* li = default_key_pairs; li != NULL; li = li->next) {
-    DefaultKeyPair* pair = (DefaultKeyPair*)li->data;
-    if ((key == pair->key) && !(~mod & pair->mod)) {
-      pair->func(context);
-      return true;
-    }
-  }
-  return false;
-}
-
-__attribute__((constructor))
-static void initialization() {
-  default_key_pairs = NULL;
-  int i = 0;
-  while (default_key_pair_definition[i].func) {
-    DefaultKeyPair* pair = g_malloc0(sizeof(DefaultKeyPair));
-    gtk_accelerator_parse(default_key_pair_definition[i].accel_name, &pair->key, &pair->mod);
-    pair->func = default_key_pair_definition[i].func;
-    default_key_pairs = g_slist_append(default_key_pairs, pair);
-    i = i + 1;
-  }
-}
-
-__attribute__((destructor))
-static void finalization() {
-  g_slist_foreach(default_key_pairs, (GFunc)g_free, NULL);
-  g_slist_free(default_key_pairs);
 }

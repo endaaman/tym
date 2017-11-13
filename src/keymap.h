@@ -24,6 +24,5 @@ void keymap_reset(Keymap* keymap);
 void keymap_prepare(Keymap* keymap);
 void keymap_load(Keymap* keymap, char** error);
 bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod);
-bool keymap_perform_default(Keymap* keymap, void* context, unsigned key, GdkModifierType mod);
 
 #endif

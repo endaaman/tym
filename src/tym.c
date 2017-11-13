@@ -54,7 +54,7 @@ static void spawn_callback(VteTerminal *vte, GPid pid, GError *error, void* user
   UNUSED(pid);
   UNUSED(user_data);
   if (error) {
-    g_printerr("error: %s\n", error->message);
+    g_warning("vte spwan failed for: %s", error->message);
   }
 }
 #endif
@@ -71,8 +71,8 @@ static void on_activate(GtkApplication* app, void* user_data)
     return;
   }
 
-  GtkWidget *window = gtk_application_window_new(app);
-  gtk_window_set_icon_name(GTK_WINDOW(window), "terminal");
+  GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
+  gtk_window_set_icon_name(window, "terminal");
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
   VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
@@ -131,8 +131,8 @@ static void on_activate(GtkApplication* app, void* user_data)
 
   g_strfreev(env);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
-  gtk_widget_show_all(window);
-  gtk_widget_show(window);
+  gtk_widget_show_all(GTK_WIDGET(window));
+  gtk_widget_show(GTK_WIDGET(window));
 }
 
 int main(int argc, char* argv[])
