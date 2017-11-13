@@ -7,8 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#ifndef BULTIN_H
-#define command_H
+#ifndef COMMAND_H
+#define COMMAND_H
 
 #include "common.h"
 #include "context.h"

@@ -1,5 +1,5 @@
 /**
- * bindings.h
+ * keymap.h
  *
  * Copyright (c) 2017 endaaman
  *

@@ -1,5 +1,5 @@
 /**
- * embedded.h
+ * builtin.h
  *
  * Copyright (c) 2017 endaaman
  *
@@ -7,8 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#ifndef EMBEDDED_H
-#define EMBEDDED_H
+#ifndef BUILTIN_H
+#define BUILTIN_H
 
 #include "common.h"
 
