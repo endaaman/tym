@@ -95,7 +95,7 @@ void context_close(Context* context)
 }
 
 
-static void context_on_load_error(Context* context, const char* error)
+static void context_on_lua_error(Context* context, const char* error)
 {
   char* message = g_strdup_printf("error in %s: %s", context->config_file_path, error);
   g_warning(message);
@@ -140,7 +140,7 @@ void context_load(Context* context)
   if (lua_pcall(l, 0, 0, 0)) {
     const char* error = lua_tostring(l, -1);
     dd("load exit for lua error: %s", error);
-    context_on_load_error(context, error);
+    context_on_lua_error(context, error);
     g_message("starting with default config and keymap");
     goto EXIT;
   }
@@ -150,7 +150,7 @@ void context_load(Context* context)
   config_load(context->config, &error);
   if (error) {
     dd("load exit for config load error: %s", error);
-    context_on_load_error(context, error);
+    context_on_lua_error(context, error);
     g_message("starting with default config");
     g_free(error);
     goto EXIT;
@@ -159,7 +159,7 @@ void context_load(Context* context)
   keymap_load(context->keymap, &error);
   if (error) {
     dd("load exit for keymap load error: %s", error);
-    context_on_load_error(context, error);
+    context_on_lua_error(context, error);
     g_message("starting without custom keymap");
     g_free(error);
     goto EXIT;
@@ -212,7 +212,12 @@ bool context_perform_default(Context* context, unsigned key, GdkModifierType mod
 
 bool context_on_key(Context* context, unsigned key, GdkModifierType mod)
 {
-  if (keymap_perform_custom(context->keymap, key, mod)) {
+  char* error;
+  if (keymap_perform_custom(context->keymap, key, mod, &error)) {
+    if (error) {
+      context_on_lua_error(context, error);
+      g_free(error);
+    }
     return true;
   }
 

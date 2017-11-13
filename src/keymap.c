@@ -97,7 +97,7 @@ void keymap_load(Keymap* keymap, char** error)
       pair->mod = mod;
       pair->func_key = g_strdup(lua_tostring(l, -1));
       keymap_add_custom(keymap, pair);
-      dd("loaded: %s mod: %x key: %x", accelator, mod, key);
+      dd("loaded: %s as key: 0x%x mod: 0x%x", accelator, mod, key);
     } else {
       g_warning("`%s` is invalid accelator", accelator);
     }
@@ -108,8 +108,7 @@ void keymap_load(Keymap* keymap, char** error)
   keymap->has_custom = true;
 }
 
-
-bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod)
+bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod, char** error)
 {
   if (!keymap->has_custom) {
     return false;
@@ -122,8 +121,7 @@ bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod)
       lua_getglobal(l, KEYMAP_TABLE_NAME);
       lua_getfield(l, -1, pair->func_key);
       if (0 != lua_pcall(l, 0, 0, 0)) {
-        g_warning("lua error: %s", lua_tostring(l, -1));
-        lua_pop(l, 1);
+        *error = g_strdup(lua_tostring(l, -1));
       }
       lua_pop(l, 1);
       return true;
