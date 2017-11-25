@@ -39,8 +39,6 @@ void command_copy_clipboard(Context* context)
 #else
   vte_terminal_copy_clipboard(context->vte);
 #endif
-
-  vte_terminal_unselect_all(context->vte);
 }
 
 void command_paste_clipboard(Context* context)
