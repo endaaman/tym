@@ -9,11 +9,8 @@
 
 #include "common.h"
 #include "context.h"
+#include "option.h"
 
-
-typedef struct {
-  char* config_file_path;
-} BootOption;
 
 static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
 {
@@ -53,6 +50,7 @@ static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
   UNUSED(vte);
   UNUSED(pid);
   UNUSED(user_data);
+
   if (error) {
     g_warning("vte spwan failed for: %s", error->message);
   }
@@ -63,7 +61,7 @@ static void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
 
-  BootOption* boot_option = (BootOption*) user_data;
+  Option* option = (Option*) user_data;
 
   GList* list = gtk_application_get_windows(app);
   if (list) {
@@ -79,7 +77,7 @@ static void on_activate(GtkApplication* app, void* user_data)
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
   vte_terminal_set_rewrap_on_resize(vte, true);
 
-  Context* context = context_init(boot_option->config_file_path, app, vte);
+  Context* context = context_init(option, app, vte);
   context_load(context);
 
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
@@ -103,7 +101,7 @@ static void on_activate(GtkApplication* app, void* user_data)
     1000,                // timeout
     NULL,                // cancel callback
     on_spawn,            // callback
-    NULL                 // user_data */
+    NULL                 // user_data
   );
 #else
   GError* error = NULL;
@@ -137,37 +135,31 @@ static void on_activate(GtkApplication* app, void* user_data)
 
 int main(int argc, char* argv[])
 {
+  dd("start");
   int exit_code = EXIT_SUCCESS;
 
-  bool version = false;
-  BootOption* boot_option = g_malloc0(sizeof(BootOption));
-  GOptionEntry entries[] = {
-    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show Version", NULL },
-    { "use", 'u', 0, G_OPTION_ARG_STRING, &boot_option->config_file_path,  "Use <path> instead of default config file", "<path>"},
-    { NULL }
-  };
-  GOptionContext* option_context = g_option_context_new("");
-  g_option_context_add_main_entries(option_context, entries, NULL);
+  Option* option = option_init();
+
   GError* error = NULL;
-  if (!g_option_context_parse(option_context, &argc, &argv, &error)) {
+  bool is_continuous = option_check(option, &argc, &argv, &error);
+  if (error) {
     g_printerr("error: %s\n", error->message);
     exit_code = EXIT_FAILURE;
     g_error_free(error);
     goto CLEANUP;
   }
-  if (version) {
-    g_print("version %s\n", PACKAGE_VERSION);
+
+  if (!is_continuous) {
     goto CLEANUP;
   }
 
   GtkApplication* app = gtk_application_new("me.endaaman.tym", G_APPLICATION_NON_UNIQUE);
-  g_signal_connect(app, "activate", G_CALLBACK(on_activate), boot_option);
+  g_signal_connect(app, "activate", G_CALLBACK(on_activate), option);
   exit_code = g_application_run(G_APPLICATION(app), argc, argv);
   g_object_unref(app);
 
 CLEANUP:
   dd("cleanup");
-  g_free(boot_option);
-  g_option_context_free(option_context);
+  option_close(option);
   return exit_code;
 }

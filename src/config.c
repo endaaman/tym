@@ -15,6 +15,47 @@
 #define CJK_WIDTH_NARROW "narrow"
 #define CJK_WIDTH_WIDE "wide"
 
+
+const char* fields_str[28] = {
+  "title",
+  "shell",
+  "font",
+  "cursor_blink_mode",
+  "cjk_width",
+  "color_bold",
+  "color_foreground",
+  "color_background",
+  "color_cursor",
+  "color_cursor_foreground",
+  "color_highlight",
+  "color_highlight_foreground",
+  "color_0",
+  "color_1",
+  "color_2",
+  "color_3",
+  "color_4",
+  "color_5",
+  "color_6",
+  "color_7",
+  "color_8",
+  "color_9",
+  "color_10",
+  "color_11",
+  "color_12",
+  "color_13",
+  "color_14",
+  "color_15",
+};
+
+const char* fields_int[2] = {
+  "width",
+  "height",
+};
+
+const char* fields_bool[1] = {
+  "use_default_keymap",
+};
+
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 typedef enum {
   VTE_CJK_WIDTH_NARROW = 1,
@@ -30,62 +71,6 @@ static const char* DEFAULT_TITLE = "tym";
 static const char* DEFAULT_BLINK_MODE = CURSOR_BLINK_MODE_SYSTEM;
 static const char* DEFAULT_CJK = CJK_WIDTH_NARROW;
 
-char** str_fields; // dynamic
-
-const char* int_fields[] = {
-  "width",
-  "height",
-  NULL,
-};
-
-const char* bool_fields[] = {
-  "use_default_keymap",
-  NULL,
-};
-
-
-static void init_config_fields()
-{
-  const char* base_str_fields[] = {
-    "title",
-    "shell",
-    "font",
-    "cursor_blink_mode",
-    "cjk_width",
-    "color_bold",
-    "color_foreground",
-    "color_background",
-    "color_cursor",
-    "color_cursor_foreground",
-    "color_highlight",
-    "color_highlight_foreground",
-  };
-  unsigned base_count = sizeof(base_str_fields) / sizeof(char*);
-
-  const unsigned color_count = 16;
-  str_fields = (char**)g_malloc0_n(sizeof(char*), base_count + color_count + 1); // NULL terminated
-
-  for (unsigned i = 0; i < base_count ; i++) {
-    str_fields[i] = g_strdup(base_str_fields[i]);
-  }
-
-  // set `color_0` ~ `color_15` field
-  char numbered_color_key[10];
-  for (unsigned i = 0; i < color_count; i++) {
-    g_snprintf(numbered_color_key, 10, "color_%d", i);
-    str_fields[base_count + i] = g_strdup(numbered_color_key);
-  }
-}
-
-static void close_config_fields()
-{
-  unsigned i = 0;
-  while (str_fields[i]) {
-    g_free(str_fields[i]);
-    i++;
-  }
-  g_free(str_fields);
-}
 
 static char* get_default_shell()
 {
@@ -211,8 +196,9 @@ void config_reset(Config* c)
   config_set_str(c, "cjk_width", DEFAULT_CJK);
   config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
   unsigned i = 0;
-  while (str_fields[i]) {
-    const char* key = str_fields[i];
+  unsigned size = sizeof(fields_str) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_str[i];
     // Set empty value if start with "color_"
     if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
       config_set_str(c, key, "");
@@ -228,12 +214,14 @@ void config_reset(Config* c)
 void config_prepare(Config* c)
 {
   lua_State* l = c->lua;
-
   lua_newtable(l);
 
-  unsigned i = 0;
-  while (str_fields[i]) {
-    const char* key = str_fields[i];
+  unsigned i;
+  unsigned size;
+  i = 0;
+  size = sizeof(fields_str) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_str[i];
     const char* value = config_get_str(c, key);
     lua_pushstring(l, key);
     lua_pushstring(l, value ? value : "");
@@ -242,8 +230,9 @@ void config_prepare(Config* c)
   }
 
   i = 0;
-  while (int_fields[i]) {
-    const char* key = int_fields[i];
+  size = sizeof(fields_int) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_int[i];
     int value = config_get_int(c, key);
     lua_pushstring(l, key);
     lua_pushinteger(l, value);
@@ -252,8 +241,9 @@ void config_prepare(Config* c)
   }
 
   i = 0;
-  while (bool_fields[i]) {
-    const char* key = bool_fields[i];
+  size = sizeof(fields_bool) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_bool[i];
     bool value = config_get_bool(c, key);
     lua_pushstring(l, key);
     lua_pushboolean(l, value);
@@ -281,9 +271,12 @@ void config_load(Config* c, char** error)
     return;
   }
 
-  unsigned i = 0;
-  while (str_fields[i]) {
-    const char* key = str_fields[i];
+  unsigned i;
+  unsigned size;
+  i = 0;
+  size = sizeof(fields_str) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_str[i];
     lua_getfield(l, -1, key);
     config_set_str(c, key, lua_tostring(l, -1));
     lua_pop(l, 1);
@@ -291,8 +284,9 @@ void config_load(Config* c, char** error)
   }
 
   i = 0;
-  while (int_fields[i]) {
-    const char* key = int_fields[i];
+  size = sizeof(fields_int) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_int[i];
     lua_getfield(l, -1, key);
     config_set_int(c, key, lua_tointeger(l, -1));
     lua_pop(l, 1);
@@ -300,8 +294,9 @@ void config_load(Config* c, char** error)
   }
 
   i = 0;
-  while (bool_fields[i]) {
-    const char* key = bool_fields[i];
+  size = sizeof(fields_bool) / sizeof(char*);
+  while (i < size) {
+    const char* key = fields_bool[i];
     lua_getfield(l, -1, key);
     config_set_bool(c, key, lua_toboolean(l, -1));
     lua_pop(l, 1);
@@ -309,6 +304,56 @@ void config_load(Config* c, char** error)
   }
 
   lua_pop(l, 1);
+}
+
+
+void config_load_option(Config* c, Option* option)
+{
+  unsigned offset_long_name = strlen(OPTION_CONFIG_PREFIX);
+
+  unsigned i, max;
+
+  i = option->idx_config_str;
+  max = option->idx_config_str + sizeof(fields_str) / sizeof(char*);
+  while (i < max) {
+    GOptionEntry* entry = &option->entries[i];
+    const char* key = &entry->long_name[offset_long_name];
+    if (*(char**)entry->arg_data) {
+      config_set_str(c, key, *(char**)entry->arg_data);
+    }
+    i++;
+  }
+
+  i = option->idx_config_int;
+  max = option->idx_config_int + sizeof(fields_int) / sizeof(char*);
+  while (i < max) {
+    GOptionEntry* entry = &option->entries[i];
+    const char* key = &entry->long_name[offset_long_name];
+    if (*(int*)entry->arg_data) { // if not zero
+      config_set_int(c, key, *(int*)entry->arg_data);
+    }
+    i++;
+  }
+
+  i = option->idx_config_bool;
+  max = option->idx_config_bool + sizeof(fields_bool) / sizeof(char*);
+  while (i < max) {
+    GOptionEntry* entry = &option->entries[i];
+    const char* key = &entry->long_name[offset_long_name];
+    char* data = *(char**)entry->arg_data;
+    if (data) {
+      bool flag;
+      if (0 == g_strcmp0(data, "true")) {
+        flag = true;
+      } else if (0 == g_strcmp0(data, "false")) {
+        flag = false;
+      } else {
+        continue;
+      }
+      config_set_bool(c, key, flag);
+    }
+    i++;
+  }
 }
 
 void config_apply_color(
@@ -409,14 +454,4 @@ char* config_get_shell(Config* c)
 bool config_get_use_default_keymap(Config* c)
 {
   return config_get_bool(c, "use_default_keymap");
-}
-
-__attribute__((constructor))
-static void initialization() {
-  init_config_fields();
-}
-
-__attribute__((destructor))
-static void finalization() {
-  close_config_fields();
 }

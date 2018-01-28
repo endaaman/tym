@@ -13,6 +13,7 @@
 #include "common.h"
 #include "config.h"
 #include "keymap.h"
+#include "option.h"
 
 typedef struct {
   GtkApplication* app;
@@ -21,11 +22,12 @@ typedef struct {
   char* config_file_path;
   Config* config;
   Keymap* keymap;
+  Option* option;
   bool loading;
 } Context;
 
 
-Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte);
+Context* context_init(Option* option,GtkApplication* app, VteTerminal* vte);
 void context_close(Context* context);
 void context_load(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);

@@ -29,16 +29,16 @@ static void context_embed_builtin_functions(Context* context); // declare forwar
 
 
 static KeyPair default_key_pairs[] = {
-  { GDK_KEY_plus,  GDK_CONTROL_MASK                 , command_increase_font_scale },
+  { GDK_KEY_plus , GDK_CONTROL_MASK                 , command_increase_font_scale },
   { GDK_KEY_minus, GDK_CONTROL_MASK                 , command_decrease_font_scale },
   { GDK_KEY_equal, GDK_CONTROL_MASK                 , command_reset_font_scale    },
-  { GDK_KEY_c,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
-  { GDK_KEY_v,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
-  { GDK_KEY_r,     GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
-  { 0,             0                                , NULL                        },
+  { GDK_KEY_c    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
+  { GDK_KEY_v    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
+  { GDK_KEY_r    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
+  { 0            , 0                                , NULL                        },
 };
 
-Context* context_init(const char* config_file_path, GtkApplication* app, VteTerminal* vte)
+Context* context_init(Option* option, GtkApplication* app, VteTerminal* vte)
 {
   dd("init");
 
@@ -48,13 +48,13 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
   luaL_openlibs(l);
   context->lua = l;
 
-  if (0 == g_strcmp0(config_file_path, USE_DEFAULT_CONFIG_SYMBOL)) {
+  if (0 == g_strcmp0(option->config_file_path, USE_DEFAULT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
     context->config_file_path = NULL;
     g_message("starting with default config");
   } else {
     char* challenging_config_file_path = NULL;
-    if (!config_file_path) {
+    if (!option->config_file_path) {
       challenging_config_file_path = g_build_path(
         G_DIR_SEPARATOR_S,
         g_get_user_config_dir(),
@@ -63,7 +63,7 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
         NULL
       );
     } else {
-      challenging_config_file_path = g_strdup(config_file_path);
+      challenging_config_file_path = g_strdup(option->config_file_path);
     }
 
     if (g_file_test(challenging_config_file_path, G_FILE_TEST_IS_REGULAR)) {
@@ -74,8 +74,10 @@ Context* context_init(const char* config_file_path, GtkApplication* app, VteTerm
     }
   }
 
+  context->option = option;
   context->app = app;
   context->vte = vte;
+
   context->config = config_init(l);
   context->keymap = keymap_init(l);
 
@@ -165,6 +167,8 @@ void context_load(Context* context)
     goto EXIT;
   }
 
+  config_load_option(context->config, context->option);
+
   config_apply(context->config, context->vte);
   dd("load successfully finished");
 
@@ -176,16 +180,18 @@ EXIT:
 static void context_embed_builtin_functions(Context* context)
 {
   const luaL_Reg table[] = {
-    { "get_version",          builtin_get_version },
+    { "get_version"         , builtin_get_version          },
     { "get_config_file_path", builtin_get_config_file_path },
-    { "notify",               builtin_notify },
-    { "put",                  builtin_put },
-    { "reload",               builtin_reload },
-    { "increase_font_scale",  builtin_increase_font_scale },
-    { "decrease_font_scale",  builtin_decrease_font_scale },
-    { "reset_font_scale",     builtin_reset_font_scale },
-    { "copy_clipboard",       builtin_copy_clipboard },
-    { "paste_clipboard",      builtin_paste_clipboard },
+    { "notify"              , builtin_notify               },
+    { "put"                 , builtin_put                  },
+    { "reload"              , builtin_reload               },
+    { "increase_font_scale" , builtin_increase_font_scale  },
+    { "decrease_font_scale" , builtin_decrease_font_scale  },
+    { "reset_font_scale"    , builtin_reset_font_scale     },
+    { "copy_clipboard"      , builtin_copy_clipboard       },
+    { "copy"                , builtin_copy_clipboard       },
+    { "paste_clipboard"     , builtin_paste_clipboard      },
+    { "paste"               , builtin_paste_clipboard      },
     { NULL, NULL },
   };
 
