@@ -58,7 +58,7 @@ int builtin_reload(lua_State* l)
 int builtin_copy_clipboard(lua_State* l)
 {
   Context* context = (Context*)lua_touserdata(l, lua_upvalueindex(1));
-  command_reload(context);
+  command_copy_clipboard(context);
   return 0;
 }
 
