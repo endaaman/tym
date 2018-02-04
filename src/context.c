@@ -211,7 +211,7 @@ static bool context_perform_default(Context* context, unsigned key, GdkModifierT
 
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 {
-  char* error;
+  char* error = NULL;
   if (keymap_perform_custom(context->keymap, key, mod, &error)) {
     if (error) {
       context_on_lua_error(context, error);
