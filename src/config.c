@@ -361,19 +361,23 @@ void config_apply(Config* c, VteTerminal* vte)
   int width = config_get_int(c, "width");
   int height = config_get_int(c, "height");
   if (0 < width && 0 < height) {
-    GtkBorder border;
-    gtk_style_context_get_padding(
-      gtk_widget_get_style_context(GTK_WIDGET(vte)),
-      gtk_widget_get_state_flags(GTK_WIDGET(vte)),
-      &border
-    );
-    const int char_width = vte_terminal_get_char_width(vte);
-    const int char_height = vte_terminal_get_char_height(vte);
-    gtk_window_resize(
-      window,
-      width * char_width + border.left + border.right,
-      height * char_height + border.top + border.bottom
-    );
+    if (gtk_window_is_active(window)){
+      GtkBorder border;
+      gtk_style_context_get_padding(
+        gtk_widget_get_style_context(GTK_WIDGET(vte)),
+        gtk_widget_get_state_flags(GTK_WIDGET(vte)),
+        &border
+      );
+      const int char_width = vte_terminal_get_char_width(vte);
+      const int char_height = vte_terminal_get_char_height(vte);
+      gtk_window_resize(
+        window,
+        width * char_width + border.left + border.right,
+        height * char_height + border.top + border.bottom
+      );
+    } else {
+      vte_terminal_set_size(vte, width, height);
+    }
   }
 
   if (config_has_str(c, "font")) {
