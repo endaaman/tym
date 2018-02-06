@@ -19,15 +19,18 @@ const unsigned offset_data = 2;
 Option* option_init() {
   Option* option = g_malloc0(sizeof(Option));
 
+  unsigned size_fields_str = sizeof(fields_str) / sizeof(char*);
+  unsigned size_fields_int = sizeof(fields_int) / sizeof(char*);
+  unsigned size_fields_bool = sizeof(fields_bool) / sizeof(char*);
   unsigned size_entries = 0
-    + ((sizeof(fields_int) + sizeof(fields_bool) + sizeof(fields_str)) / sizeof(char*))
+    + size_fields_str + size_fields_int + size_fields_bool
     + offset_data
     + 1;
   GOptionEntry* entries = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), size_entries);
 
-  option->config_str = (char**)g_malloc0_n(sizeof(char*), sizeof(fields_str) / sizeof(char*));
-  option->config_int = (int*)g_malloc0_n(sizeof(int), sizeof(fields_int) / sizeof(char*));
-  option->config_bool = (char**)g_malloc0_n(sizeof(char*), sizeof(fields_bool) / sizeof(char*));
+  option->data_config_str = (char**)g_malloc0_n(sizeof(char*), size_fields_str);
+  option->data_config_int = (int*)g_malloc0_n(sizeof(int), size_fields_int);
+  option->data_config_bool = (char**)g_malloc0_n(sizeof(char*), size_fields_bool);
 
   entries[0].long_name = g_strdup("version");
   entries[0].short_name = 'v';
@@ -47,18 +50,16 @@ Option* option_init() {
 
   unsigned cur = offset_data;
   unsigned i;
-  unsigned size;
 
   i = 0;
-  size = sizeof(fields_str) / sizeof(char*);
   option->idx_config_str = cur;
-  while (i < size) {
+  while (i < size_fields_str) {
     const char* key = fields_str[i];
     entries[cur].long_name = g_strdup_printf("%s%s", OPTION_CONFIG_PREFIX, key);
     entries[cur].short_name = 0;
     entries[cur].flags = G_OPTION_FLAG_NONE;
     entries[cur].arg = G_OPTION_ARG_STRING;
-    entries[cur].arg_data = &option->config_str[i];
+    entries[cur].arg_data = &option->data_config_str[i];
     entries[cur].description = NULL;
     entries[cur].arg_description = "<string>";
     cur++;
@@ -66,15 +67,14 @@ Option* option_init() {
   }
 
   i = 0;
-  size = sizeof(fields_int) / sizeof(char*);
   option->idx_config_int = cur;
-  while (i < size) {
+  while (i < size_fields_int) {
     const char* key = fields_int[i];
     entries[cur].long_name = g_strdup_printf("%s%s", OPTION_CONFIG_PREFIX, key);
     entries[cur].short_name = 0;
     entries[cur].flags = G_OPTION_FLAG_NONE;
     entries[cur].arg = G_OPTION_ARG_INT;
-    entries[cur].arg_data = &option->config_int[i];
+    entries[cur].arg_data = &option->data_config_int[i];
     entries[cur].description = NULL;
     entries[cur].arg_description = "<integer>";
     cur++;
@@ -82,15 +82,14 @@ Option* option_init() {
   }
 
   i = 0;
-  size = sizeof(fields_bool) / sizeof(char*);
   option->idx_config_bool = cur;
-  while (i < size) {
+  while (i < size_fields_bool) {
     const char* key = fields_bool[i];
     entries[cur].long_name = g_strdup_printf("%s%s", OPTION_CONFIG_PREFIX, key);
     entries[cur].short_name = 0;
     entries[cur].flags = G_OPTION_FLAG_NONE;
     entries[cur].arg = G_OPTION_ARG_STRING;
-    entries[cur].arg_data = &option->config_bool[i];
+    entries[cur].arg_data = &option->data_config_bool[i];
     entries[cur].description = NULL;
     entries[cur].arg_description = "<true/false>";
     cur++;
@@ -101,21 +100,30 @@ Option* option_init() {
   return option;
 }
 
+GOptionEntry* option_get_str_entries(Option* option) {
+  return &option->entries[option->idx_config_str];
+}
+
+GOptionEntry* option_get_int_entries(Option* option) {
+  return &option->entries[option->idx_config_int];
+}
+
+GOptionEntry* option_get_bool_entries(Option* option) {
+  return &option->entries[option->idx_config_bool];
+}
+
 void option_close(Option* option) {
   unsigned i = 0;
   unsigned size = sizeof(option->entries) / sizeof(char*);
   while (i < size) {
     GOptionEntry* e = &option->entries[i];
     g_free((char*)e->long_name);
-    if (e->arg_description) {
-      g_free((char*)e->arg_description);
-    }
     i++;
   }
   g_free(option->entries);
-  g_free(option->config_str);
-  g_free(option->config_bool);
-  g_free(option->config_int);
+  g_free(option->data_config_str);
+  g_free(option->data_config_int);
+  g_free(option->data_config_bool);
   g_free(option);
 }
 

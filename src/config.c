@@ -309,14 +309,15 @@ void config_load(Config* c, char** error)
 
 void config_load_option(Config* c, Option* option)
 {
-  unsigned offset_long_name = strlen(OPTION_CONFIG_PREFIX);
+  const unsigned offset_long_name = strlen(OPTION_CONFIG_PREFIX);
+  unsigned i, size;
+  GOptionEntry* entries;
 
-  unsigned i, max;
-
-  i = option->idx_config_str;
-  max = option->idx_config_str + sizeof(fields_str) / sizeof(char*);
-  while (i < max) {
-    GOptionEntry* entry = &option->entries[i];
+  i = 0;
+  size = sizeof(fields_str) / sizeof(char*);
+  entries = option_get_str_entries(option);
+  while (i < size) {
+    GOptionEntry* entry = &entries[i];
     const char* key = &entry->long_name[offset_long_name];
     if (*(char**)entry->arg_data) {
       config_set_str(c, key, *(char**)entry->arg_data);
@@ -324,10 +325,11 @@ void config_load_option(Config* c, Option* option)
     i++;
   }
 
-  i = option->idx_config_int;
-  max = option->idx_config_int + sizeof(fields_int) / sizeof(char*);
-  while (i < max) {
-    GOptionEntry* entry = &option->entries[i];
+  i = 0;
+  size = sizeof(fields_int) / sizeof(char*);
+  entries = option_get_int_entries(option);
+  while (i < size) {
+    GOptionEntry* entry = &entries[i];
     const char* key = &entry->long_name[offset_long_name];
     if (*(int*)entry->arg_data) { // if not zero
       config_set_int(c, key, *(int*)entry->arg_data);
@@ -335,10 +337,11 @@ void config_load_option(Config* c, Option* option)
     i++;
   }
 
-  i = option->idx_config_bool;
-  max = option->idx_config_bool + sizeof(fields_bool) / sizeof(char*);
-  while (i < max) {
-    GOptionEntry* entry = &option->entries[i];
+  i = 0;
+  size = sizeof(fields_bool) / sizeof(char*);
+  entries = option_get_bool_entries(option);
+  while (i < size) {
+    GOptionEntry* entry = &entries[i];
     const char* key = &entry->long_name[offset_long_name];
     char* data = *(char**)entry->arg_data;
     if (data) {
