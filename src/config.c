@@ -409,8 +409,6 @@ void config_apply(Config* c, VteTerminal* vte)
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
   vte_terminal_set_allow_bold(vte, config_get_bool(c, "allow_bold_font"));
 
-  dd("%d", config_get_bool(c, "allow_bold_font"));
-
   int width = config_get_int(c, "width");
   int height = config_get_int(c, "height");
   if (0 < width && 0 < height) {
