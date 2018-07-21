@@ -52,8 +52,9 @@ const char* fields_int[2] = {
   "height",
 };
 
-const char* fields_bool[1] = {
+const char* fields_bool[2] = {
   "use_default_keymap",
+  "allow_bold_font",
 };
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
@@ -209,6 +210,7 @@ void config_reset(Config* c)
   config_set_int(c, "height", DEFAULT_HEIGHT);
 
   config_set_bool(c, "use_default_keymap", true);
+  config_set_bool(c, "allow_bold_font", true);
 }
 
 void config_prepare(Config* c)
@@ -405,6 +407,9 @@ void config_apply(Config* c, VteTerminal* vte)
 
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
+  vte_terminal_set_allow_bold(vte, config_get_bool(c, "allow_bold_font"));
+
+  dd("%d", config_get_bool(c, "allow_bold_font"));
 
   int width = config_get_int(c, "width");
   int height = config_get_int(c, "height");

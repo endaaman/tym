@@ -21,7 +21,7 @@ typedef struct {
 
 extern const char* fields_str[28];
 extern const char* fields_int[2];
-extern const char* fields_bool[1];
+extern const char* fields_bool[2];
 
 Config* config_init(lua_State* lua);
 void config_close(Config* c);
