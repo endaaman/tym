@@ -234,3 +234,14 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
   }
   return false;
 }
+
+void context_on_change_vte_title(Context* context) {
+  GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(context->vte)));
+
+  const char* terminal_title = vte_terminal_get_window_title(context->vte);
+  const char* title = terminal_title
+    ? terminal_title
+    : config_get_title(context->config);
+
+  gtk_window_set_title(window, title);
+}

@@ -31,6 +31,7 @@ void config_load(Config* c, char** error);
 void config_load_option(Config* c, Option* option);
 void config_apply(Config* c, VteTerminal* vte);
 char* config_get_shell(Config* c);
+char* config_get_title(Config* c);
 bool config_get_use_default_keymap(Config* c);
 
 

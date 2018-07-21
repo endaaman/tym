@@ -12,6 +12,14 @@
 #include "option.h"
 
 
+static void on_shutdown(GApplication* app, void* user_data)
+{
+  UNUSED(app);
+
+  Context* context = (Context*) user_data;
+  context_close(context);
+}
+
 static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
 {
   UNUSED(widget);
@@ -26,15 +34,6 @@ static bool on_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
   return false;
 }
 
-
-static void on_shutdown(GApplication* app, void* user_data)
-{
-  UNUSED(app);
-
-  Context* context = (Context*) user_data;
-  context_close(context);
-}
-
 static void on_child_exited(VteTerminal *vte, int status, void* user_data)
 {
   UNUSED(vte);
@@ -42,6 +41,14 @@ static void on_child_exited(VteTerminal *vte, int status, void* user_data)
 
   GApplication* app = G_APPLICATION(user_data);
   g_application_quit(app);
+}
+
+static void on_vte_title_changed(VteTerminal *vte, void* user_data)
+{
+  UNUSED(vte);
+
+  Context* context = (Context*)user_data;
+  context_on_change_vte_title(context);
 }
 
 #ifdef USE_ASYNC_SPAWN
@@ -61,7 +68,7 @@ static void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
 
-  Option* option = (Option*) user_data;
+  Option* option = (Option*)user_data;
 
   GList* list = gtk_application_get_windows(app);
   if (list) {
@@ -81,8 +88,9 @@ static void on_activate(GtkApplication* app, void* user_data)
   context_load(context);
 
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), app);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
+  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), app);
+  g_signal_connect(G_OBJECT(vte), "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
 
   char* argv[] = { config_get_shell(context->config), NULL };
   char** env = g_get_environ();

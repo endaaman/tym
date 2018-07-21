@@ -27,9 +27,10 @@ typedef struct {
 } Context;
 
 
-Context* context_init(Option* option,GtkApplication* app, VteTerminal* vte);
+Context* context_init(Option* option, GtkApplication* app, VteTerminal* vte);
 void context_close(Context* context);
 void context_load(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
+void context_on_change_vte_title(Context* context);
 
 #endif

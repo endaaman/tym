@@ -457,6 +457,11 @@ char* config_get_shell(Config* c)
   return config_get_str(c, "shell");
 }
 
+char* config_get_title(Config* c)
+{
+  return config_get_str(c, "title");
+}
+
 bool config_get_use_default_keymap(Config* c)
 {
   return config_get_bool(c, "use_default_keymap");
