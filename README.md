@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym)
 
-`tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by lua.
+`tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
 
 ## Motivation
 
@@ -18,7 +18,7 @@ but I could not find it so I made it.
 
 - [GTK+3](https://www.gtk.org/)
 - [VTE](https://github.com/GNOME/vte)
-- [lua](https://www.lua.org/)
+- [Lua](https://www.lua.org/)
 
 ## Configration
 
@@ -113,6 +113,11 @@ keymap['<Shift><Ctrl>r'] = function()
   tym.reload()
   tym.notify('Config reloaded')
 end
+
+-- Disable a default keymap
+-- Note: It must be non-nil value because of Lua language spec that it can
+--       not distinguish between no-value registered state and `nil` registered state.
+keymap['<Ctrl>='] = 0
 ```
 
 ## Embedded functions

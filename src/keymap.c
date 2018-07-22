@@ -21,8 +21,9 @@ typedef struct {
 
 static const char* KEYMAP_TABLE_NAME = "keymap";
 
-void custom_key_pair_free(CustomKeyPair* pair)
+void custom_key_pair_free(CustomKeyPair* pair, void* user_data)
 {
+  UNUSED(user_data);
   g_free(pair->func_key);
   g_free(pair);
 }
@@ -113,19 +114,27 @@ bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod, ch
   if (!keymap->has_custom) {
     return false;
   }
-
   lua_State* l = keymap->lua;
+  lua_getglobal(l, KEYMAP_TABLE_NAME);
+
   for (GSList* li = keymap->custom_key_pairs; li != NULL; li = li->next) {
     CustomKeyPair* pair = (CustomKeyPair*)li->data;
     if ((key == pair->key) && !(~mod & pair->mod)) {
-      lua_getglobal(l, KEYMAP_TABLE_NAME);
       lua_getfield(l, -1, pair->func_key);
-      if (0 != lua_pcall(l, 0, 0, 0)) {
-        *error = g_strdup(lua_tostring(l, -1));
+      if (!lua_isfunction(l, -1)) {
+        lua_pop(l, 2); // table and value(not function)
+        return true;
+      } else {
+        // when not nil and function
+        if (0 != lua_pcall(l, 0, 0, 0)) {
+          *error = g_strdup(lua_tostring(l, -1));
+          lua_pop(l, 1); // error
+        }
       }
-      lua_pop(l, 1);
+      lua_pop(l, 1); // function
       return true;
     }
   }
+  lua_pop(l, 1); // table
   return false;
 }
