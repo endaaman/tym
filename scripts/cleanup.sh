@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eux
 
 rm -rf Makefile
 rm -rf Makefile.in

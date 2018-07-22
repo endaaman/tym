@@ -2,7 +2,9 @@
 
 set -eux
 
-bash cleanup.sh
+p=$(dirname "$0")
+
+bash $p/cleanup.sh
 autoreconf -fvi
 ./configure
 make clean
