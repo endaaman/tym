@@ -1,0 +1,82 @@
+.TH tym 1 "2018-07-22" "1.0.8" "tym"
+.SH DESCRIPTION
+\fBtym\fR is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
+.SH SYNOPSIS
+\fBtym\fR [OPTIONS]
+
+.SH OPTIONS
+.PP
+.IP "\fB\-h\fR, \fB\-\-help\fR"
+Show help message.
+.IP "\fB\-v\fR, \fB\-\-version\fR"
+Show version.
+.IP "\fB\-u\fR, \fB\-\-use\fR=\fI<PATH>\fR"
+Use <PATH> instead of default config file.
+.IP "\fB\-\-c\fR:\fI<OPTION>\fR=\fI<VALUE>\fR"
+Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
+\fI<VALUE>\fR is a value of its option.
+.fi
+See \fBCONFIGURATION\fR for more information about config options.
+.SH CONFIGURATION
+When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed with the
+global table \fBconfig\fR defined. You can do configuration by modifying
+\fBconfig\fR table.
+.TS
+left,box;
+lB lB lB lB
+____
+lB l l l.
+Option	type	Default value	Description
+config.width	integer	80	Initial columns
+config.height	integer	22	Initial rows
+config.title	string	'tym'	Initial window title
+config.shell	string	$SHELL -> vte_get_user_shell() -> /bin/sh	Shell to excute
+config.font	string	'' (empty string)	You can specify it like 'FAMILY-LIST [SIZE]', for example 'Ubuntu Mono 12'. The value specified here is internally passed to pango_font_description_from_string(). If you set empty string, the system default fixed width font will be used
+config.allow_bold_font	boolean	false	Use bold font or only highlight it
+config.cursor_blink_mode	string	'system'	'system', 'on' or 'off' are available
+config.cjk_width	string	'narrow'	'narrow' or 'wide' are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default
+config.use_default_keymap	boolean	true	Use default keymap or not
+config.allow_bold_font	boolean	true	Whether or not to attempt to draw bold text
+config.color_foreground	string	-	-
+config.color_background	string	-	-
+config.color_cursor	string	-	-
+config.color_cursor_foreground	string	-	-
+config.color_bold	string	-	???
+config.color_highlight	string	-	-
+config.color_highlight_foreground	string	-	-
+config.color_0 .. config.color_255	string	-	-
+.TE
+
+.SH DEFAULT KEYBINDINGS
+.TS
+left,box;
+lB lB
+____
+l l.
+Key	Action
+\fBCtrl\fR+\fBShift\fR+\fBc\fR	Copy selection to clipboard
+\fBCtrl\fR+\fBShift\fR+\fBv\fR	Paste from clipboard
+\fBCtrl\fR+\fBShift\fR+\fBr\fR	Reload config file
+\fBCtrl\fR+\fB+\fR	Increase font scale
+\fBCtrl\fR+\fB-\fR	Decrease font scale
+\fBCtrl\fR+\fB=\fR	Reset font scale
+.TE
+
+.SH BUILTIN FUNCTIONS
+.TS
+left,box;
+lB lB lB
+____
+l l l.
+name	return value	description
+tym.get_version()	string	Get version string
+tym.get_config_file_path()	string	Get path of config file currently being read
+tym.notify(message, title = 'tym')	void	Show desktop notification
+tym.put(text)	void	Feed text
+tym.reload()	void	Reload config file
+tym.copy_clipboard()	void	Copy current serection
+tym.paste_clipboard()	void	Paste clipboard
+tym.increase_font_scale()	void	Increase font scale
+tym.decrease_font_scale()	void	Decrease font scale
+tym.reset_font_scale()	void	Reset font scale
+.TE
