@@ -1,11 +1,10 @@
-.TH tym 1 "2018-07-22" "1.0.8" "tym"
+.TH tym 1 "2018-07-23" "1.0.8" "tym"
 .SH DESCRIPTION
 \fBtym\fR is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
 .SH SYNOPSIS
 \fBtym\fR [OPTIONS]
 
 .SH OPTIONS
-.PP
 .IP "\fB\-h\fR, \fB\-\-help\fR"
 Show help message.
 .IP "\fB\-v\fR, \fB\-\-version\fR"
@@ -21,37 +20,85 @@ See \fBCONFIGURATION\fR for more information about config options.
 When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed with the
 global table \fBconfig\fR defined. You can do configuration by modifying
 \fBconfig\fR table.
-.TS
-left,box;
-lB lB lB lB
-____
-lB l l l.
-Option	type	Default value	Description
-config.width	integer	80	Initial columns
-config.height	integer	22	Initial rows
-config.title	string	'tym'	Initial window title
-config.shell	string	$SHELL -> vte_get_user_shell() -> /bin/sh	Shell to excute
-config.font	string	'' (empty string)	You can specify it like 'FAMILY-LIST [SIZE]', for example 'Ubuntu Mono 12'. The value specified here is internally passed to pango_font_description_from_string(). If you set empty string, the system default fixed width font will be used
-config.allow_bold_font	boolean	false	Use bold font or only highlight it
-config.cursor_blink_mode	string	'system'	'system', 'on' or 'off' are available
-config.cjk_width	string	'narrow'	'narrow' or 'wide' are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default
-config.use_default_keymap	boolean	true	Use default keymap or not
-config.allow_bold_font	boolean	true	Whether or not to attempt to draw bold text
-config.color_foreground	string	-	-
-config.color_background	string	-	-
-config.color_cursor	string	-	-
-config.color_cursor_foreground	string	-	-
-config.color_bold	string	-	???
-config.color_highlight	string	-	-
-config.color_highlight_foreground	string	-	-
-config.color_0 .. config.color_255	string	-	-
-.TE
+.IP \fBconfig.width\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI80\fR
+.fi
+Initial columns.
+.IP \fBconfig.height\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI22\fR
+.fi
+Initial rows.
+.IP \fBconfig.title\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'tym'\fR
+.fi
+Initial window title.
+.IP \fBconfig.shell\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI$SHELL\fR → \fBvte_get_user_shell()\fR → \fB/bin/sh\fR
+.fi
+Shell to excute.
+.IP \fBconfig.font\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI''\fR (empty string)
+.fi
+You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example 
+\fI'Ubuntu Mono 12'\fR. The value specified here is internally passed to
+\fBpango_font_description_from_string()\fR. If you set empty string, the system
+default fixed width font will be used.
+.IP \fBconfig.cursor_blink_mode\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'system'\fR
+.fi
+\fI'system'\fR, \fI'on'\fR or \fI'off'\fR are available.
+.IP \fBconfig.cjk_width\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'narrow'\fR
+.fi
+\fI'narrow'\fR or \fI'wide'\fR are available. There are complicated problems
+about this, so if you are not familiar with it, it's better to use the default.
+.IP "\fBconfig.use_default_keymap\fR (boolean)"
+Type:	\fBboolean\fR
+.fi
+Default:	\fItrue\fR
+.fi
+Use default keymap or not.
+.IP \fBconfig.allow_bold_font\fR
+Type:	\fBboolean\fR
+.fi
+Default:	\fItrue\fR
+.fi
+Whether or not to attempt to draw bold text.
+.IP \fBconfig.color_bold\fR
+.IP \fBconfig.color_foreground\fR
+.IP \fBconfig.color_background\fR
+.IP \fBconfig.color_cursor\fR
+.IP \fBconfig.color_cursor_foreground\fR
+.IP \fBconfig.color_highlight\fR
+.IP \fBconfig.color_highlight_foreground\fR
+.IP "\fBconfig.color_0\fR .. \fBconfig.color_15\fR"
+Type: \fBstring\fR
+.fi
+Default:	\fI''\fR (empty string)
+.fi
+You can specify standard color string, for example \fI'#f00'\fR, \fI'#ff0000'\fR
+or \fI'red'\fR. These will be parsed with \fBgdk_rgba_parse()\fR. If you set
+empty string, the VTE default color will be used.
 
 .SH DEFAULT KEYBINDINGS
 .TS
 left,box;
 lB lB
-____
+__
 l l.
 Key	Action
 \fBCtrl\fR+\fBShift\fR+\fBc\fR	Copy selection to clipboard
@@ -63,20 +110,65 @@ Key	Action
 .TE
 
 .SH BUILTIN FUNCTIONS
-.TS
-left,box;
-lB lB lB
-____
-l l l.
-name	return value	description
-tym.get_version()	string	Get version string
-tym.get_config_file_path()	string	Get path of config file currently being read
-tym.notify(message, title = 'tym')	void	Show desktop notification
-tym.put(text)	void	Feed text
-tym.reload()	void	Reload config file
-tym.copy_clipboard()	void	Copy current serection
-tym.paste_clipboard()	void	Paste clipboard
-tym.increase_font_scale()	void	Increase font scale
-tym.decrease_font_scale()	void	Decrease font scale
-tym.reset_font_scale()	void	Reset font scale
-.TE
+.IP \fBtym.get_version()\fR
+Returns:	\fBstring\fR
+.fi
+Get version string.
+.IP \fBtym.get_config_file_path()\fR
+Returns:	\fBstring\fR
+.fi
+Get path of config file currently being read.
+.IP "\fBtym.notify('\fImessage\fB', title = '\fItym\fB')\fR"
+Returns:	\fBvoid\fR
+.fi
+Show desktop notification.
+.IP \fBtym.put('\fItext\fB')\fR
+Returns:	\fBvoid\fR
+.fi
+Feed text.
+.IP \fBtym.reload()\fR
+Returns:	\fBvoid\fR
+.fi
+Reload config file.
+.IP \fBtym.copy_clipboard()\fR
+Returns:	\fBvoid\fR
+.fi
+Copy current serection.
+.IP \fBtym.paste_clipboard()\fR
+Returns:	\fBvoid\fR
+.fi
+Paste clipboard.
+.IP \fBtym.increase_font_scale()\fR
+Returns:	\fBvoid\fR
+.fi
+Increase font scale.
+.IP \fBtym.decrease_font_scale()\fR
+Returns:	\fBvoid\fR
+.fi
+Decrease font scale.
+.IP \fBtym.reset_font_scale()\fR
+Returns:	\fBvoid\fR
+.fi
+Reset font scale.
+.SH EXAMPLES
+You can register functions in a table named \fBkeymap\fR (defaultly defined like
+\fBconfig\fR table) in a format parsable by \fBgtk_accelerator_parse()\fR.
+
+.nf
+\fB
+keymap['<Shift><Ctrl>u'] = function()
+  tym.notify('Pressed C-S-u')
+end
+
+-- Override default keymap
+keymap['<Shift><Ctrl>r'] = function()
+  tym.reload()
+  tym.notify('Config reloaded')
+end
+
+-- Disable a default keymap
+-- NOTE: It must be non-nil value because of Lua language spec that it can not
+-- distinguish between no-value registered state and `nil` registered state.
+keymap['<Ctrl>='] = 0
+\fR
+.fi
