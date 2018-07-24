@@ -1,4 +1,4 @@
-.TH tym 1 "2018-07-23" "1.0.8" "tym"
+.TH tym 1 "@DATE@" "@VERSION@" "tym"
 .SH DESCRIPTION
 \fBtym\fR is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
 .SH SYNOPSIS
@@ -49,7 +49,7 @@ Type:	\fBstring\fR
 .fi
 Default:	\fI''\fR (empty string)
 .fi
-You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example 
+You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example
 \fI'Ubuntu Mono 12'\fR. The value specified here is internally passed to
 \fBpango_font_description_from_string()\fR. If you set empty string, the system
 default fixed width font will be used.

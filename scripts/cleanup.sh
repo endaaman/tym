@@ -31,6 +31,7 @@ rm -rf src/toollib/*.lo
 rm -rf src/toollib/.deps
 rm -rf src/toollib/.dirstamp
 rm -rf stamp-h1
+rm -rf tym.1
 
 rm -rf config.h.in
 rm -rf config.h

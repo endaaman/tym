@@ -9,12 +9,19 @@ m4_define([tym_version],[tym_major_version().tym_minor_version().tym_micro_versi
 AC_PREREQ([2.69])
 AC_INIT([tym], [tym_version()], [], [tym], [https://github.com/endaaman/tym])
 AM_INIT_AUTOMAKE([foreign])
+DATE="`date '+%Y-%m-%d'`"
+AC_SUBST(DATE)
 AC_CONFIG_SRCDIR([src/tym.c])
-AC_CONFIG_HEADERS([config.h:config.h.in])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  tym.1
 ])
+
+AC_PROG_CC
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 ])
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug          turn on debugging [[default=no]]],
@@ -29,10 +36,5 @@ if test x"${enable_debug}" = x"yes"; then
   AC_DEFINE(DEBUG, 1, [Define to 1 if you want to debug])
 fi
 AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
-
-AC_PROG_CC
-
-PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 ])
 
 AC_OUTPUT

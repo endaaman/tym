@@ -1,4 +1,5 @@
 SUBDIRS = src
-nodist_include_HEADERS = config.h
+man_MANS = tym.1
+EXTRA_DIST = $(man_MANS)
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = tym.desktop

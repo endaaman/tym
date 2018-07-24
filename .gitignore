@@ -13,14 +13,12 @@ libtool
 ltmain.sh
 missing
 stamp-h?
-
 .deps/
 .libs/
 autom4te.cache/
 m4/
 
+tym.1
 /config.*
-
-src/version.h
 tym
 tym-*.tar.gz
