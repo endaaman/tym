@@ -75,17 +75,16 @@ static void on_activate(GtkApplication* app, void* user_data)
     gtk_window_present(GTK_WINDOW(list->data));
     return;
   }
-
-  GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
-  gtk_window_set_icon_name(window, "terminal");
-  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-
   VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
-  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
-  vte_terminal_set_rewrap_on_resize(vte, true);
+  GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
 
   Context* context = context_init(option, app, vte);
   context_load(context);
+
+  gtk_window_set_icon_name(window, config_get_icon(context->config));
+  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
+  vte_terminal_set_rewrap_on_resize(vte, true);
 
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
