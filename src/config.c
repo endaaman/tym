@@ -53,9 +53,10 @@ const char* fields_int[2] = {
   "height",
 };
 
-const char* fields_bool[2] = {
+const char* fields_bool[3] = {
   "use_default_keymap",
   "allow_bold_font",
+  "no_quit",
 };
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
@@ -214,6 +215,7 @@ void config_reset(Config* c)
 
   config_set_bool(c, "use_default_keymap", true);
   config_set_bool(c, "allow_bold_font", true);
+  config_set_bool(c, "no_quit", false);
 }
 
 void config_prepare(Config* c)
@@ -473,4 +475,9 @@ char* config_get_icon(Config* c)
 bool config_get_use_default_keymap(Config* c)
 {
   return config_get_bool(c, "use_default_keymap");
+}
+
+bool config_get_no_quit(Config* c)
+{
+  return config_get_bool(c, "no_quit");
 }

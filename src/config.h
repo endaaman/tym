@@ -21,7 +21,7 @@ typedef struct {
 
 extern const char* fields_str[29];
 extern const char* fields_int[2];
-extern const char* fields_bool[2];
+extern const char* fields_bool[3];
 
 Config* config_init(lua_State* lua);
 void config_close(Config* c);
@@ -34,6 +34,7 @@ char* config_get_shell(Config* c);
 char* config_get_title(Config* c);
 char* config_get_icon(Config* c);
 bool config_get_use_default_keymap(Config* c);
+bool config_get_no_quit(Config* c);
 
 
 #endif

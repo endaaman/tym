@@ -38,9 +38,12 @@ static void on_child_exited(VteTerminal *vte, int status, void* user_data)
 {
   UNUSED(vte);
   UNUSED(status);
+  Context* context = (Context*)user_data;
+  GApplication* app = G_APPLICATION(context->app);
 
-  GApplication* app = G_APPLICATION(user_data);
-  g_application_quit(app);
+  if (!config_get_no_quit(context->config)) {
+    g_application_quit(app);
+  }
 }
 
 static void on_vte_title_changed(VteTerminal *vte, void* user_data)
@@ -56,7 +59,9 @@ static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
 {
   UNUSED(vte);
   UNUSED(pid);
-  UNUSED(user_data);
+
+  Context* context = (Context*)user_data;
+  UNUSED(context);
 
   if (error) {
     g_warning("vte spwan failed for: %s", error->message);
@@ -75,20 +80,20 @@ static void on_activate(GtkApplication* app, void* user_data)
     gtk_window_present(GTK_WINDOW(list->data));
     return;
   }
-  VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
   GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
+  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+
+  VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
+  vte_terminal_set_rewrap_on_resize(vte, true);
 
   Context* context = context_init(option, app, vte);
   context_load(context);
 
   gtk_window_set_icon_name(window, config_get_icon(context->config));
-  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
-  vte_terminal_set_rewrap_on_resize(vte, true);
-
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), app);
+  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), context);
   g_signal_connect(G_OBJECT(vte), "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
 
   char* argv[] = { config_get_shell(context->config), NULL };
@@ -108,7 +113,7 @@ static void on_activate(GtkApplication* app, void* user_data)
     1000,                // timeout
     NULL,                // cancel callback
     on_spawn,            // callback
-    NULL                 // user_data
+    context              // user_data
   );
 #else
   GError* error = NULL;
