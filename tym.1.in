@@ -1,6 +1,7 @@
 .TH tym 1 "@DATE@" "@VERSION@" "tym"
 .SH DESCRIPTION
 \fBtym\fR is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
+
 .SH SYNOPSIS
 \fBtym\fR [OPTIONS]
 
@@ -16,6 +17,7 @@ Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
 \fI<VALUE>\fR is a value of its option.
 .fi
 See \fBCONFIGURATION\fR for more information about config options.
+
 .SH CONFIGURATION
 When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed with the
 global table \fBconfig\fR defined. You can do configuration by modifying
@@ -71,7 +73,7 @@ Type:	\fBboolean\fR
 .fi
 Default:	\fItrue\fR
 .fi
-Use default keymap or not.
+Whether or not use default keymap.
 .IP \fBconfig.allow_bold_font\fR
 Type:	\fBboolean\fR
 .fi
@@ -133,7 +135,7 @@ Reload config file.
 .IP \fBtym.copy_clipboard()\fR
 Returns:	\fBvoid\fR
 .fi
-Copy current serection.
+Copy current selection.
 .IP \fBtym.paste_clipboard()\fR
 Returns:	\fBvoid\fR
 .fi
@@ -150,6 +152,7 @@ Decrease font scale.
 Returns:	\fBvoid\fR
 .fi
 Reset font scale.
+
 .SH EXAMPLES
 You can register functions in a table named \fBkeymap\fR (defaultly defined like
 \fBconfig\fR table) in a format parsable by \fBgtk_accelerator_parse()\fR.

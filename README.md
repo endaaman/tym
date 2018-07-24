@@ -58,7 +58,7 @@ All available options are shown below.
 | `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
 | `cursor_blink` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
-| `use_default_keymap` | boolean | `true` | Use default keymap or not |
+| `use_default_keymap` | boolean | `true` | Whether or not to use default keymap |
 | `allow_bold_font` | boolean | `true` | Whether or not to attempt to draw bold text |
 | `color_bold`, `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_0` ... `color_15` | string | `''` (empty string) | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If you set empty string, the VTE default color will be used. |
 
@@ -129,7 +129,7 @@ keymap['<Ctrl>='] = 0
 | `tym.notify(message, title = 'tym')` | void           | Show desktop notification.                      |
 | `tym.put(text)`                      | void           | Feed text.                                      |
 | `tym.reload()`                       | void           | Reload config file.                             |
-| `tym.copy_clipboard()`               | void           | Copy current serection.                         |
+| `tym.copy_clipboard()`               | void           | Copy current selection.                         |
 | `tym.paste_clipboard()`              | void           | Paste clipboard.                                |
 | `tym.increase_font_scale()`          | void           | Increase font scale.                            |
 | `tym.decrease_font_scale()`          | void           | Decrease font scale.                            |
