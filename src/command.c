@@ -17,7 +17,7 @@ void command_notify(Context* context, const char* body, const char* title)
   GtkApplication* app = context->app;
 
   GNotification* notification = g_notification_new(title ? title : DEFAULT_NOTIFICATION_TITLE);
-  GIcon* icon = g_themed_icon_new("terminal");
+  GIcon* icon = g_themed_icon_new_with_default_fallbacks(config_get_icon(context->config));
 
   g_notification_set_icon (notification, G_ICON (icon));
   g_notification_set_body(notification, body);

@@ -54,6 +54,7 @@ All available options are shown below.
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `title` | string | `'tym'` | Window title |
+| `icon` | string | `'terminal'` | Name of icon. c.f [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/). |
 | `shell` | string | `$SHELL` -> `vte_get_user_shell()` -> `/bin/sh` | Shell to excute |
 | `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
 | `cursor_blink` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |

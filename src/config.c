@@ -16,10 +16,11 @@
 #define CJK_WIDTH_WIDE "wide"
 
 
-const char* fields_str[28] = {
+const char* fields_str[29] = {
   "title",
   "shell",
   "font",
+  "icon",
   "cursor_blink_mode",
   "cjk_width",
   "color_bold",
@@ -69,6 +70,7 @@ static const char* FALL_BACK_SHELL = "/bin/sh";
 static const int DEFAULT_WIDTH = 80;
 static const int DEFAULT_HEIGHT = 22;
 static const char* DEFAULT_TITLE = "tym";
+static const char* DEFAULT_ICON = "terminal";
 static const char* DEFAULT_BLINK_MODE = CURSOR_BLINK_MODE_SYSTEM;
 static const char* DEFAULT_CJK = CJK_WIDTH_NARROW;
 
@@ -194,6 +196,7 @@ void config_reset(Config* c)
   g_free(default_shell);
   config_set_str(c, "title", DEFAULT_TITLE);
   config_set_str(c, "font", "");
+  config_set_str(c, "icon", DEFAULT_ICON);
   config_set_str(c, "cjk_width", DEFAULT_CJK);
   config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
   unsigned i = 0;
@@ -460,6 +463,11 @@ char* config_get_shell(Config* c)
 char* config_get_title(Config* c)
 {
   return config_get_str(c, "title");
+}
+
+char* config_get_icon(Config* c)
+{
+  return config_get_str(c, "icon");
 }
 
 bool config_get_use_default_keymap(Config* c)
