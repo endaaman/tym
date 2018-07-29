@@ -45,7 +45,13 @@ Type:	\fBstring\fR
 .fi
 Default:	\fI'terminal'\fR
 .fi
-Name of icon. c.f https://developer.gnome.org/icon-naming-spec/.
+Name of icon. cf. https://developer.gnome.org/icon-naming-spec/.
+.IP \fBconfig.role\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI''\fR
+.fi
+Unique identifier for the window. If empty string set, no value set. cf. gtk_window_set_role()
 .IP \fBconfig.shell\fR
 Type:	\fBstring\fR
 .fi

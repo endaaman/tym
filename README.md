@@ -53,14 +53,16 @@ All available options are shown below.
 | --- | --- | --- | --- |
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
-| `title` | string | `'tym'` | Window title |
-| `icon` | string | `'terminal'` | Name of icon. c.f [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/). |
-| `shell` | string | `$SHELL` -> `vte_get_user_shell()` -> `/bin/sh` | Shell to excute |
+| `title` | string | `'tym'` | Window title. |
+| `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
+| `role` | string | `''` | Unique identifier for the window. If empty string set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
+| `shell` | string | `$SHELL` -> `vte_get_user_shell()` -> `/bin/sh` | Shell to excute. |
 | `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
 | `cursor_blink` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
-| `use_default_keymap` | boolean | `true` | Whether or not to use default keymap |
-| `allow_bold_font` | boolean | `true` | Whether or not to attempt to draw bold text |
+| `use_default_keymap` | boolean | `true` | Whether or not to use default keymap. |
+| `allow_bold_font` | boolean | `true` | Whether or not to attempt to draw bold text. |
+| `no_quit` | boolean | `false` | If `true`, app will not be quitn when child-process exited. |
 | `color_bold`, `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_0` ... `color_15` | string | `''` (empty string) | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If you set empty string, the VTE default color will be used. |
 
 
