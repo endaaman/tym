@@ -144,6 +144,7 @@ static void on_activate(GtkApplication* app, void* user_data)
 
   if (error) {
     g_strfreev(env);
+    g_strfreev(argv);
     g_printerr("error: %s\n", error->message);
     g_error_free(error);
     do_quit(app);
@@ -152,9 +153,9 @@ static void on_activate(GtkApplication* app, void* user_data)
 #endif
 
   g_strfreev(env);
+  g_strfreev(argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(GTK_WIDGET(window));
-  gtk_widget_show(GTK_WIDGET(window));
 }
 
 int main(int argc, char* argv[])
