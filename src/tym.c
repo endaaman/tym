@@ -11,6 +11,10 @@
 #include "context.h"
 #include "option.h"
 
+static void do_quit(GtkApplication* app)
+{
+  g_application_quit(G_APPLICATION(app));
+}
 
 static void on_shutdown(GApplication* app, void* user_data)
 {
@@ -39,10 +43,9 @@ static void on_child_exited(VteTerminal *vte, int status, void* user_data)
   UNUSED(vte);
   UNUSED(status);
   Context* context = (Context*)user_data;
-  GApplication* app = G_APPLICATION(context->app);
 
   if (!config_get_no_quit(context->config)) {
-    g_application_quit(app);
+    do_quit(context->app);
   }
 }
 
@@ -61,10 +64,10 @@ static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
   UNUSED(pid);
 
   Context* context = (Context*)user_data;
-  UNUSED(context);
 
   if (error) {
     g_warning("vte spwan failed for: %s", error->message);
+    do_quit(context->app);
   }
 }
 #endif
@@ -72,14 +75,14 @@ static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
 static void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
-
-  Option* option = (Option*)user_data;
-
   GList* list = gtk_application_get_windows(app);
   if (list) {
     gtk_window_present(GTK_WINDOW(list->data));
     return;
   }
+  GError* error = NULL;
+  Option* option = (Option*)user_data;
+
   GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
@@ -96,7 +99,15 @@ static void on_activate(GtkApplication* app, void* user_data)
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), context);
   g_signal_connect(G_OBJECT(vte), "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
 
-  char* argv[] = { config_get_shell(context->config), NULL };
+  int argc;
+  char** argv;
+  char* line = config_get_shell(context->config);
+  g_shell_parse_argv(line, &argc, &argv, &error);
+  if (error) {
+    g_printerr("error: failed to parse `%s`: %s\n", line, error->message);
+    g_error_free(error);
+    do_quit(app);
+  }
   char** env = g_get_environ();
 
 #ifdef USE_ASYNC_SPAWN
@@ -116,7 +127,6 @@ static void on_activate(GtkApplication* app, void* user_data)
     context              // user_data
   );
 #else
-  GError* error = NULL;
   GPid child_pid;
   vte_terminal_spawn_sync(
     vte,
@@ -133,8 +143,10 @@ static void on_activate(GtkApplication* app, void* user_data)
   );
 
   if (error) {
+    g_strfreev(env);
     g_printerr("error: %s\n", error->message);
     g_error_free(error);
+    do_quit(app);
     return;
   }
 #endif
@@ -149,7 +161,6 @@ int main(int argc, char* argv[])
 {
   dd("start");
   int exit_code = EXIT_SUCCESS;
-
   Option* option = option_init();
 
   GError* error = NULL;
