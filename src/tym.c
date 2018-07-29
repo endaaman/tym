@@ -66,7 +66,7 @@ static void on_spawn(VteTerminal *vte, GPid pid, GError *error, void* user_data)
   Context* context = (Context*)user_data;
 
   if (error) {
-    g_warning("vte spwan failed for: %s", error->message);
+    g_printerr("error: %s\n", error->message);
     do_quit(context->app);
   }
 }
@@ -104,9 +104,10 @@ static void on_activate(GtkApplication* app, void* user_data)
   char* line = config_get_shell(context->config);
   g_shell_parse_argv(line, &argc, &argv, &error);
   if (error) {
-    g_printerr("error: failed to parse `%s`: %s\n", line, error->message);
+    g_printerr("error: %s\n", error->message);
     g_error_free(error);
     do_quit(app);
+    return;
   }
   char** env = g_get_environ();
 
