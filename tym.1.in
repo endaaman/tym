@@ -8,10 +8,13 @@
 .SH OPTIONS
 .IP "\fB\-h\fR, \fB\-\-help\fR"
 Show help message.
+
 .IP "\fB\-v\fR, \fB\-\-version\fR"
 Show version.
+
 .IP "\fB\-u\fR, \fB\-\-use\fR=\fI<PATH>\fR"
 Use <PATH> instead of default config file.
+
 .IP "\fB\-\-c\fR:\fI<OPTION>\fR=\fI<VALUE>\fR"
 Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
 \fI<VALUE>\fR is a value of its option.
@@ -22,48 +25,56 @@ See \fBCONFIGURATION\fR for more information about config options.
 When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed with the
 global table \fBconfig\fR defined. You can do configuration by modifying
 \fBconfig\fR table.
+
 .IP \fBconfig.width\fR
 Type:	\fBinteger\fR
 .fi
 Default:	\fI80\fR
 .fi
 Initial columns.
+
 .IP \fBconfig.height\fR
 Type:	\fBinteger\fR
 .fi
 Default:	\fI22\fR
 .fi
 Initial rows.
+
 .IP \fBconfig.title\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'tym'\fR
 .fi
 Initial window title.
+
 .IP \fBconfig.term\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'xterm-256color'\fR
 .fi
 Default value of `$TERM`.
+
 .IP \fBconfig.icon\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'terminal'\fR
 .fi
 Name of icon. cf. https://developer.gnome.org/icon-naming-spec/.
+
 .IP \fBconfig.role\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI''\fR
 .fi
 Unique identifier for the window. If empty string set, no value set. cf. gtk_window_set_role()
+
 .IP \fBconfig.shell\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI$SHELL\fR → \fBvte_get_user_shell()\fR → \fB/bin/sh\fR
 .fi
 Shell to excute.
+
 .IP \fBconfig.font\fR
 Type:	\fBstring\fR
 .fi
@@ -73,12 +84,14 @@ You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example
 \fI'Ubuntu Mono 12'\fR. The value specified here is internally passed to
 \fBpango_font_description_from_string()\fR. If you set empty string, the system
 default fixed width font will be used.
+
 .IP \fBconfig.cursor_blink_mode\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'system'\fR
 .fi
 \fI'system'\fR, \fI'on'\fR or \fI'off'\fR are available.
+
 .IP \fBconfig.cjk_width\fR
 Type:	\fBstring\fR
 .fi
@@ -86,12 +99,14 @@ Default:	\fI'narrow'\fR
 .fi
 \fI'narrow'\fR or \fI'wide'\fR are available. There are complicated problems
 about this, so if you are not familiar with it, it's better to use the default.
+
 .IP "\fBconfig.use_default_keymap\fR (boolean)"
 Type:	\fBboolean\fR
 .fi
 Default:	\fItrue\fR
 .fi
 Whether or not use default keymap.
+
 .IP \fBconfig.allow_bold_font\fR
 Type:	\fBboolean\fR
 .fi
@@ -130,42 +145,52 @@ Key	Action
 .TE
 
 .SH BUILTIN FUNCTIONS
+
 .IP \fBtym.get_version()\fR
 Returns:	\fBstring\fR
 .fi
 Get version string.
+
 .IP \fBtym.get_config_file_path()\fR
 Returns:	\fBstring\fR
 .fi
 Get path of config file currently being read.
+
 .IP "\fBtym.notify('\fImessage\fB', title = '\fItym\fB')\fR"
 Returns:	\fBvoid\fR
 .fi
 Show desktop notification.
+
 .IP \fBtym.put('\fItext\fB')\fR
 Returns:	\fBvoid\fR
 .fi
 Feed text.
+
 .IP \fBtym.reload()\fR
 Returns:	\fBvoid\fR
 .fi
 Reload config file.
+
 .IP \fBtym.copy_clipboard()\fR
 Returns:	\fBvoid\fR
 .fi
 Copy current selection.
+
 .IP \fBtym.paste_clipboard()\fR
 Returns:	\fBvoid\fR
 .fi
 Paste clipboard.
+
 .IP \fBtym.increase_font_scale()\fR
 Returns:	\fBvoid\fR
 .fi
 Increase font scale.
+
 .IP \fBtym.decrease_font_scale()\fR
 Returns:	\fBvoid\fR
 .fi
 Decrease font scale.
+
 .IP \fBtym.reset_font_scale()\fR
 Returns:	\fBvoid\fR
 .fi
