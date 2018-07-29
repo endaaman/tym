@@ -19,7 +19,7 @@ typedef struct {
 } Config;
 
 
-extern const char* fields_str[29];
+extern const char* fields_str[30];
 extern const char* fields_int[2];
 extern const char* fields_bool[3];
 

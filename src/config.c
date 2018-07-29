@@ -16,13 +16,14 @@
 #define CJK_WIDTH_WIDE "wide"
 
 
-const char* fields_str[29] = {
+const char* fields_str[30] = {
   "title",
   "shell",
   "font",
   "icon",
   "cursor_blink_mode",
   "cjk_width",
+  "role",
   "color_bold",
   "color_foreground",
   "color_background",
@@ -198,6 +199,7 @@ void config_reset(Config* c)
   config_set_str(c, "title", DEFAULT_TITLE);
   config_set_str(c, "font", "");
   config_set_str(c, "icon", DEFAULT_ICON);
+  config_set_str(c, "role", "");
   config_set_str(c, "cjk_width", DEFAULT_CJK);
   config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
   unsigned i = 0;
@@ -409,6 +411,10 @@ void config_apply(Config* c, VteTerminal* vte)
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
 
   gtk_window_set_title(window, config_get_str(c, "title"));
+  char* role = config_has_str(c, "role")
+    ? config_get_str(c, "role")
+    : NULL;
+  gtk_window_set_role(window, role);
 
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
