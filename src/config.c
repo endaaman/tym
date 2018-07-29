@@ -16,7 +16,7 @@
 #define CJK_WIDTH_WIDE "wide"
 
 
-const char* fields_str[30] = {
+const char* fields_str[31] = {
   "title",
   "shell",
   "font",
@@ -24,6 +24,7 @@ const char* fields_str[30] = {
   "cursor_blink_mode",
   "cjk_width",
   "role",
+  "term",
   "color_bold",
   "color_foreground",
   "color_background",
@@ -73,6 +74,7 @@ static const int DEFAULT_WIDTH = 80;
 static const int DEFAULT_HEIGHT = 22;
 static const char* DEFAULT_TITLE = "tym";
 static const char* DEFAULT_ICON = "terminal";
+static const char* DEFAULT_TERM = "xterm-256color";
 static const char* DEFAULT_BLINK_MODE = CURSOR_BLINK_MODE_SYSTEM;
 static const char* DEFAULT_CJK = CJK_WIDTH_NARROW;
 
@@ -200,6 +202,7 @@ void config_reset(Config* c)
   config_set_str(c, "font", "");
   config_set_str(c, "icon", DEFAULT_ICON);
   config_set_str(c, "role", "");
+  config_set_str(c, "term", DEFAULT_TERM);
   config_set_str(c, "cjk_width", DEFAULT_CJK);
   config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
   unsigned i = 0;
@@ -476,6 +479,11 @@ char* config_get_title(Config* c)
 char* config_get_icon(Config* c)
 {
   return config_get_str(c, "icon");
+}
+
+char* config_get_term(Config* c)
+{
+  return config_get_str(c, "term");
 }
 
 bool config_get_use_default_keymap(Config* c)

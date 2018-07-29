@@ -110,6 +110,7 @@ static void on_activate(GtkApplication* app, void* user_data)
     return;
   }
   char** env = g_get_environ();
+  env = g_environ_setenv(env, "TERM", config_get_term(context->config), true);
 
 #ifdef USE_ASYNC_SPAWN
   vte_terminal_spawn_async(

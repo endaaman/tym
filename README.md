@@ -54,6 +54,7 @@ All available options are shown below.
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `title` | string | `'tym'` | Window title. |
+| `term` | string | `'xterm-256color'` | Default value of `$TERM`. |
 | `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `role` | string | `''` | Unique identifier for the window. If empty string set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
 | `shell` | string | `$SHELL` -> `vte_get_user_shell()` -> `/bin/sh` | Shell to excute. |

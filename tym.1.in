@@ -40,6 +40,12 @@ Type:	\fBstring\fR
 Default:	\fI'tym'\fR
 .fi
 Initial window title.
+.IP \fBconfig.term\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'xterm-256color'\fR
+.fi
+Default value of `$TERM`.
 .IP \fBconfig.icon\fR
 Type:	\fBstring\fR
 .fi
