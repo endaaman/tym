@@ -418,6 +418,7 @@ void config_apply(Config* c, VteTerminal* vte)
     ? config_get_str(c, "role")
     : NULL;
   gtk_window_set_role(window, role);
+  gtk_window_set_icon_name(window, config_get_icon(c));
 
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));

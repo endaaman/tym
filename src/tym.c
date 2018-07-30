@@ -93,7 +93,6 @@ static void on_activate(GtkApplication* app, void* user_data)
   Context* context = context_init(option, app, vte);
   context_load(context);
 
-  gtk_window_set_icon_name(window, config_get_icon(context->config));
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
   g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
   g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), context);
