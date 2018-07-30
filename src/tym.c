@@ -94,14 +94,13 @@ static void on_activate(GtkApplication* app, void* user_data)
   context_load(context);
 
   g_signal_connect(app, "shutdown", G_CALLBACK(on_shutdown), context);
-  g_signal_connect(G_OBJECT(vte), "key-press-event", G_CALLBACK(on_key_press), context);
-  g_signal_connect(G_OBJECT(vte), "child-exited", G_CALLBACK(on_child_exited), context);
-  g_signal_connect(G_OBJECT(vte), "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
+  g_signal_connect(vte, "key-press-event", G_CALLBACK(on_key_press), context);
+  g_signal_connect(vte, "child-exited", G_CALLBACK(on_child_exited), context);
+  g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
 
-  int argc;
   char** argv;
   char* line = config_get_shell(context->config);
-  g_shell_parse_argv(line, &argc, &argv, &error);
+  g_shell_parse_argv(line, NULL, &argv, &error);
   if (error) {
     g_printerr("error: %s\n", error->message);
     g_error_free(error);

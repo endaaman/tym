@@ -170,7 +170,7 @@ void context_load(Context* context)
   config_load_option(context->config, context->option);
 
   config_apply(context->config, context->vte);
-  dd("load successfully finished");
+  dd("load finished");
 
 EXIT:
   context->loading = false;
