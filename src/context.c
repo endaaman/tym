@@ -48,29 +48,28 @@ Context* context_init(Option* option, GtkApplication* app, VteTerminal* vte)
   luaL_openlibs(l);
   context->lua = l;
 
-  if (0 == g_strcmp0(option->config_file_path, USE_DEFAULT_CONFIG_SYMBOL)) {
+  char* path = option->config_file_path;
+  if (0 == g_strcmp0(path, USE_DEFAULT_CONFIG_SYMBOL)) {
     // If symbol to start without config provived
     context->config_file_path = NULL;
     g_message("starting with default config");
   } else {
-    char* challenging_config_file_path = NULL;
-    if (!option->config_file_path) {
-      challenging_config_file_path = g_build_path(
+    if (path) {
+      if (g_path_is_absolute(path)) {
+        context->config_file_path = g_strdup(path);
+      } else {
+        char* cwd = g_get_current_dir();
+        context->config_file_path = g_build_path(cwd, path, NULL);
+        g_free(cwd);
+      }
+    } else {
+      context->config_file_path = g_build_path(
         G_DIR_SEPARATOR_S,
         g_get_user_config_dir(),
         CONFIG_DIR_NAME,
         CONFIG_FILE_NAME,
         NULL
       );
-    } else {
-      challenging_config_file_path = g_strdup(option->config_file_path);
-    }
-
-    if (g_file_test(challenging_config_file_path, G_FILE_TEST_IS_REGULAR)) {
-      context->config_file_path = challenging_config_file_path;
-    } else {
-      g_warning("`%s` is not regular file. starting with default config", challenging_config_file_path);
-      g_free(challenging_config_file_path);
     }
     dd("config path: `%s`", context->config_file_path);
   }
@@ -141,7 +140,7 @@ void context_load(Context* context)
 
   int result = luaL_loadfile(l, context->config_file_path);
   if (result != LUA_OK) {
-    g_warning("`%s` does not exist. skipping loading", context->config_file_path);
+    g_warning("Could not load `%s`. skipping loading", context->config_file_path);
     goto EXIT;
   }
 
