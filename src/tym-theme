@@ -1,0 +1,147 @@
+#!/bin/bash
+
+remote_repo='endaaman/tym-themes'
+remote_dir='themes'
+config_dir="$HOME/.config/tym"
+themes_dir="$config_dir/themes"
+
+function c_red {
+  tput setaf 1
+}
+function c_green {
+  tput setaf 2
+}
+function c_blue {
+  tput setaf 4
+}
+function c_reset {
+  tput sgr0
+}
+
+function build_uri {
+  echo "https://raw.githubusercontent.com/$remote_repo/master/$remote_dir/$1.lua"
+}
+
+
+function usage {
+    cat <<EOF
+Usage:
+  tym-theme [command]
+
+Commands:
+  ls          Show local themes
+  ls-remote   Show remote themes on repository
+  install     Download a theme from repository
+  select      Select theme to use
+  delete      delete a local theme
+  help        Show this help
+
+Options:
+  -h, --help          Print help
+EOF
+}
+
+function list {
+  local themes=$(find $themes_dir -maxdepth 1 -iname '*.lua' | sed 's!^.*/!!')
+  for each in "${themes[@]}"; do
+    # TODO: show which is active
+    echo "$each"
+  done
+}
+
+function install {
+  local name=$1
+  local url=$(build_uri $name)
+  local path="$themes_dir/$name.lua"
+  if [ -f "$path" ]; then
+    c_red
+    echo "\"$path\" already exists."
+    c_reset
+    exit 1
+  fi
+
+  # TODO: show progress
+  if ! theme=$(curl --fail -sL $url); then
+    c_red
+    echo "Theme \"$name\" does not exist."
+    c_reset
+    exit 1
+  fi
+
+  echo $theme > $path
+  c_green
+  echo "Successfully installed the theme \"$name\" (saved into $path)"
+  c_reset
+}
+
+
+function _select {
+  local name=$1
+  local target="$config_dir/theme.lua"
+  local path="$themes_dir/$name.lua"
+
+  if [ ! -f "$path" ]; then
+    echo "\"$path\" does not exist."
+    exit 1
+  fi
+
+  if [ ! -f "$target" ]; then
+    echo "\"$target\" does not exist."
+    exit 1
+  fi
+
+  if [ ! -L "$target" ]; then
+    echo "\"$target\" is not symbolic link."
+    exit 1
+  fi
+
+  ln -sf $path $target
+  c_green
+  echo "Linked from \"$path\" to \"$target\""
+  c_reset
+}
+
+
+function delete {
+  local name=$1
+  local path="$themes_dir/$name.lua"
+
+  # TODO: check if the theme is active or not
+
+  if [ ! -f "$path" ]; then
+    echo "\"$path\" does not exist."
+    exit 1
+  fi
+
+  read -p "Ok to delete \"$path\" [Y/n] " -n 1 -r
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+  echo
+  rm -f $path
+}
+
+subcommand="$1"
+shift
+case $subcommand in
+  ls)
+    list $*
+  ;;
+  install)
+    install $*
+  ;;
+  select)
+    _select $*
+  ;;
+  delete)
+    delete $*
+  ;;
+  help|--help|-h|'')
+    usage $*
+  ;;
+  *)
+    echo "[ERROR] Invalid subcommand '${1}'"
+    usage $*
+    exit 1
+  ;;
+esac
