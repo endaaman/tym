@@ -72,6 +72,7 @@ Context* context_init(Option* option, GtkApplication* app, VteTerminal* vte)
       g_warning("`%s` is not regular file. starting with default config", challenging_config_file_path);
       g_free(challenging_config_file_path);
     }
+    dd("config path: `%s`", context->config_file_path);
   }
 
   context->option = option;
@@ -99,7 +100,7 @@ void context_close(Context* context)
 
 static void context_on_lua_error(Context* context, const char* error)
 {
-  char* message = g_strdup_printf("error in %s: %s", context->config_file_path, error);
+  char* message = g_strdup_printf("Error in %s: %s", context->config_file_path, error);
   g_warning(message);
   command_notify(context, message, NULL);
   g_free(message);
@@ -117,7 +118,7 @@ void context_load(Context* context)
 
   if (context->loading) {
     dd("load exit for recursive loading");
-    g_warning("tried to load config recursively");
+    g_warning("Tried to load config recursively");
     return;
   }
 
@@ -137,7 +138,12 @@ void context_load(Context* context)
   keymap_prepare(context->keymap);
 
   lua_State* l = context->lua;
-  luaL_loadfile(l, context->config_file_path);
+
+  int result = luaL_loadfile(l, context->config_file_path);
+  if (result != LUA_OK) {
+    g_warning("`%s` does not exist. skipping loading", context->config_file_path);
+    goto EXIT;
+  }
 
   if (lua_pcall(l, 0, 0, 0)) {
     const char* error = lua_tostring(l, -1);

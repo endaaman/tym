@@ -136,7 +136,7 @@ static void* config_get_raw(Config* c, const char* key)
 {
   void* ptr = g_hash_table_lookup(c->data, key);
   if (!ptr) {
-    g_warning("tried to refer null field: `%s`", key);
+    g_warning("Tried to refer null field: `%s`", key);
   }
   return g_hash_table_lookup(c->data, key);
 }
