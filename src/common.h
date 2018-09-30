@@ -43,9 +43,11 @@
 #endif
 
 #ifdef DEBUG
-#define dump_stack(x) debug_dump_stack(x)
+void debug_dump_stack(lua_State *l, char* file, unsigned line);
+#define ds(lua_state) \
+  debug_dump_stack((lua_state), __FILE__, __LINE__)
 #else
-#define dump_stack(...) ((void)0)
+#define ds(...) ((void)0)
 #endif
 
 #endif

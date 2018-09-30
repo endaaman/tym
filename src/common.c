@@ -11,12 +11,13 @@
 
 #ifdef DEBUG
 
-void debug_dump_stack(lua_State *l) {
-  g_print("[Stack Dump Start]\n");
+void debug_dump_stack(lua_State *l, char* file, unsigned line) {
+  g_print("[%s:%u stack dump]\n", file, line);
   int i = lua_gettop(l);
   if ( i > 0 ) {
     while( i ) {
       int t = lua_type(l, i);
+      g_print("  ");
       switch (t) {
         case LUA_TSTRING:
           g_print("%d: str: %s\n", i, lua_tostring(l, i));
@@ -34,9 +35,9 @@ void debug_dump_stack(lua_State *l) {
       i--;
     }
   } else {
-    g_print("stack is empty\n");
+    g_print("  stack is empty\n");
   }
-  g_print("[Stack Dump End]\n");
+  g_print("[stack dump end]\n");
 }
 
 #endif
