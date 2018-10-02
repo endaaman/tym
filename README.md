@@ -1,6 +1,7 @@
 # tym
 
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym)
+[![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
 
 `tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
 
