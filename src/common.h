@@ -21,7 +21,13 @@
 #include <vte/vte.h>
 #include "../config.h"
 
+
 #define UNUSED(x) (void)(x)
+
+// compat definition
+#ifndef LUA_LOADED_TABLE
+#define LUA_LOADED_TABLE "_LOADED"
+#endif
 
 /* Switch to use old api */
 /* #define TYM_USE_OLD_API */
