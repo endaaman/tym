@@ -14,6 +14,7 @@
 
 
 #define TYM_APP_ID "me.endaaman.tym"
+#define TYM_SYMBOL_NONE "NONE"
 
 typedef enum {
   CONFIG_TYPE_STRING = 1,

@@ -20,7 +20,6 @@ typedef struct {
 
 static const char* TYM_CONFIG_FILE_NAME = "config.lua";
 static const char* TYM_THEME_FILE_NAME = "theme.lua";
-static const char* TYM_SYMBOL_NONE = "NONE";
 static const char* TYM_CONFIG_DIR_NAME = "tym";
 static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
