@@ -17,6 +17,9 @@ typedef enum {
 } VteCjkWidth;
 
 #define TYM_FALL_BACK_SHELL "/bin/sh"
+#define TYM_CURSOR_SHAPE_BLOCK "block"
+#define TYM_CURSOR_SHAPE_IBEAM "ibeam"
+#define TYM_CURSOR_SHAPE_UNDERLINE "underline"
 #define TYM_CURSOR_BLINK_MODE_SYSTEM "system"
 #define TYM_CURSOR_BLINK_MODE_ON "on"
 #define TYM_CURSOR_BLINK_MODE_OFF "off"
@@ -26,7 +29,8 @@ typedef enum {
 static const char* TYM_DEFAULT_TITLE = "tym";
 static const char* TYM_DEFAULT_ICON = "terminal";
 static const char* TYM_DEFAULT_TERM = "xterm-256color";
-static const char* TYM_DEFAULT_BLINK_MODE = TYM_CURSOR_BLINK_MODE_SYSTEM;
+static const char* TYM_DEFAULT_CURSOR_SHAPE = TYM_CURSOR_SHAPE_BLOCK;
+static const char* TYM_DEFAULT_CURSOR_BLINK_MODE = TYM_CURSOR_BLINK_MODE_SYSTEM;
 static const char* TYM_DEFAULT_CJK = TYM_CJK_WIDTH_NARROW;
 static const int TYM_DEFAULT_WIDTH = 80;
 static const int TYM_DEFAULT_HEIGHT = 22;
@@ -51,14 +55,12 @@ unsigned config_fields_len = 0;
 
 __attribute__((constructor))
 static void config_fields_init() {
-#define color_special(name) { ("color_" name), 0, T_STR, G_COLOR, F_NONE, dup(""), "", ("value of "name "_color"), NULL, }
-#define color_normal(name) { ("color_" name), 0, T_STR, G_COLOR, F_HIDDEN, dup(""), NULL, NULL, NULL, }
+#define color_special(name) { ("color_" name), 0, T_STR, F_NONE, dup(""), "", ("value of "name "_color"), NULL, }
+#define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, dup(""), NULL, NULL, NULL, }
   const ConfigType T_STR = CONFIG_TYPE_STRING;
   const ConfigType T_INT = CONFIG_TYPE_INTEGER;
   const ConfigType T_BOOL = CONFIG_TYPE_BOOLEAN;
   const ConfigType T_NONE = CONFIG_TYPE_NONE;
-  const ConfigGroup G_BASE = CONFIG_GROUP_BASE;
-  const ConfigGroup G_COLOR = CONFIG_GROUP_COLOR;
   const GOptionFlags F_NONE = G_OPTION_FLAG_NONE;
   const GOptionFlags F_HIDDEN = G_OPTION_FLAG_HIDDEN;
 
@@ -66,22 +68,20 @@ static void config_fields_init() {
   const bool default_false = false;
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
-    { "title",               0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Intial Window title", NULL, },
-    { "shell",             'e', T_STR, G_BASE, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
-    { "font",                0, T_STR, G_BASE, F_NONE, dup(""), "", "Font to render(e.g. `Ubuntu Mono 12`)", NULL, },
-    { "icon",                0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", NULL, },
-    { "cursor_blink_mode",   0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_BLINK_MODE), "", "`system`, `on` or `off`", NULL, },
-    { "cjk_width",           0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_CJK), "", "`narrow` or `wide`", NULL, },
-    { "role",                0, T_STR, G_BASE, F_NONE, dup(""), "", "Unique identifier for the window", NULL, },
-    { "term",                0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", NULL, },
-
-    { "width",               0, T_INT, G_BASE, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", NULL, },
-    { "height",              0, T_INT, G_BASE, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", NULL, },
-
-    { "ignore_default_keymap", 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap", NULL, },
-    { "ignore_bold"          , 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", NULL, },
-    { "autohide"             , 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse when the user presses a key", NULL, },
-
+    { "title",               0, T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Intial Window title", NULL, },
+    { "shell",             'e', T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
+    { "font",                0, T_STR, F_NONE, dup(""), "", "Font to render(e.g. `Ubuntu Mono 12`)", NULL, },
+    { "icon",                0, T_STR, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", NULL, },
+    { "cursor_shape",        0, T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_SHAPE), "", "`block`, `ibeam` or `underline`", NULL, },
+    { "cursor_blink_mode",   0, T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_BLINK_MODE), "", "`system`, `on` or `off`", NULL, },
+    { "cjk_width",           0, T_STR, F_NONE, dup(TYM_DEFAULT_CJK), "", "`narrow` or `wide`", NULL, },
+    { "role",                0, T_STR, F_NONE, dup(""), "", "Unique identifier for the window", NULL, },
+    { "term",                0, T_STR, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", NULL, },
+    { "width",               0, T_INT, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", NULL, },
+    { "height",              0, T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", NULL, },
+    { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap", NULL, },
+    { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", NULL, },
+    { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", NULL, },
     color_special("foreground"),
     color_special("background"),
     color_special("cursor"),
@@ -93,7 +93,7 @@ static void config_fields_init() {
     color_normal("4"),  color_normal("5"),  color_normal("6"),  color_normal("7"),
     color_normal("8"),  color_normal("9"),  color_normal("10"), color_normal("11"),
     color_normal("12"), color_normal("13"), color_normal("14"), color_normal("15"),
-    { "color_1..15", 0, T_NONE, G_COLOR, F_NONE, NULL, "", "value of color from color_1 to color_15", NULL, },
+    { "color_1..15", 0, T_NONE, F_NONE, NULL, "", "value of color from color_1 to color_15", NULL, },
   };
 #undef color_special
 #undef color_normal
@@ -131,6 +131,17 @@ ConfigField* get_config_field(const char* key) {
   return NULL;
 }
 
+static VteCursorShape match_cursor_shape(const char* str)
+{
+  dd("cursor: %s", str);
+  if (0 == g_strcmp0(str, TYM_CURSOR_SHAPE_IBEAM)) {
+    return VTE_CURSOR_SHAPE_IBEAM;
+  }
+  if (0 == g_strcmp0(str, TYM_CURSOR_SHAPE_UNDERLINE)) {
+    return VTE_CURSOR_SHAPE_UNDERLINE;
+  }
+  return VTE_CURSOR_SHAPE_BLOCK;
+}
 
 static VteCursorBlinkMode match_cursor_blink_mode(const char* str)
 {
@@ -394,6 +405,7 @@ void config_apply(Config* config, VteTerminal* vte)
   gtk_window_set_role(window, role);
   gtk_window_set_icon_name(window, config_get_str(config, "icon"));
 
+  vte_terminal_set_cursor_shape(vte, match_cursor_shape(config_get_str(config, "cursor_shape")));
   vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(config, "cursor_blink_mode")));
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(config, "cjk_width")));
   vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));

@@ -22,12 +22,6 @@ typedef enum {
   CONFIG_TYPE_NONE = 4, // not actual, only shown in help
 } ConfigType;
 
-typedef enum {
-  CONFIG_GROUP_BASE = 1,
-  CONFIG_GROUP_COLOR = 2,
-} ConfigGroup;
-
-
 typedef struct {
   GOptionEntry* entries;
   bool version;
@@ -39,7 +33,6 @@ typedef struct {
   char* name;
   char short_name;
   ConfigType type;
-  ConfigGroup group;
   GOptionFlags option_flag;
   void* default_value;
   char* arg_desc;
