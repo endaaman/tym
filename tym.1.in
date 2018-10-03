@@ -151,7 +151,7 @@ Returns:	\fBstring\fR
 .fi
 Get version string.
 
-.IP \fBtym.get_config_file_path()\fR
+.IP \fBtym.get_config_path()\fR
 Returns:	\fBstring\fR
 .fi
 Get path of config file currently being read.

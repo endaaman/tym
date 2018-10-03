@@ -3,15 +3,15 @@
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym)
 [![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
 
-`tym` is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
+`tym` is a tiny VTE-based terminal emulator, which configurable by Lua.
 
 ## Motivation
 
-I wanted a teminal emulator that is
+I wanted a terminal emulator that is
 
 - simple (no menu bar, no GUI setting window etc..)
-- text based configuration
-- original VTE-based (not a forked one like vte-ng)
+- flexiblly configurable by text
+- original VTE-based (not a forked one like 'vte-ng')
 
 but I could not find it so I made it.
 
@@ -62,9 +62,8 @@ All available options are shown below.
 | `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
 | `cursor_blink` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
-| `use_default_keymap` | boolean | `true` | Whether or not to use default keymap. |
-| `allow_bold_font` | boolean | `true` | Whether or not to attempt to draw bold text. |
-| `no_quit` | boolean | `false` | If `true`, app will not be quitn when child-process exited. |
+| `ignore_default_keymap` | boolean | `false` | Whether not to use default keymap. |
+| `ignore_bold` | boolean | `false` | Whether to ignore drawing bold text(cf. [vte-terminal-set-allow-bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `color_bold`, `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_0` ... `color_15` | string | `''` (empty string) | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If you set empty string, the VTE default color will be used. |
 
 
@@ -165,12 +164,12 @@ and also can start without loading default `config.lua`.
 $ tym -u NONE
 ```
 
-### `--c:<config option>`
+### `--<config option>`
 
 Overriding config option via command line
 
 ```
-$ tym --c:shell=/bin/bash --c:color_background=red --c:use_default_keymap=false
+$ tym --shell=/bin/bash --color_background=red --width=40 --ignore_default_keymap
 ```
 
 ## Compilation
@@ -196,19 +195,21 @@ $ sudo pacman -S lua vte3
 $ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev
 ```
 
-#### Other distro
+#### Other distros or OS
 
-I don't check packeges needed to build on other distros. Awaiting your comtribution!!
+I did not check which packeges are needed to build on other distros or OS. Awaiting your contribution ;)
 
 ## Installation
 
-If you are an Arch linux user, just do
+#### Arch Linux
 
 ```
-$ yaourt -S tym
+$ yay -S tym
 ```
 
-or compile and do
+#### Other distros or OS
+
+Just compile and do
 
 ```
 $ sudo make install
@@ -222,7 +223,7 @@ Clone and do
 $ autoreconf -fvi
 ```
 
-Then you will get `configure` script.
+Then you will get `./configure` script.
 
 ## Tips
 

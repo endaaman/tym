@@ -7,59 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "config.h"
+#include "tym.h"
 
-#define CURSOR_BLINK_MODE_SYSTEM "system"
-#define CURSOR_BLINK_MODE_ON "on"
-#define CURSOR_BLINK_MODE_OFF "off"
-#define CJK_WIDTH_NARROW "narrow"
-#define CJK_WIDTH_WIDE "wide"
-
-
-const char* fields_str[31] = {
-  "title",
-  "shell",
-  "font",
-  "icon",
-  "cursor_blink_mode",
-  "cjk_width",
-  "role",
-  "term",
-  "color_bold",
-  "color_foreground",
-  "color_background",
-  "color_cursor",
-  "color_cursor_foreground",
-  "color_highlight",
-  "color_highlight_foreground",
-  "color_0",
-  "color_1",
-  "color_2",
-  "color_3",
-  "color_4",
-  "color_5",
-  "color_6",
-  "color_7",
-  "color_8",
-  "color_9",
-  "color_10",
-  "color_11",
-  "color_12",
-  "color_13",
-  "color_14",
-  "color_15",
-};
-
-const char* fields_int[2] = {
-  "width",
-  "height",
-};
-
-const char* fields_bool[3] = {
-  "use_default_keymap",
-  "allow_bold_font",
-  "no_quit",
-};
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 typedef enum {
@@ -67,16 +16,20 @@ typedef enum {
   VTE_CJK_WIDTH_WIDE = 2
 } VteCjkWidth;
 
-static const char* CONFIG_TABLE_NAME = "config";
-static const char* FALL_BACK_SHELL = "/bin/sh";
+#define TYM_FALL_BACK_SHELL "/bin/sh"
+#define TYM_CURSOR_BLINK_MODE_SYSTEM "system"
+#define TYM_CURSOR_BLINK_MODE_ON "on"
+#define TYM_CURSOR_BLINK_MODE_OFF "off"
+#define TYM_CJK_WIDTH_NARROW "narrow"
+#define TYM_CJK_WIDTH_WIDE "wide"
 
-static const int DEFAULT_WIDTH = 80;
-static const int DEFAULT_HEIGHT = 22;
-static const char* DEFAULT_TITLE = "tym";
-static const char* DEFAULT_ICON = "terminal";
-static const char* DEFAULT_TERM = "xterm-256color";
-static const char* DEFAULT_BLINK_MODE = CURSOR_BLINK_MODE_SYSTEM;
-static const char* DEFAULT_CJK = CJK_WIDTH_NARROW;
+static const char* TYM_DEFAULT_TITLE = "tym";
+static const char* TYM_DEFAULT_ICON = "terminal";
+static const char* TYM_DEFAULT_TERM = "xterm-256color";
+static const char* TYM_DEFAULT_BLINK_MODE = TYM_CURSOR_BLINK_MODE_SYSTEM;
+static const char* TYM_DEFAULT_CJK = TYM_CJK_WIDTH_NARROW;
+static const int TYM_DEFAULT_WIDTH = 80;
+static const int TYM_DEFAULT_HEIGHT = 22;
 
 
 static char* get_default_shell()
@@ -89,16 +42,102 @@ static char* get_default_shell()
   if (user_shell) {
     return user_shell;
   }
-  return g_strdup(FALL_BACK_SHELL);
+  return g_strdup(TYM_FALL_BACK_SHELL);
+}
+
+GList* config_fields = NULL;
+unsigned config_fields_len = 0;
+
+
+__attribute__((constructor))
+static void config_fields_init() {
+#define color_special(name) { ("color_" name), 0, T_STR, G_COLOR, F_NONE, dup(""), "", ("value of "name "_color"), NULL, }
+#define color_normal(name) { ("color_" name), 0, T_STR, G_COLOR, F_HIDDEN, dup(""), NULL, NULL, NULL, }
+  const ConfigType T_STR = CONFIG_TYPE_STRING;
+  const ConfigType T_INT = CONFIG_TYPE_INTEGER;
+  const ConfigType T_BOOL = CONFIG_TYPE_BOOLEAN;
+  const ConfigType T_NONE = CONFIG_TYPE_NONE;
+  const ConfigGroup G_BASE = CONFIG_GROUP_BASE;
+  const ConfigGroup G_COLOR = CONFIG_GROUP_COLOR;
+  const GOptionFlags F_NONE = G_OPTION_FLAG_NONE;
+  const GOptionFlags F_HIDDEN = G_OPTION_FLAG_HIDDEN;
+
+  char* (*dup)(const char*) = g_strdup;
+  const bool default_false = false;
+  // name, short, type, group, flag, default, desc
+  ConfigField c[] = {
+    { "title",               0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Intial Window title", NULL, },
+    { "shell",             'e', T_STR, G_BASE, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
+    { "font",                0, T_STR, G_BASE, F_NONE, dup(""), "", "Font to render(e.g. `Ubuntu Mono 12`)", NULL, },
+    { "icon",                0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", NULL, },
+    { "cursor_blink_mode",   0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_BLINK_MODE), "", "`system`, `on` or `off`", NULL, },
+    { "cjk_width",           0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_CJK), "", "`narrow` or `wide`", NULL, },
+    { "role",                0, T_STR, G_BASE, F_NONE, dup(""), "", "Unique identifier for the window", NULL, },
+    { "term",                0, T_STR, G_BASE, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", NULL, },
+
+    { "width",               0, T_INT, G_BASE, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", NULL, },
+    { "height",              0, T_INT, G_BASE, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", NULL, },
+
+    { "ignore_default_keymap", 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap", NULL, },
+    { "ignore_bold"          , 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", NULL, },
+    { "autohide"             , 0, T_BOOL, G_BASE, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse when the user presses a key", NULL, },
+
+    color_special("foreground"),
+    color_special("background"),
+    color_special("cursor"),
+    color_special("cursor_foreground"),
+    color_special("highlight"),
+    color_special("highlight_foreground"),
+    color_special("bold"),
+    color_normal("0"),  color_normal("1"),  color_normal("2"),  color_normal("3"),
+    color_normal("4"),  color_normal("5"),  color_normal("6"),  color_normal("7"),
+    color_normal("8"),  color_normal("9"),  color_normal("10"), color_normal("11"),
+    color_normal("12"), color_normal("13"), color_normal("14"), color_normal("15"),
+    { "color_1..15", 0, T_NONE, G_COLOR, F_NONE, NULL, "", "value of color from color_1 to color_15", NULL, },
+  };
+#undef color_special
+#undef color_normal
+
+
+  unsigned i = 0;
+  config_fields_len = sizeof(c) / sizeof(ConfigField);
+  while (i < config_fields_len) {
+    config_fields = g_list_append(config_fields, g_memdup(&c[i], sizeof(c[i])));
+    i++;
+  }
+}
+
+static void free_data(void* data, void* user_data) {
+  UNUSED(user_data);
+  g_free(data);
+}
+
+__attribute__((destructor))
+static void config_fields_close() {
+  g_list_foreach(config_fields, free_data, NULL);
+  g_list_free(config_fields);
+}
+
+ConfigField* get_config_field(const char* key) {
+  for (GList* li = config_fields; li != NULL; li = li->next) {
+    ConfigField* field = (ConfigField*)li->data;
+    if (0 == g_strcmp0(field->name, key)) {
+      ConfigType t= field->type;
+      if (t == CONFIG_TYPE_STRING || t == CONFIG_TYPE_INTEGER || t == CONFIG_TYPE_BOOLEAN) {
+        return field;
+      }
+    }
+  }
+  return NULL;
 }
 
 
 static VteCursorBlinkMode match_cursor_blink_mode(const char* str)
 {
-  if (0 == g_strcmp0(str, CURSOR_BLINK_MODE_ON)) {
+  if (0 == g_strcmp0(str, TYM_CURSOR_BLINK_MODE_ON)) {
     return VTE_CURSOR_BLINK_ON;
   }
-  if (0 == g_strcmp0(str, CURSOR_BLINK_MODE_OFF)) {
+  if (0 == g_strcmp0(str, TYM_CURSOR_BLINK_MODE_OFF)) {
     return VTE_CURSOR_BLINK_OFF;
   }
   return VTE_CURSOR_BLINK_SYSTEM;
@@ -106,64 +145,34 @@ static VteCursorBlinkMode match_cursor_blink_mode(const char* str)
 
 static unsigned match_cjk_width(const char* str)
 {
-  if (0 == g_strcmp0(str, CJK_WIDTH_WIDE)) {
+  if (0 == g_strcmp0(str, TYM_CJK_WIDTH_WIDE)) {
     return VTE_CJK_WIDTH_WIDE;
   }
   return VTE_CJK_WIDTH_NARROW;
 }
 
-Config* config_init(lua_State* lua)
+Config* config_init()
 {
-  Config* c = g_malloc0(sizeof(Config));
-  c->lua = lua;
-  c->data = g_hash_table_new_full(
+  Config* config = g_malloc0(sizeof(Config));
+  config->data = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,
     (GDestroyNotify)g_free,
     (GDestroyNotify)g_free
   );
-  config_reset(c);
-  return c;
+  config_reset(config);
+  return config;
 }
 
-void config_close(Config* c)
+void config_close(Config* config)
 {
-  g_hash_table_destroy(c->data);
-  g_free(c);
+  g_hash_table_destroy(config->data);
+  g_free(config);
 }
 
-static void* config_get_raw(Config* c, const char* key)
+bool config_has_str(Config* config, const char* key)
 {
-  void* ptr = g_hash_table_lookup(c->data, key);
-  if (!ptr) {
-    g_warning("Tried to refer null field: `%s`", key);
-  }
-  return g_hash_table_lookup(c->data, key);
-}
-
-static void config_set_raw(Config* c, const char* key, void* value)
-{
-  char* old_key = NULL;
-  bool has_value = g_hash_table_lookup_extended(c->data, key, (gpointer)&old_key, NULL);
-  if (has_value) {
-    g_hash_table_remove(c->data, old_key);
-  }
-  g_hash_table_insert(c->data, g_strdup(key), value);
-}
-
-static char* config_get_str(Config* c, const char* key)
-{
-  return (char*)config_get_raw(c, key);
-}
-
-static void config_set_str(Config* c, const char* key, const char* value)
-{
-  config_set_raw(c, key, g_strdup(value));
-}
-
-static bool config_has_str(Config* c, const char* key)
-{
-  char* value = config_get_str(c, key);
+  char* value = config_get_str(config, key);
   if (!value) {
     return false;
   }
@@ -173,229 +182,179 @@ static bool config_has_str(Config* c, const char* key)
   return true;
 }
 
-static int config_get_int(Config* c, const char* key)
+static void* config_get_raw(Config* config, const char* key)
 {
-  return *(int*)config_get_raw(c, key);
-}
-
-static void config_set_int(Config* c, const char* key, int value)
-{
-  config_set_raw(c, key, g_memdup((gpointer)&value, sizeof(int)));
-}
-
-static bool config_get_bool(Config* c, const char* key)
-{
-  return *(bool*)config_get_raw(c, key);
-}
-
-static void config_set_bool(Config* c, const char* key, bool value)
-{
-  config_set_raw(c, key, g_memdup((gpointer)&value, sizeof(bool)));
-}
-
-void config_reset(Config* c)
-{
-  char* default_shell = get_default_shell();
-  config_set_str(c, "shell", default_shell);
-  g_free(default_shell);
-  config_set_str(c, "title", DEFAULT_TITLE);
-  config_set_str(c, "font", "");
-  config_set_str(c, "icon", DEFAULT_ICON);
-  config_set_str(c, "role", "");
-  config_set_str(c, "term", DEFAULT_TERM);
-  config_set_str(c, "cjk_width", DEFAULT_CJK);
-  config_set_str(c, "cursor_blink_mode", DEFAULT_BLINK_MODE);
-  unsigned i = 0;
-  unsigned size = sizeof(fields_str) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_str[i];
-    // Set empty value if start with "color_"
-    if (0 == g_ascii_strncasecmp(key, "color_", 6)) {
-      config_set_str(c, key, "");
-    }
-    i++;
+  void* ptr = g_hash_table_lookup(config->data, key);
+  if (!ptr) {
+    dd("tried to refer null field: `%s`", key);
   }
-  config_set_int(c, "width", DEFAULT_WIDTH);
-  config_set_int(c, "height", DEFAULT_HEIGHT);
-
-  config_set_bool(c, "use_default_keymap", true);
-  config_set_bool(c, "allow_bold_font", true);
-  config_set_bool(c, "no_quit", false);
+  return ptr;
 }
 
-void config_prepare(Config* c)
+static void config_add_raw(Config* config, const char* key, void* value)
 {
-  lua_State* l = c->lua;
-  lua_newtable(l);
-
-  unsigned i;
-  unsigned size;
-  i = 0;
-  size = sizeof(fields_str) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_str[i];
-    const char* value = config_get_str(c, key);
-    lua_pushstring(l, key);
-    lua_pushstring(l, value ? value : "");
-    lua_settable(l, -3);
-    i++;
-  }
-
-  i = 0;
-  size = sizeof(fields_int) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_int[i];
-    int value = config_get_int(c, key);
-    lua_pushstring(l, key);
-    lua_pushinteger(l, value);
-    lua_settable(l, -3);
-    i++;
-  }
-
-  i = 0;
-  size = sizeof(fields_bool) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_bool[i];
-    bool value = config_get_bool(c, key);
-    lua_pushstring(l, key);
-    lua_pushboolean(l, value);
-    lua_settable(l, -3);
-    i++;
-  }
-  lua_setglobal(l, CONFIG_TABLE_NAME);
-}
-
-void config_load(Config* c, char** error)
-{
-  lua_State* l = c->lua;
-
-  lua_getglobal(l, CONFIG_TABLE_NAME);
-
-  if (lua_isnil(l, -1)) {
-    // no error for nil
-    lua_pop(l, 1);
+  void* ptr = g_hash_table_lookup(config->data, key);
+  if (ptr) {
+    dd("tried to overwrite field: `%s`", key);
     return;
   }
-
-  if (!lua_istable(l, -1)) {
-    *error = g_strdup_printf("`%s` is not table", CONFIG_TABLE_NAME);
-    lua_pop(l, 1);
-    return;
-  }
-
-  unsigned i;
-  unsigned size;
-  i = 0;
-  size = sizeof(fields_str) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_str[i];
-    lua_getfield(l, -1, key);
-    config_set_str(c, key, lua_tostring(l, -1));
-    lua_pop(l, 1);
-    i++;
-  }
-
-  i = 0;
-  size = sizeof(fields_int) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_int[i];
-    lua_getfield(l, -1, key);
-    config_set_int(c, key, lua_tointeger(l, -1));
-    lua_pop(l, 1);
-    i++;
-  }
-
-  i = 0;
-  size = sizeof(fields_bool) / sizeof(char*);
-  while (i < size) {
-    const char* key = fields_bool[i];
-    lua_getfield(l, -1, key);
-    config_set_bool(c, key, lua_toboolean(l, -1));
-    lua_pop(l, 1);
-    i++;
-  }
-
-  lua_pop(l, 1);
+  g_hash_table_insert(config->data, g_strdup(key), value);
 }
 
-
-void config_load_option(Config* c, Option* option)
+static bool config_set_raw(Config* config, const char* key, void* value)
 {
-  const unsigned offset_long_name = strlen(OPTION_CONFIG_PREFIX);
-  unsigned i, size;
-  GOptionEntry* entries;
-
-  i = 0;
-  size = sizeof(fields_str) / sizeof(char*);
-  entries = option_get_str_entries(option);
-  while (i < size) {
-    GOptionEntry* entry = &entries[i];
-    const char* key = &entry->long_name[offset_long_name];
-    if (*(char**)entry->arg_data) {
-      config_set_str(c, key, *(char**)entry->arg_data);
-    }
-    i++;
+  if (!value) {
+    dd("tried to set null field: `%s`", key);
+    return false;
   }
-
-  i = 0;
-  size = sizeof(fields_int) / sizeof(char*);
-  entries = option_get_int_entries(option);
-  while (i < size) {
-    GOptionEntry* entry = &entries[i];
-    const char* key = &entry->long_name[offset_long_name];
-    if (*(int*)entry->arg_data) { // if not zero
-      config_set_int(c, key, *(int*)entry->arg_data);
-    }
-    i++;
+  void* old_key = NULL;
+  bool has_value = g_hash_table_lookup_extended(config->data, key, &old_key, NULL);
+  if (has_value) {
+    g_hash_table_remove(config->data, old_key);
+  } else {
+    dd("tried to add new field: `%s`", key);
+    return false;
   }
+  g_hash_table_insert(config->data, g_strdup(key), value);
+  return true;
+}
 
-  i = 0;
-  size = sizeof(fields_bool) / sizeof(char*);
-  entries = option_get_bool_entries(option);
-  while (i < size) {
-    GOptionEntry* entry = &entries[i];
-    const char* key = &entry->long_name[offset_long_name];
-    char* data = *(char**)entry->arg_data;
-    if (data) {
-      bool flag;
-      if (0 == g_strcmp0(data, "true")) {
-        flag = true;
-      } else if (0 == g_strcmp0(data, "false")) {
-        flag = false;
-      } else {
-        continue;
+static void config_add_str(Config* config, const char* key, const char* value)
+{
+  config_add_raw(config, key, g_strdup(value));
+}
+
+bool config_set_str(Config* config, const char* key, const char* value)
+{
+  return config_set_raw(config, key, g_strdup(value));
+}
+
+char* config_get_str(Config* config, const char* key)
+{
+  char* v = (char*)config_get_raw(config, key);
+  if (v) {
+    return v;
+  }
+  dd("`%s`(int) is null. falling back to \"\"", key);
+  return "";
+}
+
+int config_get_int(Config* config, const char* key)
+{
+  int* v = (int*)config_get_raw(config, key);
+  if (v) {
+    return *v;
+  }
+  dd("`%s`(int) is null. falling back to 0", key);
+  return 0;
+}
+
+static void config_add_int(Config* config, const char* key, int value)
+{
+  config_add_raw(config, key, g_memdup((gpointer)&value, sizeof(int)));
+}
+
+bool config_set_int(Config* config, const char* key, int value)
+{
+  return config_set_raw(config, key, g_memdup((gpointer)&value, sizeof(int)));
+}
+
+bool config_get_bool(Config* config, const char* key)
+{
+  bool* v = (bool*)config_get_raw(config, key);
+  if (v) {
+    return *v;
+  }
+  dd("`%s`(bool) is null. falling back to null", key);
+  return false;
+}
+
+static void config_add_bool(Config* config, const char* key, bool value)
+{
+  config_add_raw(config, key, g_memdup((gpointer)&value, sizeof(bool)));
+}
+
+bool config_set_bool(Config* config, const char* key, bool value)
+{
+  return config_set_raw(config, key, g_memdup((gpointer)&value, sizeof(bool)));
+}
+
+void config_reset(Config* config)
+{
+  dd("reset");
+  g_hash_table_remove_all(config->data);
+
+  for (GList* li = config_fields; li != NULL; li = li->next) {
+    ConfigField* field = (ConfigField*)li->data;
+    switch (field->type) {
+      case CONFIG_TYPE_STRING:
+        config_add_str(config, field->name, field->default_value);
+        break;
+      case CONFIG_TYPE_INTEGER:
+        config_add_int(config, field->name, *(int*)(field->default_value));
+        break;
+      case CONFIG_TYPE_BOOLEAN:
+        config_add_bool(config, field->name, *(bool*)(field->default_value));
+        break;
+      case CONFIG_TYPE_NONE:
+        break;
+    }
+  }
+}
+
+void config_load_option_values(Config* config, Option* option)
+{
+  UNUSED(option);
+
+  for (GList* li = config_fields; li != NULL; li = li->next) {
+    ConfigField* field = (ConfigField*)li->data;
+    char* key = field->name;
+    if (!field->option_data) {
+      continue;
+    }
+    switch (field->type) {
+      case CONFIG_TYPE_STRING:
+        config_set_str(config, key, (char*)field->option_data);
+        break;
+      case CONFIG_TYPE_INTEGER:
+        config_set_int(config, key, (uintptr_t)field->option_data);
+        break;
+      case CONFIG_TYPE_BOOLEAN: {
+        config_set_bool(config, key, (bool)field->option_data);
+        break;
       }
-      config_set_bool(c, key, flag);
+      case CONFIG_TYPE_NONE:
+        break;
     }
-    i++;
   }
 }
 
-void config_apply_color(
-  Config* c,
+static void config_apply_color(
+  Config* config,
   VteTerminal* vte,
   VteSetColorFunc vte_set_color_func,
   const char* key
 ) {
-  if (!config_has_str(c, key)) {
+  if (!config_has_str(config, key)) {
     return;
   }
   GdkRGBA color;
-  const char* value = config_get_str(c, key);
+  const char* value = config_get_str(config, key);
   bool valid = gdk_rgba_parse(&color, value);
   if (valid) {
     vte_set_color_func(vte, &color);
   }
 }
 
-void config_apply_colors(Config* c, VteTerminal* vte)
+static void config_apply_colors(Config* config, VteTerminal* vte)
 {
   GdkRGBA* palette = g_new0(GdkRGBA, 16);
   char key[10];
   for (unsigned i = 0; i < 16; i++) {
+    // read color_0 .. color_15
     g_snprintf(key, 10, "color_%d", i);
-    if (config_has_str(c, key)) {
-      bool valid = gdk_rgba_parse(&palette[i], config_get_str(c, key));
+    if (config_has_str(config, key)) {
+      bool valid = gdk_rgba_parse(&palette[i], config_get_str(config, key));
       if (valid) {
         continue;
       }
@@ -409,23 +368,41 @@ void config_apply_colors(Config* c, VteTerminal* vte)
   vte_terminal_set_colors(vte, NULL, NULL, palette, 16);
 }
 
-void config_apply(Config* c, VteTerminal* vte)
+void config_apply_theme(Config* config, VteTerminal* vte)
+{
+  config_apply_colors(config, vte);
+  config_apply_color(config, vte, vte_terminal_set_color_bold, "color_bold");
+  config_apply_color(config, vte, vte_terminal_set_color_background, "color_background");
+  config_apply_color(config, vte, vte_terminal_set_color_foreground, "color_foreground");
+  config_apply_color(config, vte, vte_terminal_set_color_cursor, "color_cursor");
+  config_apply_color(config, vte, vte_terminal_set_color_highlight, "color_highlight");
+  config_apply_color(config, vte, vte_terminal_set_color_highlight_foreground, "color_highlight_foreground");
+
+#ifdef TYM_USE_VTE_COLOR_CURSOR_FOREGROUND
+  config_apply_color(config, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
+#endif
+}
+
+void config_apply(Config* config, VteTerminal* vte)
 {
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
 
-  gtk_window_set_title(window, config_get_str(c, "title"));
-  char* role = config_has_str(c, "role")
-    ? config_get_str(c, "role")
+  gtk_window_set_title(window, config_get_str(config, "title"));
+  char* role = config_has_str(config, "role")
+    ? config_get_str(config, "role")
     : NULL;
   gtk_window_set_role(window, role);
-  gtk_window_set_icon_name(window, config_get_icon(c));
+  gtk_window_set_icon_name(window, config_get_str(config, "icon"));
 
-  vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(c, "cursor_blink_mode")));
-  vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(c, "cjk_width")));
-  vte_terminal_set_allow_bold(vte, config_get_bool(c, "allow_bold_font"));
+  vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(config, "cursor_blink_mode")));
+  vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(config, "cjk_width")));
+  vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));
+  vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
 
-  int width = config_get_int(c, "width");
-  int height = config_get_int(c, "height");
+  dd("%d", vte_terminal_get_mouse_autohide(vte));
+
+  int width = config_get_int(config, "width");
+  int height = config_get_int(config, "height");
   if (0 < width && 0 < height) {
     if (gtk_window_is_active(window)){
       GtkBorder border;
@@ -446,53 +423,9 @@ void config_apply(Config* c, VteTerminal* vte)
     }
   }
 
-  if (config_has_str(c, "font")) {
-    PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(c, "font"));
+  if (config_has_str(config, "font")) {
+    PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(config, "font"));
     vte_terminal_set_font(vte, font_desc);
     pango_font_description_free(font_desc);
   }
-
-  config_apply_colors(c, vte);
-  config_apply_color(c, vte, vte_terminal_set_color_bold, "color_bold");
-  config_apply_color(c, vte, vte_terminal_set_color_background, "color_background");
-  config_apply_color(c, vte, vte_terminal_set_color_foreground, "color_foreground");
-  config_apply_color(c, vte, vte_terminal_set_color_cursor, "color_cursor");
-  config_apply_color(c, vte, vte_terminal_set_color_highlight, "color_highlight");
-  config_apply_color(c, vte, vte_terminal_set_color_highlight_foreground, "color_highlight_foreground");
-#if VTE_MAJOR_VERSION == 0
-#if VTE_MINOR_VERSION >= 46
-  /* vte_terminal_set_color_cursor_foreground is implemented since v0.46 */
-  config_apply_color(c, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
-#endif
-#endif
-}
-
-char* config_get_shell(Config* c)
-{
-  return config_get_str(c, "shell");
-}
-
-char* config_get_title(Config* c)
-{
-  return config_get_str(c, "title");
-}
-
-char* config_get_icon(Config* c)
-{
-  return config_get_str(c, "icon");
-}
-
-char* config_get_term(Config* c)
-{
-  return config_get_str(c, "term");
-}
-
-bool config_get_use_default_keymap(Config* c)
-{
-  return config_get_bool(c, "use_default_keymap");
-}
-
-bool config_get_no_quit(Config* c)
-{
-  return config_get_bool(c, "no_quit");
 }

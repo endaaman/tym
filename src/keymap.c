@@ -7,34 +7,30 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "keymap.h"
-#include "context.h"
-#include "command.h"
+#include "tym.h"
 
 
 typedef struct {
   unsigned key;
   GdkModifierType mod;
-  char* func_key;
-} CustomKeyPair;
+  char* acceralator;
+  int ref;
+} KeymapEntry;
 
 
-static const char* KEYMAP_TABLE_NAME = "keymap";
-
-void custom_key_pair_free(CustomKeyPair* pair, void* user_data)
+static void free_keymap_entry(KeymapEntry* e, void* user_data)
 {
+  // TODO: luaL_unref the ref
   UNUSED(user_data);
-  g_free(pair->func_key);
-  g_free(pair);
+  g_free(e->acceralator);
+  g_free(e);
 }
 
-
-Keymap* keymap_init(lua_State* lua)
+Keymap* keymap_init()
 {
+  dd("init");
   Keymap* keymap = g_malloc0(sizeof(Keymap));
-  keymap->lua = lua;
-  keymap->custom_key_pairs = NULL;
-  keymap->has_custom = false;
+  keymap->entries = NULL;
 
   keymap_reset(keymap);
   return keymap;
@@ -42,10 +38,10 @@ Keymap* keymap_init(lua_State* lua)
 
 void keymap_reset(Keymap* keymap)
 {
-  g_slist_foreach(keymap->custom_key_pairs, (GFunc)custom_key_pair_free, NULL);
-  g_slist_free(keymap->custom_key_pairs);
-  keymap->custom_key_pairs = NULL;
-  keymap->has_custom = false;
+  dd("reset");
+  g_list_foreach(keymap->entries, (GFunc)free_keymap_entry, NULL);
+  g_list_free(keymap->entries);
+  keymap->entries = NULL;
 }
 
 void keymap_close(Keymap* keymap)
@@ -54,87 +50,60 @@ void keymap_close(Keymap* keymap)
   g_free(keymap);
 }
 
-
-void keymap_prepare(Keymap* keymap)
+bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref)
 {
-  lua_State* l = keymap->lua;
-  lua_newtable(l);
-  lua_setglobal(l, KEYMAP_TABLE_NAME);
-}
-
-static void keymap_add_custom(Keymap* keymap, CustomKeyPair* pair)
-{
-  keymap->custom_key_pairs = g_slist_append(keymap->custom_key_pairs, pair);
-}
-
-void keymap_load(Keymap* keymap, char** error)
-{
-  lua_State* l = keymap->lua;
-  lua_getglobal(l, KEYMAP_TABLE_NAME);
-
-  if (lua_isnil(l, -1)) {
-    // no error for nil
-    lua_pop(l, 1);
-    return;
-  }
-
-  if (!lua_istable(l, -1)) {
-    *error = g_strdup_printf("`%s` is not table", KEYMAP_TABLE_NAME);
-    lua_pop(l, 1);
-    return;
-  }
-
-  lua_pushnil(l);
-  while (lua_next(l, -2)) {
-    lua_pushvalue(l, -2);
-    const char* accelator = lua_tostring(l, -1);
-
-    unsigned key;
-    GdkModifierType mod;
-    gtk_accelerator_parse(accelator, &key, &mod);
-    if (0 != key && 0 != mod) {
-      CustomKeyPair* pair = g_malloc0(sizeof(CustomKeyPair));
-      pair->key = key;
-      pair->mod = mod;
-      pair->func_key = g_strdup(lua_tostring(l, -1));
-      keymap_add_custom(keymap, pair);
-      dd("loaded: %s as key: 0x%x mod: 0x%x", accelator, mod, key);
-    } else {
-      g_warning("`%s` is invalid accelator", accelator);
-    }
-    lua_pop(l, 2);
-  }
-  lua_pop(l, 1);
-
-  keymap->has_custom = true;
-}
-
-bool keymap_perform_custom(Keymap* keymap, unsigned key, GdkModifierType mod, char** error)
-{
-  if (!keymap->has_custom) {
+  unsigned key;
+  GdkModifierType mod;
+  gtk_accelerator_parse(acceralator, &key, &mod);
+  if (0 == key || 0 == mod) {
     return false;
   }
-  lua_State* l = keymap->lua;
-  lua_getglobal(l, KEYMAP_TABLE_NAME);
+  bool removed = keymap_remove_entry(keymap, acceralator);
+  KeymapEntry* e = g_malloc0(sizeof(KeymapEntry));
+  e->key = key;
+  e->mod = mod;
+  e->acceralator = g_strdup(acceralator);
+  e->ref = ref;
+  keymap->entries = g_list_append(keymap->entries, e);
+  if (removed) {
+    dd("keymap [%s] has been overwritten", acceralator);
+  } else {
+    dd("keymap [%s] has been newly assined", acceralator);
+  }
+  return true;
+}
 
-  for (GSList* li = keymap->custom_key_pairs; li != NULL; li = li->next) {
-    CustomKeyPair* pair = (CustomKeyPair*)li->data;
-    if ((key == pair->key) && !(~mod & pair->mod)) {
-      lua_getfield(l, -1, pair->func_key);
-      if (!lua_isfunction(l, -1)) {
-        lua_pop(l, 2); // table and value(not function)
-        return true;
-      } else {
-        // when not nil and function
-        if (0 != lua_pcall(l, 0, 0, 0)) {
-          *error = g_strdup(lua_tostring(l, -1));
-          lua_pop(l, 1); // error
-        }
-      }
-      lua_pop(l, 1); // function
+bool keymap_remove_entry(Keymap* keymap, const char* acceralator)
+{
+  for (GList* li = keymap->entries; li != NULL; li = li->next) {
+    KeymapEntry* e = (KeymapEntry*)li->data;
+    if (0 == g_strcmp0(e->acceralator, acceralator)) {
+      keymap->entries = g_list_remove(keymap->entries, e);
+      g_free(e);
       return true;
     }
   }
-  lua_pop(l, 1); // table
+  return false;
+}
+
+bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, char** error)
+{
+  for (GList* li = keymap->entries; li != NULL; li = li->next) {
+    KeymapEntry* e = (KeymapEntry*)li->data;
+    if ((key == e->key) && !(~mod & e->mod)) {
+      lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
+      if (lua_isfunction(L, -1)) {
+        dd("perform keymap: %s", e->acceralator);
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+          *error = g_strdup(lua_tostring(L, -1));
+          lua_pop(L, 1); // error
+        }
+      } else {
+        lua_pop(L, 1); // pop none-function
+        g_warning("Tried to call keymap (%s) which is not function.", e->acceralator);
+      }
+      return true;
+    }
+  }
   return false;
 }

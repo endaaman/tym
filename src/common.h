@@ -23,31 +23,56 @@
 
 #define UNUSED(x) (void)(x)
 
+/* Switch to use old api */
+/* #define TYM_USE_OLD_API */
+
+#ifndef TYM_USE_OLD_VTE
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 48
-#define USE_ASYNC_SPAWN
+#define TYM_USE_VTE_SPAWN_ASYNC
+#endif
 #endif
 #endif
 
+#ifndef TYM_USE_OLD_VTE
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 50
-#define USE_COPY_CLIPBOARD_FORMAT
+#define TYM_USE_VTE_COPY_CLIPBOARD_FORMAT
+#endif
+#endif
+#endif
+
+#ifndef TYM_USE_OLD_VTE
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 46
+#define TYM_USE_VTE_COLOR_CURSOR_FOREGROUND
+#endif
 #endif
 #endif
 
 #ifdef DEBUG
 #define dd( fmt, ... ) \
-  g_print("[%s:%u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+  g_print("[%-10s:%3u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define dd( ... ) ((void)0)
 #endif
 
 #ifdef DEBUG
-void debug_dump_stack(lua_State *l, char* file, unsigned line);
+#define df( fmt, ... ) \
+  g_print("[%-10s:%3u] %s\n", __FILE__, __LINE__, __func__)
+#else
+#define df( ... ) ((void)0)
+#endif
+
+#ifdef DEBUG
+void debug_dump_stack(lua_State *L, char* file, unsigned line);
 #define ds(lua_state) \
   debug_dump_stack((lua_state), __FILE__, __LINE__)
 #else
 #define ds(...) ((void)0)
 #endif
+
+void luaL_requiref_with_userdata(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata);
+int luaL_warn (lua_State *L, const char *fmt, ...);
 
 #endif

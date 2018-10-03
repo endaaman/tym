@@ -7,9 +7,7 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "context.h"
-#include "command.h"
-#include "builtin.h"
+#include "tym.h"
 
 
 typedef void (*TymCommandFunc)(Context* context);
@@ -20,13 +18,12 @@ typedef struct {
   TymCommandFunc func;
 } KeyPair;
 
-static const char* CONFIG_FILE_NAME = "config.lua";
-static const char* USE_DEFAULT_CONFIG_SYMBOL = "NONE";
-static const char* CONFIG_DIR_NAME = "tym";
-static const char* LIB_NAME = "tym";
-
-static void context_embed_builtin_functions(Context* context); // declare forward
-
+static const char* TYM_CONFIG_FILE_NAME = "config.lua";
+static const char* TYM_THEME_FILE_NAME = "theme.lua";
+static const char* TYM_SYMBOL_NONE = "NONE";
+static const char* TYM_CONFIG_DIR_NAME = "tym";
+static const char* TYM_MODULE_NAME = "tym";
+static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
 static KeyPair default_key_pairs[] = {
   { GDK_KEY_plus , GDK_CONTROL_MASK                 , command_increase_font_scale },
@@ -38,181 +35,230 @@ static KeyPair default_key_pairs[] = {
   { 0            , 0                                , NULL                        },
 };
 
-Context* context_init(Option* option, GtkApplication* app, VteTerminal* vte)
+
+static void context_set_config_path(Context* context, char* path)
 {
-  dd("init");
-
-  Context* context = g_malloc0(sizeof(Context));
-
-  lua_State* l = luaL_newstate();
-  luaL_openlibs(l);
-  context->lua = l;
-
-  char* path = option->config_file_path;
-  if (0 == g_strcmp0(path, USE_DEFAULT_CONFIG_SYMBOL)) {
-    // If symbol to start without config provived
-    context->config_file_path = NULL;
-    g_message("starting with default config");
+  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+    context->config_path = NULL;
+    g_message("Starting with default config.");
   } else {
     if (path) {
       if (g_path_is_absolute(path)) {
-        context->config_file_path = g_strdup(path);
+        context->config_path = g_strdup(path);
       } else {
         char* cwd = g_get_current_dir();
-        context->config_file_path = g_build_path(cwd, path, NULL);
+        context->config_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
         g_free(cwd);
       }
     } else {
-      context->config_file_path = g_build_path(
+      context->config_path = g_build_path(
         G_DIR_SEPARATOR_S,
         g_get_user_config_dir(),
-        CONFIG_DIR_NAME,
-        CONFIG_FILE_NAME,
+        TYM_CONFIG_DIR_NAME,
+        TYM_CONFIG_FILE_NAME,
         NULL
       );
     }
-    dd("config path: `%s`", context->config_file_path);
+    dd("config path: `%s`", context->config_path);
+  }
+}
+
+static void context_set_theme_path(Context* context, char* path)
+{
+  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+    context->theme_path = NULL;
+    g_message("Starting without custom theme.");
+  } else {
+    if (path) {
+      if (g_path_is_absolute(path)) {
+        context->theme_path = g_strdup(path);
+      } else {
+        char* cwd = g_get_current_dir();
+        context->theme_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+        g_free(cwd);
+      }
+    } else {
+      context->theme_path = g_build_path(
+        G_DIR_SEPARATOR_S,
+        g_get_user_config_dir(),
+        TYM_CONFIG_DIR_NAME,
+        TYM_THEME_FILE_NAME,
+        NULL
+      );
+    }
+  }
+  dd("theme path: `%s`", context->theme_path);
+}
+
+static void context_prepare_lua(Context* context)
+{
+  lua_State* L = luaL_newstate();
+  luaL_openlibs(L);
+  luaL_requiref_with_userdata(L, TYM_MODULE_NAME, builtin_register_module, true, context);
+  ///* BACKWARD COMPAT BEGIN
+  lua_newtable(L);
+  lua_setglobal(L, "config");
+  lua_newtable(L);
+  lua_setglobal(L, "keymap");
+  ///* BACKWARD COMPAT END
+  context->lua = L;
+}
+
+Context* context_init()
+{
+  dd("init");
+  Context* context = g_malloc0(sizeof(Context));
+  context->config = config_init();
+  context->keymap = keymap_init();
+  context->option = option_init();
+  context->app = gtk_application_new(TYM_APP_ID, G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN);
+  context_prepare_lua(context);
+  return context;
+}
+
+int context_start(Context* context, int argc, char** argv) {
+  GError* error = NULL;
+  bool is_continuous = option_check(context->option, &argc, &argv, &error);
+  if (error) {
+    g_error(error->message);
+    g_error_free(error);
+    return EXIT_FAILURE;
   }
 
-  context->option = option;
-  context->app = app;
-  context->vte = vte;
+  if (!is_continuous) {
+    return EXIT_SUCCESS;
+  }
 
-  context->config = config_init(l);
-  context->keymap = keymap_init(l);
+  // read option after option parsed
+  context_set_config_path(context, context->option->config_path);
+  context_set_theme_path(context, context->option->theme_path);
 
-  context_embed_builtin_functions(context);
-  return context;
+  // load option as default
+  config_load_option_values(context->config, context->option);
+
+  g_signal_connect(context->app, "activate", G_CALLBACK(on_activate), context);
+  g_signal_connect(context->app, "open", G_CALLBACK(on_open), context);
+  return g_application_run(G_APPLICATION(context->app), argc, argv);
 }
 
 void context_close(Context* context)
 {
   dd("close");
-
-  lua_close(context->lua);
-  g_free(context->config_file_path);
   config_close(context->config);
   keymap_close(context->keymap);
+  option_close(context->option);
+  g_object_unref(context->app);
+  lua_close(context->lua);
+  g_free(context->config_path);
   g_free(context);
 }
 
-
 static void context_on_lua_error(Context* context, const char* error)
 {
-  char* message = g_strdup_printf("Error in %s: %s", context->config_file_path, error);
-  g_warning(message);
-  command_notify(context, message, NULL);
+  char* message = g_strdup_printf("%s", error);
+  g_message(message);
+  context_notify(context, error, "tym: lua error");
   g_free(message);
 }
 
-void context_load(Context* context)
+void context_load_config(Context* context)
 {
-  dd("load start");
+  dd("load config start");
 
-  if (!context->config_file_path) {
-    // Running without config
-    dd("load exit for running with out config");
+  if (!context->config_path) {
+    dd("skip config loading");
     return;
   }
 
   if (context->loading) {
-    dd("load exit for recursive loading");
-    g_warning("Tried to load config recursively");
+    g_message("Tried to load config recursively. Ignoring loading.");
     return;
   }
-
   context->loading = true;
 
-  config_reset(context->config);
-  keymap_reset(context->keymap);
-
-  if (!g_file_test(context->config_file_path, G_FILE_TEST_EXISTS)) {
-    dd("load exit for the file(%s) does not exists", context->config_file_path);
-    // Warn only if user config file provided
-    g_warning("`%s` does not exist. skipping loading", context->config_file_path);
+  if (!g_file_test(context->config_path, G_FILE_TEST_EXISTS)) {
+    g_message("Config file (`%s`) does not exist. Skipping cofig loading.", context->config_path);
     goto EXIT;
   }
 
-  config_prepare(context->config);
-  keymap_prepare(context->keymap);
-
-  lua_State* l = context->lua;
-
-  int result = luaL_loadfile(l, context->config_file_path);
+  lua_State* L = context->lua;
+  int result = luaL_loadfile(L, context->config_path);
   if (result != LUA_OK) {
-    g_warning("Could not load `%s`. skipping loading", context->config_file_path);
+    g_warning("Could not load `%s`.", context->config_path);
     goto EXIT;
   }
 
-  if (lua_pcall(l, 0, 0, 0)) {
-    const char* error = lua_tostring(l, -1);
-    dd("load exit for lua error: %s", error);
+  if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+    const char* error = lua_tostring(L, -1);
+    g_message("Got error excuting config script. Stopped config loading.");
     context_on_lua_error(context, error);
-    g_message("starting with default config and keymap");
     goto EXIT;
   }
-
-  char* error = NULL;
-
-  config_load(context->config, &error);
-  if (error) {
-    dd("load exit for config load error: %s", error);
-    context_on_lua_error(context, error);
-    g_message("starting with default config");
-    g_free(error);
-    goto EXIT;
-  }
-
-  keymap_load(context->keymap, &error);
-  if (error) {
-    dd("load exit for keymap load error: %s", error);
-    context_on_lua_error(context, error);
-    g_message("starting without custom keymap");
-    g_free(error);
-    goto EXIT;
-  }
-
-  config_load_option(context->config, context->option);
-
-  config_apply(context->config, context->vte);
-  dd("load finished");
 
 EXIT:
   context->loading = false;
-  return;
+  dd("load config end");
 }
 
-static void context_embed_builtin_functions(Context* context)
+void context_load_theme(Context* context)
 {
-  const luaL_Reg table[] = {
-    { "get_version"         , builtin_get_version          },
-    { "get_config_file_path", builtin_get_config_file_path },
-    { "notify"              , builtin_notify               },
-    { "put"                 , builtin_put                  },
-    { "reload"              , builtin_reload               },
-    { "increase_font_scale" , builtin_increase_font_scale  },
-    { "decrease_font_scale" , builtin_decrease_font_scale  },
-    { "reset_font_scale"    , builtin_reset_font_scale     },
-    { "copy_clipboard"      , builtin_copy_clipboard       },
-    { "copy"                , builtin_copy_clipboard       },
-    { "paste_clipboard"     , builtin_paste_clipboard      },
-    { "paste"               , builtin_paste_clipboard      },
-    { NULL, NULL },
-  };
+  dd("load theme start");
 
-  lua_State* l = context->lua;
-  luaL_newlibtable(l, table);
-  lua_pushlightuserdata(l, context);
-  luaL_setfuncs(l, table, 1);
-  lua_setglobal(l, LIB_NAME);
+  if (!context->theme_path) {
+    dd("skip theme loading");
+    goto EXIT;
+  }
+
+  if (!g_file_test(context->theme_path, G_FILE_TEST_EXISTS)) {
+    // do not warn
+    g_message("Theme file (`%s`) does not exist. Skipping theme loading.", context->theme_path);
+    goto EXIT;
+  }
+
+  lua_State* L = context->lua;
+  int result = luaL_loadfile(L, context->theme_path);
+  if (result != LUA_OK) {
+    g_warning("Could not load `%s`.", context->config_path);
+    goto EXIT;
+  }
+
+  if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+    const char* error = lua_tostring(L, -1);
+    g_message("Got error excuting theme script. Stopped theme loading.");
+    context_on_lua_error(context, error);
+    goto EXIT;
+  }
+
+  if (!lua_istable(L, -1)) {
+    g_message("Theme script must return a table (got %s). Skipping theme assignment.", lua_typename(L, lua_type(L, -1)));
+    goto EXIT;
+  }
+
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    lua_pushvalue(L, -2);
+    const char* key = lua_tostring(L, -1);
+    const char* value = lua_tostring(L, -2);
+    if (value) {
+      bool ok = config_set_str(context->config, key, value);
+      if (!ok) {
+        luaL_warn(L, "Invalid color key: `%s`", key);
+      }
+    }
+    lua_pop(L, 2);
+  }
+  lua_pop(L, 1); // last key
+EXIT:
+  dd("load theme end");
 }
 
 static bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
 {
   unsigned i = 0;
   while (default_key_pairs[i].func) {
-    if ((key == default_key_pairs[i].key) && !(~mod & default_key_pairs[i].mod)) {
-      default_key_pairs[i].func(context);
+    KeyPair* pair = &default_key_pairs[i];
+    if ((key == pair->key) && !(~mod & pair->mod)) {
+      pair->func(context);
       return true;
     }
     i++;
@@ -223,30 +269,58 @@ static bool context_perform_default(Context* context, unsigned key, GdkModifierT
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 {
   char* error = NULL;
-  if (keymap_perform_custom(context->keymap, key, mod, &error)) {
+  if (keymap_perform(context->keymap, context->lua, key, mod, &error)) {
     if (error) {
       context_on_lua_error(context, error);
       g_free(error);
     }
     return true;
   }
-
-  if (
-    config_get_use_default_keymap(context->config) &&
-    context_perform_default(context, key, mod)
-  ) {
-    return true;
+  if (config_get_bool(context->config, "ignore_default_keymap")) {
+    return false;
   }
-  return false;
+  return context_perform_default(context, key, mod);
 }
 
-void context_on_change_vte_title(Context* context) {
-  GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(context->vte)));
+void context_apply_config(Context* context)
+{
+  config_apply(context->config, context_get_vte(context));
+}
 
-  const char* terminal_title = vte_terminal_get_window_title(context->vte);
-  const char* title = terminal_title
-    ? terminal_title
-    : config_get_title(context->config);
+void context_apply_theme(Context* context)
+{
+  config_apply_theme(context->config, context_get_vte(context));
+}
 
-  gtk_window_set_title(window, title);
+GtkWindow* context_get_window(Context* context)
+{
+  return gtk_application_get_active_window(context->app);
+}
+
+VteTerminal* context_get_vte(Context* context)
+{
+  GList *children = gtk_container_get_children(GTK_CONTAINER(context_get_window(context)));
+  for (GList* item = children; item != NULL; item = g_list_next(item)) {
+    if (item->data && VTE_IS_TERMINAL(item->data)) {
+      return VTE_TERMINAL(item->data);
+    }
+  }
+  dd("vte has not been initialized.");
+  return NULL;
+}
+
+void context_notify(Context* context, const char* body, const char* title)
+{
+  GtkApplication* app = context->app;
+
+  GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
+  GIcon* icon = g_themed_icon_new_with_default_fallbacks(config_get_str(context->config, "icon"));
+
+  g_notification_set_icon(notification, G_ICON (icon));
+  g_notification_set_body(notification, body);
+  g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_URGENT);
+  g_application_send_notification(G_APPLICATION(app), TYM_APP_ID, notification);
+
+  g_object_unref(notification);
+  g_object_unref(icon);
 }
