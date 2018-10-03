@@ -319,10 +319,9 @@ static int builtin_notify(lua_State* L)
 static int builtin_feed(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  VteTerminal* vte = context_get_vte(context);
 
   const char* text = luaL_checkstring(L, -1);
-  vte_terminal_feed_child(vte, text, -1);
+  vte_terminal_feed_child(context->vte, text, -1);
   return 1;
 }
 

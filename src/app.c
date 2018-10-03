@@ -43,7 +43,7 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
 
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
 
-  const char* title = vte_terminal_get_window_title(context_get_vte(context));
+  const char* title = vte_terminal_get_window_title(context->vte);
   if (title && !config_has_str(context->config, "title")) {
     gtk_window_set_title(window, title);
   }
@@ -109,7 +109,7 @@ void on_activate(GtkApplication* app, void* user_data)
   Context* context = (Context*)user_data;
 
   VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
-  vte_terminal_set_rewrap_on_resize(vte, true);
+  context_set_vte(context, vte);
 
   GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));

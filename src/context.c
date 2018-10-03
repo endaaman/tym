@@ -116,6 +116,18 @@ Context* context_init()
   return context;
 }
 
+void context_close(Context* context)
+{
+  dd("close");
+  config_close(context->config);
+  keymap_close(context->keymap);
+  option_close(context->option);
+  g_object_unref(context->app);
+  lua_close(context->lua);
+  g_free(context->config_path);
+  g_free(context);
+}
+
 int context_start(Context* context, int argc, char** argv) {
   GError* error = NULL;
   bool is_continuous = option_check(context->option, &argc, &argv, &error);
@@ -139,18 +151,6 @@ int context_start(Context* context, int argc, char** argv) {
   g_signal_connect(context->app, "activate", G_CALLBACK(on_activate), context);
   g_signal_connect(context->app, "open", G_CALLBACK(on_open), context);
   return g_application_run(G_APPLICATION(context->app), argc, argv);
-}
-
-void context_close(Context* context)
-{
-  dd("close");
-  config_close(context->config);
-  keymap_close(context->keymap);
-  option_close(context->option);
-  g_object_unref(context->app);
-  lua_close(context->lua);
-  g_free(context->config_path);
-  g_free(context);
 }
 
 static void context_on_lua_error(Context* context, const char* error)
@@ -284,29 +284,22 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 
 void context_apply_config(Context* context)
 {
-  config_apply(context->config, context_get_vte(context));
+  config_apply(context->config, context->vte);
 }
 
 void context_apply_theme(Context* context)
 {
-  config_apply_theme(context->config, context_get_vte(context));
+  config_apply_theme(context->config, context->vte);
 }
 
 GtkWindow* context_get_window(Context* context)
 {
-  return gtk_application_get_active_window(context->app);
+  return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(context->vte)));
 }
 
-VteTerminal* context_get_vte(Context* context)
+void context_set_vte(Context* context, VteTerminal* vte)
 {
-  GList *children = gtk_container_get_children(GTK_CONTAINER(context_get_window(context)));
-  for (GList* item = children; item != NULL; item = g_list_next(item)) {
-    if (item->data && VTE_IS_TERMINAL(item->data)) {
-      return VTE_TERMINAL(item->data);
-    }
-  }
-  dd("vte has not been initialized.");
-  return NULL;
+  context->vte = vte;
 }
 
 void context_notify(Context* context, const char* body, const char* title)

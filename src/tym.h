@@ -64,6 +64,7 @@ typedef struct {
   Keymap* keymap;
   Option* option;
   GtkApplication* app;
+  VteTerminal* vte;
   lua_State* lua;
   char* config_path;
   char* theme_path;
@@ -120,7 +121,7 @@ void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
 void context_apply_config(Context* context);
 void context_apply_theme(Context* context);
-VteTerminal* context_get_vte(Context* context);
+void context_set_vte(Context* context, VteTerminal* vte);
 GtkWindow* context_get_window(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
 
