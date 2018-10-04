@@ -39,37 +39,6 @@ static int builtin_get(lua_State* L)
   return 1;
 }
 
-static int builtin_get_config(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-
-  lua_newtable(L);
-
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
-    char* key = field->name;
-    lua_pushstring(L, key);
-    switch (field->type) {
-      case CONFIG_TYPE_STRING: {
-        const char* value = config_get_str(context->config, key);
-        lua_pushstring(L, value);
-        break;
-      }
-      case CONFIG_TYPE_INTEGER:
-        lua_pushinteger(L, config_get_int(context->config, key));
-        break;
-      case CONFIG_TYPE_BOOLEAN:
-        lua_pushboolean(L, config_get_bool(context->config, key));
-        break;
-      case CONFIG_TYPE_NONE:
-        lua_pop(L, 1);
-        continue;
-    }
-    lua_settable(L, -3);
-  }
-  return 1;
-}
-
 static int builtin_set(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -111,6 +80,37 @@ static int builtin_set(lua_State* L)
       break;
   }
   return 0;
+}
+
+static int builtin_get_config(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+
+  lua_newtable(L);
+
+  for (GList* li = config_fields; li != NULL; li = li->next) {
+    ConfigField* field = (ConfigField*)li->data;
+    char* key = field->name;
+    lua_pushstring(L, key);
+    switch (field->type) {
+      case CONFIG_TYPE_STRING: {
+        const char* value = config_get_str(context->config, key);
+        lua_pushstring(L, value);
+        break;
+      }
+      case CONFIG_TYPE_INTEGER:
+        lua_pushinteger(L, config_get_int(context->config, key));
+        break;
+      case CONFIG_TYPE_BOOLEAN:
+        lua_pushboolean(L, config_get_bool(context->config, key));
+        break;
+      case CONFIG_TYPE_NONE:
+        lua_pop(L, 1);
+        continue;
+    }
+    lua_settable(L, -3);
+  }
+  return 1;
 }
 
 static int builtin_set_config(lua_State* L)
@@ -167,8 +167,6 @@ static int builtin_reset_config(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   config_reset(context->config);
-  context_apply_config(context);
-  context_apply_theme(context);
   return 0;
 }
 
@@ -235,30 +233,15 @@ static int builtin_reset_keymaps(lua_State* L)
   return 0;
 }
 
-static int builtin_set_hook(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+/* static int builtin_set_hook(lua_State* L) */
+/* { */
+/*   return 0 */
+/* } */
 
-  const char* key = luaL_checkstring(L, 1);
-  luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
-
-  // register hook
-  UNUSED(key);
-  UNUSED(context);
-  dd("UNDER CONSTRUCTION");
-
-  return 0;
-}
-
-static int builtin_set_hooks(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-
-  UNUSED(context);
-  dd("UNDER CONSTRUCTION");
-
-  return 0;
-}
+/* static int builtin_set_hooks(lua_State* L) */
+/* { */
+/*   return 0 */
+/* } */
 
 static int builtin_reload(lua_State* L)
 {
@@ -306,6 +289,15 @@ static int builtin_get_version(lua_State* L)
   return 1;
 }
 
+static int builtin_put(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+
+  const char* text = luaL_checkstring(L, -1);
+  vte_terminal_feed_child(context->vte, text, -1);
+  return 1;
+}
+
 static int builtin_notify(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -314,15 +306,6 @@ static int builtin_notify(lua_State* L)
   const char* title = lua_tostring(L, 2);
   context_notify(context, body, title);
   return 0;
-}
-
-static int builtin_feed(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-
-  const char* text = luaL_checkstring(L, -1);
-  vte_terminal_feed_child(context->vte, text, -1);
-  return 1;
 }
 
 static int builtin_copy(lua_State* L)
@@ -364,30 +347,29 @@ int builtin_register_module(lua_State* L)
 {
   const luaL_Reg table[] = {
     { "get"                 , builtin_get                  },
-    { "get_config"          , builtin_get_config           },
     { "set"                 , builtin_set                  },
+    { "get_config"          , builtin_get_config           },
     { "set_config"          , builtin_set_config           },
     { "reset_config"        , builtin_reset_config         },
     { "set_keymap"          , builtin_set_keymap           },
-    { "unset_keymap"        , builtin_unset_keymap         },
     { "set_keymaps"         , builtin_set_keymaps          },
+    { "unset_keymap"        , builtin_unset_keymap         },
     { "reset_keymaps"       , builtin_reset_keymaps        },
-    { "set_hook"            , builtin_set_hook             },
-    { "set_hooks"           , builtin_set_hooks            },
+    /* { "set_hook"            , builtin_set_hook             }, */
+    /* { "set_hooks"           , builtin_set_hooks            }, */
     { "reload"              , builtin_reload               },
     { "reload_theme"        , builtin_reload_theme         },
     { "apply"               , builtin_apply                },
-    { "reset_keymaps"       , builtin_reset_keymaps        },
-    { "get_config_path"     , builtin_get_config_path      },
-    { "get_theme_path"      , builtin_get_theme_path       },
-    { "get_version"         , builtin_get_version          },
+    { "put"                 , builtin_put                  },
     { "notify"              , builtin_notify               },
-    { "feed"                , builtin_feed                 },
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },
     { "reset_font_scale"    , builtin_reset_font_scale     },
     { "copy"                , builtin_copy                 },
     { "paste"               , builtin_paste                },
+    { "get_version"         , builtin_get_version          },
+    { "get_config_path"     , builtin_get_config_path      },
+    { "get_theme_path"      , builtin_get_theme_path       },
     { NULL, NULL },
   };
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
