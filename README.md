@@ -50,7 +50,7 @@ All available options are shown below.
 | `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `cursor_shape` | string | `'block'` | `'block'`, `'ibeam'` or `'underline'` are available. |
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
-| `term` | string | `'xterm-256color'` | Default value of `$TERM`. |
+| `term` | string | `'xterm-256color'` | Value to assign to `$TERM` (default: `xterm-256color`) |
 | `role` | string | `''` | Unique identifier for the window. If empty string set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
 | `width` | integer | `80` | Initial columns. |
@@ -99,10 +99,9 @@ color_15 : white
 
 ### Customize
 
-You can register functions in a table named `keymap` (defaultly defined like `config` table) in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
+You can register keymap by `tym.set_keymap(acceralator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
 
 ```lua
-
 -- also can set keymap
 tym.set_keymap('<Ctrl><Shift>o', function()
   local h = tym.get('height')
@@ -121,25 +120,34 @@ tym.set_keymaps({
     tym.notify("Overwrite pasting event")
   end,
 })
-
--- disable default keymap
-keymap['<Ctrl>='] = 0
 ```
 
 ## Lua API
 
-| name                                 | return value   | description                                     |
-| ------------------------------------ | -------------- | ----------------------------------------------- |
-| `tym.get_version()`                  | string         | Get version string.                             |
-| `tym.get_config_file_path()`         | string         | Get path of config file currently being read.   |
-| `tym.notify(message, title = 'tym')` | void           | Show desktop notification.                      |
-| `tym.put(text)`                      | void           | Feed text.                                      |
-| `tym.reload()`                       | void           | Reload config file.                             |
-| `tym.copy()`                         | void           | Copy current selection.                         |
-| `tym.paste()`                        | void           | Paste clipboard.                                |
-| `tym.increase_font_scale()`          | void           | Increase font scale.                            |
-| `tym.decrease_font_scale()`          | void           | Decrease font scale.                            |
-| `tym.reset_font_scale()`             | void           | Reset font scale.                               |
+| name                                 | return value | description                                     |
+| ------------------------------------ | -------------| ----------------------------------------------- |
+| `tym.get(key)`                       | any          | Get config value.                               |
+| `tym.set(key, value)`                | void         | Set config value.                               |
+| `tym.get_config()`                   | table        | Get whole config.                               |
+| `tym.set_config(table)`              | void         | Set config by table.                            |
+| `tym.reset_config()`                 | void         | Reset all config to default (but not apply it)  |
+| `tym.set_keymap(acceralator, func)`  | void         | Set keymap.                                     |
+| `tym.set_keymaps(table)`             | void         | Set keymaps by table.                           |
+| `tym.unset_keymap(acceralator)`      | void         | Unset keymap.                                   |
+| `tym.reset_keymaps()`                | void         | Reset all keymaps.                              |
+| `tym.reload()`                       | void         | Reload config file.                             |
+| `tym.reload_theme()`                 | void         | Reload theme file.                              |
+| `tym.apply()`                        | void         | Apply config to app.                            |
+| `tym.put(text)`                      | void         | Feed text.                                      |
+| `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
+| `tym.copy()`                         | void         | Copy current selection.                         |
+| `tym.paste()`                        | void         | Paste clipboard.                                |
+| `tym.increase_font_scale()`          | void         | Increase font scale.                            |
+| `tym.decrease_font_scale()`          | void         | Decrease font scale.                            |
+| `tym.reset_font_scale()`             | void         | Reset font scale.                               |
+| `tym.get_version()`                  | string       | Get version string.                             |
+| `tym.get_config_path()`              | string       | Get path to config file.                        |
+| `tym.get_theme_path()`               | string       | Get path to theme file.                         |
 
 
 ## Options
@@ -242,7 +250,7 @@ $ ./configure --enable-debug
 
 ## Tips
 
-If you want to know more about configuration, see my [config.lua](https://github.com/endaaman/dotfiles/blob/master/tym/config.lua)
+If you want to learn more, see my [config.lua](https://github.com/endaaman/dotfiles/blob/master/tym/config.lua)
 
 ## License
 
