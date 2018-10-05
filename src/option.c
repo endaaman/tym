@@ -29,7 +29,7 @@ Option* option_init() {
   ee[1].flags = G_OPTION_FLAG_NONE;
   ee[1].arg = G_OPTION_ARG_STRING;
   ee[1].arg_data = &option->config_path;
-  ee[1].description = "<path> to config file. Set " TYM_SYMBOL_NONE " to start without loading config.";
+  ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config.";
   ee[1].arg_description = "<path>";
 
   unsigned i = offset_option;

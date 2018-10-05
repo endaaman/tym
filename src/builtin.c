@@ -17,7 +17,7 @@ static int builtin_get(lua_State* L)
   const char* key = luaL_checkstring(L, 1);
   ConfigField* field = get_config_field(key);
   if (!field) {
-    luaL_warn(L, "Invalid config key: `%s`", key);
+    luaL_warn(L, "Invalid config key: '%s'", key);
     lua_pushnil(L);
     return 1;
   }
@@ -47,7 +47,7 @@ static int builtin_set(lua_State* L)
 
   ConfigField* field = get_config_field(key);
   if (!field) {
-    luaL_warn(L, "Invalid config key: `%s`", key);
+    luaL_warn(L, "Invalid config key: '%s'", key);
     return 0;
   }
 
@@ -56,7 +56,7 @@ static int builtin_set(lua_State* L)
     case CONFIG_TYPE_STRING: {
       const char* value = lua_tostring(L, 2);
       if (!value) {
-        luaL_warn(L, "Invalid string config for `%s` (string expected, got %s)", key, lua_typename(L, type));
+        luaL_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
         break;
       }
       config_set_str(context->config, key, value);
@@ -64,7 +64,7 @@ static int builtin_set(lua_State* L)
     }
     case CONFIG_TYPE_INTEGER: {
       if (type != LUA_TNUMBER) {
-        luaL_warn(L, "Invalid integer config for `%s`: `%s` (number expected, got %s)", key, lua_tostring(L, 2), lua_typename(L, type));
+        luaL_warn(L, "Invalid integer config for '%s': %s (number expected, got %s)", key, lua_tostring(L, 2), lua_typename(L, type));
         break;
       }
       int value = lua_tointeger(L, 2);
@@ -130,7 +130,7 @@ static int builtin_set_config(lua_State* L)
         case CONFIG_TYPE_STRING: {
           const char* value = lua_tostring(L, -2);
           if (!value) {
-            luaL_warn(L, "Invalid string config for `%s` (string expected, got %s)", key, lua_typename(L, type));
+            luaL_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
             break;
           }
           config_set_str(context->config, key, value);
@@ -138,7 +138,7 @@ static int builtin_set_config(lua_State* L)
         }
         case CONFIG_TYPE_INTEGER: {
           if (type != LUA_TNUMBER) {
-            luaL_warn(L, "Invalid integer config for `%s`: `%s` (number expected, got %s)", key, lua_tostring(L, -2), lua_typename(L, type));
+            luaL_warn(L, "Invalid integer config for '%s': %s (number expected, got %s)", key, lua_tostring(L, -2), lua_typename(L, type));
             break;
           }
           int value = lua_tointeger(L, -2);
@@ -154,7 +154,7 @@ static int builtin_set_config(lua_State* L)
           break;
       }
     } else {
-      luaL_warn(L, "Invalid config key: `%s`", key);
+      luaL_warn(L, "Invalid config key: '%s'", key);
     }
     lua_pop(L, 2);
   }
@@ -181,7 +181,7 @@ static int builtin_set_keymap(lua_State* L)
   bool ok = keymap_add_entry(context->keymap, key, ref);
   if (!ok) {
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
-    luaL_error(L, "Invalid acceralator: `%s`", key);
+    luaL_error(L, "Invalid acceralator: '%s'", key);
     return 0;
   }
   return 0;
@@ -193,7 +193,7 @@ static int builtin_unset_keymap(lua_State* L)
   const char* key = luaL_checkstring(L, 1);
   bool removed = keymap_remove_entry(context->keymap, key);
   if (!removed) {
-    luaL_warn(L, "Tried to remove en empty keymap (`%s`) which is not assigned function to", key);
+    luaL_warn(L, "Tried to remove en empty keymap '(%s') which is not assigned function to", key);
   }
   return 0;
 }
@@ -209,14 +209,14 @@ static int builtin_set_keymaps(lua_State* L)
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
     if (!lua_isfunction(L, -2)) {
-      luaL_warn(L, "Invalid keymap value for `%s`: function expected, got %s", key, lua_typename(L, lua_type(L, -2)));
+      luaL_warn(L, "Invalid keymap value for '%s': function expected, got %s", key, lua_typename(L, lua_type(L, -2)));
     } else {
       lua_pushvalue(L, -2); // push function to stack top
       int ref = luaL_ref(L, LUA_REGISTRYINDEX);
       bool ok = keymap_add_entry(context->keymap, key, ref);
       if (!ok) {
         luaL_unref(L, LUA_REGISTRYINDEX, ref);
-        luaL_warn(L, "Invalid acceralator: `%s`", key);
+        luaL_warn(L, "Invalid acceralator: '%s'", key);
       }
     }
     lua_pop(L, 2);
