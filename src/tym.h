@@ -14,6 +14,9 @@
 
 
 #define TYM_APP_ID "me.endaaman.tym"
+#define TYM_CONFIG_DIR_NAME "tym"
+#define TYM_CONFIG_FILE_NAME "config.lua"
+#define TYM_THEME_FILE_NAME "theme.lua"
 #define TYM_SYMBOL_NONE "NONE"
 
 typedef enum {
@@ -27,7 +30,6 @@ typedef struct {
   GOptionEntry* entries;
   bool version;
   char* config_path;
-  char* theme_path;
 } Option;
 
 typedef struct {
@@ -61,7 +63,6 @@ typedef struct {
   VteTerminal* vte;
   lua_State* lua;
   char* config_path;
-  char* theme_path;
   bool loading;
 } Context;
 
@@ -93,6 +94,7 @@ int config_get_int(Config* config, const char* key);
 bool config_set_int(Config* config, const char* key, int value);
 bool config_get_bool(Config* config, const char* key);
 bool config_set_bool(Config* config, const char* key, bool value);
+char* config_acquire_theme_path(Config* config);
 
 
 // keymap

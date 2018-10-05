@@ -279,7 +279,9 @@ static int builtin_get_config_path(lua_State* L)
 static int builtin_get_theme_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  lua_pushstring(L, context->theme_path);
+  char* path = config_acquire_theme_path(context->config);
+  lua_pushstring(L, path);
+  g_free(path);
   return 1;
 }
 

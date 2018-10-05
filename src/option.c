@@ -13,7 +13,7 @@
 Option* option_init() {
   Option* option = g_malloc0(sizeof(Option));
   // --version and --use
-  const unsigned offset_option = 3;
+  const unsigned offset_option = 2;
   GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), config_fields_len + offset_option + 1);
 
   ee[0].long_name = "version";
@@ -31,14 +31,6 @@ Option* option_init() {
   ee[1].arg_data = &option->config_path;
   ee[1].description = "<path> to config file. Set " TYM_SYMBOL_NONE " to start without loading config.";
   ee[1].arg_description = "<path>";
-
-  ee[2].long_name = "theme";
-  ee[2].short_name = 't';
-  ee[2].flags = G_OPTION_FLAG_NONE;
-  ee[2].arg = G_OPTION_ARG_STRING;
-  ee[2].arg_data = &option->theme_path;
-  ee[2].description = "<path> to theme file. Set " TYM_SYMBOL_NONE " to start without loading theme.";
-  ee[2].arg_description = "<path>";
 
   unsigned i = offset_option;
 

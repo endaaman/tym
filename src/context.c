@@ -18,9 +18,6 @@ typedef struct {
   TymCommandFunc func;
 } KeyPair;
 
-static const char* TYM_CONFIG_FILE_NAME = "config.lua";
-static const char* TYM_THEME_FILE_NAME = "theme.lua";
-static const char* TYM_CONFIG_DIR_NAME = "tym";
 static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
@@ -35,11 +32,11 @@ static KeyPair default_key_pairs[] = {
 };
 
 
-static void context_set_config_path(Context* context, char* path)
+static void context_load_config_path(Context* context)
 {
+  char* path = context->option->config_path;
   if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
     context->config_path = NULL;
-    g_message("Starting with default config.");
   } else {
     if (path) {
       if (g_path_is_absolute(path)) {
@@ -60,33 +57,6 @@ static void context_set_config_path(Context* context, char* path)
     }
     dd("config path: `%s`", context->config_path);
   }
-}
-
-static void context_set_theme_path(Context* context, char* path)
-{
-  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
-    context->theme_path = NULL;
-    g_message("Starting without custom theme.");
-  } else {
-    if (path) {
-      if (g_path_is_absolute(path)) {
-        context->theme_path = g_strdup(path);
-      } else {
-        char* cwd = g_get_current_dir();
-        context->theme_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
-        g_free(cwd);
-      }
-    } else {
-      context->theme_path = g_build_path(
-        G_DIR_SEPARATOR_S,
-        g_get_user_config_dir(),
-        TYM_CONFIG_DIR_NAME,
-        TYM_THEME_FILE_NAME,
-        NULL
-      );
-    }
-  }
-  dd("theme path: `%s`", context->theme_path);
 }
 
 static void context_prepare_lua(Context* context)
@@ -141,8 +111,7 @@ int context_start(Context* context, int argc, char** argv) {
   }
 
   // read option after option parsed
-  context_set_config_path(context, context->option->config_path);
-  context_set_theme_path(context, context->option->theme_path);
+  context_load_config_path(context);
 
   // load option as default
   config_load_option_values(context->config, context->option);
@@ -165,7 +134,7 @@ void context_load_config(Context* context)
   dd("load config start");
 
   if (!context->config_path) {
-    dd("skip config loading");
+    g_message("Skipped config loading.");
     return;
   }
 
@@ -176,7 +145,7 @@ void context_load_config(Context* context)
   context->loading = true;
 
   if (!g_file_test(context->config_path, G_FILE_TEST_EXISTS)) {
-    g_message("Config file (`%s`) does not exist. Skipping cofig loading.", context->config_path);
+    g_message("Config file (`%s`) does not exist. Skipped config loading.", context->config_path);
     goto EXIT;
   }
 
@@ -203,19 +172,21 @@ void context_load_theme(Context* context)
 {
   dd("load theme start");
 
-  if (!context->theme_path) {
-    dd("skip theme loading");
+  char* theme_path = config_acquire_theme_path(context->config);
+
+  if (!theme_path) {
+    g_message("Skipped theme loading.");
     goto EXIT;
   }
 
-  if (!g_file_test(context->theme_path, G_FILE_TEST_EXISTS)) {
+  if (!g_file_test(theme_path, G_FILE_TEST_EXISTS)) {
     // do not warn
-    g_message("Theme file (`%s`) does not exist. Skipping theme loading.", context->theme_path);
+    g_message("Theme file (`%s`) does not exist. Skiped theme loading.", theme_path);
     goto EXIT;
   }
 
   lua_State* L = context->lua;
-  int result = luaL_loadfile(L, context->theme_path);
+  int result = luaL_loadfile(L, theme_path);
   if (result != LUA_OK) {
     g_warning("Could not load `%s`.", context->config_path);
     goto EXIT;
@@ -229,7 +200,7 @@ void context_load_theme(Context* context)
   }
 
   if (!lua_istable(L, -1)) {
-    g_message("Theme script must return a table (got %s). Skipping theme assignment.", lua_typename(L, lua_type(L, -1)));
+    g_message("Theme script must return a table (got %s). Skiped theme assignment.", lua_typename(L, lua_type(L, -1)));
     goto EXIT;
   }
 
@@ -248,6 +219,7 @@ void context_load_theme(Context* context)
   }
   lua_pop(L, 1); // last key
 EXIT:
+  g_free(theme_path);
   dd("load theme end");
 }
 

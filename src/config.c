@@ -49,12 +49,20 @@ static char* get_default_shell()
   return g_strdup(TYM_FALL_BACK_SHELL);
 }
 
+char* default_theme_path;
 GList* config_fields = NULL;
 unsigned config_fields_len = 0;
 
 
 __attribute__((constructor))
-static void config_fields_init() {
+static void initialize() {
+  default_theme_path = g_build_path(
+    G_DIR_SEPARATOR_S,
+    g_get_user_config_dir(),
+    TYM_CONFIG_DIR_NAME,
+    TYM_THEME_FILE_NAME,
+    NULL
+  );
 #define color_special(name) { ("color_" name), 0, T_STR, F_NONE, dup(""), "", ("value of "name "_color"), NULL, }
 #define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, dup(""), NULL, NULL, NULL, }
   const ConfigType T_STR = CONFIG_TYPE_STRING;
@@ -66,8 +74,10 @@ static void config_fields_init() {
 
   char* (*dup)(const char*) = g_strdup;
   const bool default_false = false;
+
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
+    { "theme",              't', T_STR, F_NONE, dup(default_theme_path), "<path>", "<path> to theme file. Set " TYM_SYMBOL_NONE " to start without loading theme.", NULL, },
     { "title",               0, T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Intial Window title", NULL, },
     { "shell",             'e', T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
     { "font",                0, T_STR, F_NONE, dup(""), "", "Font to render(e.g. `Ubuntu Mono 12`)", NULL, },
@@ -113,7 +123,8 @@ static void free_data(void* data, void* user_data) {
 }
 
 __attribute__((destructor))
-static void config_fields_close() {
+static void finalize() {
+  g_free(default_theme_path);
   g_list_foreach(config_fields, free_data, NULL);
   g_list_free(config_fields);
 }
@@ -133,7 +144,6 @@ ConfigField* get_config_field(const char* key) {
 
 static VteCursorShape match_cursor_shape(const char* str)
 {
-  dd("cursor: %s", str);
   if (0 == g_strcmp0(str, TYM_CURSOR_SHAPE_IBEAM)) {
     return VTE_CURSOR_SHAPE_IBEAM;
   }
@@ -181,18 +191,6 @@ void config_close(Config* config)
   g_free(config);
 }
 
-bool config_has_str(Config* config, const char* key)
-{
-  char* value = config_get_str(config, key);
-  if (!value) {
-    return false;
-  }
-  if (0 == g_strcmp0(value, "")) {
-    return false;
-  }
-  return true;
-}
-
 static void* config_get_raw(Config* config, const char* key)
 {
   void* ptr = g_hash_table_lookup(config->data, key);
@@ -227,6 +225,18 @@ static bool config_set_raw(Config* config, const char* key, void* value)
     return false;
   }
   g_hash_table_insert(config->data, g_strdup(key), value);
+  return true;
+}
+
+bool config_has_str(Config* config, const char* key)
+{
+  char* value = (char*)config_get_raw(config, key);
+  if (!value) {
+    return false;
+  }
+  if (0 == g_strcmp0(value, "")) {
+    return false;
+  }
   return true;
 }
 
@@ -411,8 +421,6 @@ void config_apply(Config* config, VteTerminal* vte)
   vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));
   vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
 
-  dd("%d", vte_terminal_get_mouse_autohide(vte));
-
   int width = config_get_int(config, "width");
   int height = config_get_int(config, "height");
   if (0 < width && 0 < height) {
@@ -440,4 +448,26 @@ void config_apply(Config* config, VteTerminal* vte)
     vte_terminal_set_font(vte, font_desc);
     pango_font_description_free(font_desc);
   }
+}
+
+char* config_acquire_theme_path(Config* config)
+{
+  if (!config_has_str(config, "theme")) {
+    return g_strdup(default_theme_path);
+  }
+
+  char* path = config_get_str(config, "theme");
+
+  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+    return NULL;
+  }
+
+  if (g_path_is_absolute(path)) {
+    return g_strdup(path);
+  }
+
+  char* cwd = g_get_current_dir();
+  char* p = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  g_free(cwd);
+  return p;
 }
