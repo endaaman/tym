@@ -15,28 +15,25 @@ I wanted a terminal emulator that is
 
 but I could not find it so I made it.
 
-## Dependencies
-
-- [GTK+3](https://www.gtk.org/)
-- [VTE](https://github.com/GNOME/vte)
-- [Lua](https://www.lua.org/)
-
 ## Configration
 
-When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed.
+By defaultl, `$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. The path can be changed by `--use` `-u` option.
 
 ```lua
--- At first you need to require tym module
+-- At first, you need to require tym module
 local tym = require('tym')
 
 -- set config individually
 tym.set('width', 100)
 
+tym.set('font', 'DejaVu Sans Mono 11')
+
 -- set by table
 tym.set_config({
-  shell = '/bin/bash',
+  shell = '/usr/bin/fish',
   cursor = 'underline',
   autohide = true,
+  color_foreground = '',
 })
 ```
 
@@ -44,24 +41,45 @@ All available options are shown below.
 
 | field name | type | default value | description |
 | --- | --- | --- | --- |
+| `theme` | string | `'/home/<user name>/.config/tym/theme.lua'` | Path to theme file. If empty string is set, default path will be loaded. If relative path is set, the path joined with CWD will be loaded. If `'NONE'` is set, no theme file will be loaded. |
 | `title` | string | `'tym'` | Window title. |
-| `shell` | string | `$SHELL` -> `vte_get_user_shell()` -> `/bin/sh` | Shell to excute. |
-| `font` | string | `''` (empty string) | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If you set empty string, the system default fixed width font will be used. |
+| `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to excute. |
+| `font` | string | `''` | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
 | `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `cursor_shape` | string | `'block'` | `'block'`, `'ibeam'` or `'underline'` are available. |
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
-| `term` | string | `'xterm-256color'` | Value to assign to `$TERM` (default: `xterm-256color`) |
-| `role` | string | `''` | Unique identifier for the window. If empty string set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
+| `term` | string | `'xterm-256color'` | Value to assign to `$TERM` |
+| `role` | string | `''` | Unique identifier for the window. If empty string is set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
-| `ignore_bold` | boolean | `false` | Whether to allow drawing bold text(cf. [vte-terminal-set-allow-bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
+| `ignore_bold` | boolean | `false` | Whether to allow drawing bold text(cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohie` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
-| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` (empty string) | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If you set empty string, the VTE default color will be used. |
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
 
 
-## Color scheming
+## Theme customization
+
+By defaultl, `$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. The path can be changed by the value of `'theme'` in config or `--theme` `-t`  option.
+
+```
+local fg = '#d2d4de'
+local bg = '#161821'
+return {
+  color_background = bg,
+  color_foreground = fg,
+  color_0  = '#161821',
+  color_1  = '#e27878',
+  -- SNIP
+  color_14 = '#95c4ce',
+  color_15 = '#d2d4de',
+}
+```
+
+You need to return the color map with table.
+
+## Color map
 
 Please refer to the correspondence table of each color below.
 
@@ -146,8 +164,8 @@ tym.set_keymaps({
 | `tym.decrease_font_scale()`          | void         | Decrease font scale.                            |
 | `tym.reset_font_scale()`             | void         | Reset font scale.                               |
 | `tym.get_version()`                  | string       | Get version string.                             |
-| `tym.get_config_path()`              | string       | Get path to config file.                        |
-| `tym.get_theme_path()`               | string       | Get path to theme file.                         |
+| `tym.get_config_path()`              | string       | Get full path to config file.                   |
+| `tym.get_theme_path()`               | string       | Get full path to theme file.                    |
 
 
 ## Options
@@ -205,7 +223,11 @@ $ ./configure
 $ make
 ```
 
-### Build dependencies
+### Dependencies
+
+- [GTK+3](https://www.gtk.org/)
+- [VTE](https://github.com/GNOME/vte)
+- [Lua](https://www.lua.org/)
 
 #### Arch Linux
 
@@ -225,13 +247,13 @@ I did not check which packeges are needed to build on other distros or OS. Await
 
 ## Installation
 
-#### Arch Linux
+### Arch Linux
 
 ```
 $ yay -S tym
 ```
 
-#### Other distros or OS
+### Other distros or OS
 
 Just compile and do
 

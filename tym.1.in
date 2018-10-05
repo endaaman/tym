@@ -15,7 +15,10 @@ Show version.
 .IP "\fB\-u\fR, \fB\-\-use\fR=\fI<PATH>\fR"
 Use <PATH> instead of default config file.
 
-.IP "\fB\-\-c\fR:\fI<OPTION>\fR=\fI<VALUE>\fR"
+.IP "\fB\-t\fR, \fB\-\-theme\fR=\fI<PATH>\fR"
+Use <PATH> instead of default theme file.
+
+.IP "\fB\-\-\fR\fI<OPTION>\fR=\fI<VALUE>\fR"
 Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
 \fI<VALUE>\fR is a value of its option.
 .fi
