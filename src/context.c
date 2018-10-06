@@ -101,7 +101,7 @@ int context_start(Context* context, int argc, char** argv) {
   GError* error = NULL;
   bool is_continuous = option_check(context->option, &argc, &argv, &error);
   if (error) {
-    g_error(error->message);
+    g_message("%s", error->message);
     g_error_free(error);
     return EXIT_FAILURE;
   }
@@ -124,7 +124,7 @@ int context_start(Context* context, int argc, char** argv) {
 static void context_on_lua_error(Context* context, const char* error)
 {
   char* message = g_strdup_printf("%s", error);
-  g_message(message);
+  g_message("%s", message);
   context_notify(context, error, "tym: lua error");
   g_free(message);
 }
