@@ -297,7 +297,14 @@ static int builtin_put(lua_State* L)
 
   const char* text = luaL_checkstring(L, -1);
   vte_terminal_feed_child(context->vte, text, -1);
-  return 1;
+  return 0;
+}
+
+static int builtin_beep(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  return 0;
 }
 
 static int builtin_notify(lua_State* L)
@@ -363,6 +370,7 @@ int builtin_register_module(lua_State* L)
     { "reload_theme"        , builtin_reload_theme         },
     { "apply"               , builtin_apply                },
     { "put"                 , builtin_put                  },
+    { "beep"                , builtin_beep                 },
     { "notify"              , builtin_notify               },
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },

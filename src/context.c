@@ -265,7 +265,7 @@ void context_apply_theme(Context* context)
 
 GtkWindow* context_get_window(Context* context)
 {
-  return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(context->vte)));
+  return gtk_application_get_active_window(context->app);
 }
 
 void context_set_vte(Context* context, VteTerminal* vte)

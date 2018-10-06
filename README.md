@@ -5,17 +5,7 @@
 
 `tym` is a tiny VTE-based terminal emulator, which configurable by Lua.
 
-## Motivation
-
-I wanted a terminal emulator that is
-
-- simple (no menu bar, no GUI setting window etc..)
-- flexiblly configurable by text
-- original VTE-based (not a forked one like 'vte-ng')
-
-but I could not find it so I made it.
-
-## Configration
+## Configuration
 
 By defaultl, `$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. The path can be changed by `--use` `-u` option.
 
@@ -33,18 +23,18 @@ tym.set_config({
   shell = '/usr/bin/fish',
   cursor = 'underline',
   autohide = true,
-  color_foreground = '',
+  color_foreground = 'red',
 })
 ```
 
-All available options are shown below.
+All available config values are shown below.
 
 | field name | type | default value | description |
 | --- | --- | --- | --- |
 | `theme` | string | `'/home/<user name>/.config/tym/theme.lua'` | Path to theme file. If empty string is set, default path will be loaded. If relative path is set, the path joined with CWD will be loaded. If `'NONE'` is set, no theme file will be loaded. |
 | `title` | string | `'tym'` | Window title. |
 | `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to excute. |
-| `font` | string | `''` | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value specified here is internally passed to [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
+| `font` | string | `''` | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value is parsed by [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
 | `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `cursor_shape` | string | `'block'` | `'block'`, `'ibeam'` or `'underline'` are available. |
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
@@ -54,16 +44,16 @@ All available options are shown below.
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
-| `ignore_bold` | boolean | `false` | Whether to allow drawing bold text(cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
+| `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohie` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
-| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. These will be parsed with [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. They will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
 
 
 ## Theme customization
 
 By defaultl, `$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. The path can be changed by the value of `'theme'` in config or `--theme` `-t`  option.
 
-```
+```lua
 local fg = '#d2d4de'
 local bg = '#161821'
 return {
@@ -157,6 +147,7 @@ tym.set_keymaps({
 | `tym.reload_theme()`                 | void         | Reload theme file.                              |
 | `tym.apply()`                        | void         | Apply config to app.                            |
 | `tym.put(text)`                      | void         | Feed text.                                      |
+| `tym.beep(text)`                     | void         | Sound beep.                                     |
 | `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
 | `tym.copy()`                         | void         | Copy current selection.                         |
 | `tym.paste()`                        | void         | Paste clipboard.                                |
