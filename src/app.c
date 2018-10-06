@@ -68,7 +68,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   UNUSED(pid);
   Context* context = (Context*)user_data;
   if (error) {
-    g_error(error->message);
+    g_error("%s", error->message);
     do_quit(context->app);
     return;
   }
@@ -130,7 +130,7 @@ void on_activate(GtkApplication* app, void* user_data)
   char* line = config_get_str(context->config, "shell");
   g_shell_parse_argv(line, NULL, &argv, &error);
   if (error) {
-    g_error(error->message);
+    g_error("%s", error->message);
     g_error_free(error);
     do_quit(app);
     return;
