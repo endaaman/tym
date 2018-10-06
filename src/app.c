@@ -51,11 +51,14 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
 
 static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
+  dd("on bell");
+
   UNUSED(vte);
   Context* context = (Context*)user_data;
-
-  dd("bell");
-  UNUSED(context);
+  GtkWindow* window = context_get_window(context);
+  if (!gtk_window_is_active(window)) {
+    gtk_window_set_urgency_hint(window, true);
+  }
 }
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
@@ -74,23 +77,19 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  UNUSED(window);
+  dd("on_focus in");
   UNUSED(event);
-  Context* context = (Context*)user_data;
-
-  dd("focus in");
-  UNUSED(context);
+  UNUSED(user_data);
+  gtk_window_set_urgency_hint(window, false);
   return false;
 }
 
 static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_data)
 {
+  dd("on focus out");
   UNUSED(window);
   UNUSED(event);
-  Context* context = (Context*)user_data;
-
-  dd("focus out");
-  UNUSED(context);
+  UNUSED(user_data);
   return false;
 }
 

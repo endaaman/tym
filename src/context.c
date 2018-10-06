@@ -210,9 +210,12 @@ void context_load_theme(Context* context)
     const char* key = lua_tostring(L, -1);
     const char* value = lua_tostring(L, -2);
     if (value) {
-      bool ok = config_set_str(context->config, key, value);
+      bool ok = false;
+      if (strncmp("color_", key, 6) == 0) {
+        ok = config_set_str(context->config, key, value);
+      }
       if (!ok) {
-        luaL_warn(L, "Invalid color key: `%s`", key);
+        g_warning("%s: Invalid color key in theme: `%s`", theme_path, key);
       }
     }
     lua_pop(L, 2);

@@ -380,9 +380,10 @@ static void config_apply_colors(Config* config, VteTerminal* vte)
     if (config_has_str(config, key)) {
       bool valid = gdk_rgba_parse(&palette[i], value);
       if (valid) {
-        g_message( "Invalid color string for '%s': %s", key, value);
+        continue;
       }
     }
+    g_message( "Invalid color string for '%s': %s", key, value);
     // calc default color
     palette[i].blue  = (((i & 5) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
     palette[i].green = (((i & 2) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
