@@ -1,20 +1,41 @@
 bin_PROGRAMS = tym
 
 tym_SOURCES = \
-							common.h \
-							tym.h \
-							common.c \
-							tym.c \
-							app.c \
-							command.c \
-							config.c \
-							context.c \
-							builtin.c \
-							keymap.c \
-							option.c
+	common.h \
+	tym.h \
+	common.c \
+	tym.c \
+	app.c \
+	command.c \
+	config.c \
+	context.c \
+	builtin.c \
+	keymap.c \
+	option.c
+
 tym_LDADD = $(TYM_LIBS)
+
 if DEBUG
-tym_CFLAGS = -std=c11 -Wall -Wextra -g3 -O0 $(TYM_CFLAGS)
+ENV_OPT=-g3 -O0
 else
-tym_CFLAGS = -std=c11 -Wall -Wextra -O3 $(TYM_CFLAGS)
+ENV_OPT=-O3
 endif
+
+tym_CFLAGS = \
+	-std=c11 \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter \
+	-Wno-sign-compare \
+	-Wno-pointer-sign \
+	-Wno-missing-field-initializers \
+	-Wformat=2 \
+	-Wstrict-aliasing=2 \
+	-Wdisabled-optimization \
+	-Wfloat-equal \
+	-Wpointer-arith \
+	-Wbad-function-cast \
+	-Wcast-align \
+	-Wredundant-decls \
+	-Winline \
+	$(ENV_OPT) $(TYM_CFLAGS)
