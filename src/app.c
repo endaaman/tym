@@ -42,9 +42,8 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
   Context* context = (Context*)user_data;
 
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
-
   const char* title = vte_terminal_get_window_title(context->vte);
-  if (title && !config_has_str(context->config, "title")) {
+  if (title) {
     gtk_window_set_title(window, title);
   }
 }
@@ -77,7 +76,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  dd("on_focus in");
+  dd("on focus in");
   UNUSED(event);
   UNUSED(user_data);
   gtk_window_set_urgency_hint(window, false);
