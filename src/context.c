@@ -113,9 +113,6 @@ int context_start(Context* context, int argc, char** argv) {
   // read option after option parsed
   context_load_config_path(context);
 
-  // load option as default
-  config_load_option_values(context->config, context->option);
-
   g_signal_connect(context->app, "activate", G_CALLBACK(on_activate), context);
   g_signal_connect(context->app, "open", G_CALLBACK(on_open), context);
   return g_application_run(G_APPLICATION(context->app), argc, argv);
@@ -162,6 +159,9 @@ void context_load_config(Context* context)
     context_on_lua_error(context, error);
     goto EXIT;
   }
+
+  dd("load option to config");
+  config_load_option_values(context->config, context->option);
 
 EXIT:
   context->loading = false;
