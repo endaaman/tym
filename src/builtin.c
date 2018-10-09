@@ -241,7 +241,7 @@ static int builtin_send_key(lua_State* L)
   unsigned key;
   GdkModifierType mod;
   gtk_accelerator_parse(acceralator, &key, &mod);
-  if (0 == key || 0 == mod) {
+  if (0 == key && 0 == mod) {
     luaL_error(L, "Invalid acceralator: '%s'", acceralator);
     return 0;
   }

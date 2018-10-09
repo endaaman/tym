@@ -55,7 +55,7 @@ bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref)
   unsigned key;
   GdkModifierType mod;
   gtk_accelerator_parse(acceralator, &key, &mod);
-  if (0 == key || 0 == mod) {
+  if (0 == key && 0 == mod) {
     return false;
   }
   bool removed = keymap_remove_entry(keymap, acceralator);
