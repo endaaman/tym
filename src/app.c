@@ -172,7 +172,7 @@ void on_activate(GtkApplication* app, void* user_data)
   if (error) {
     g_strfreev(env);
     g_strfreev(argv);
-    g_error(error->message);
+    g_error("%s", error->message);
     g_error_free(error);
     do_quit(app);
     return;
