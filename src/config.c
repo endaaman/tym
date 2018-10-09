@@ -78,8 +78,8 @@ static void initialize() {
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
     { "theme",               't',  T_STR, F_NONE, dup(default_theme_path), "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", NULL, },
-    { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", NULL, },
     { "shell",               'e',  T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
+    { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", NULL, },
     { "font",                  0,  T_STR, F_NONE, dup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", NULL, },
     { "icon",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", NULL, },
     { "cursor_shape",          0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_SHAPE), "", "'block', 'ibeam' or 'underline'", NULL, },
