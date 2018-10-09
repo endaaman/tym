@@ -91,18 +91,24 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
     if ((key == e->key) && !(~mod & e->mod)) {
+      dd("perform keymap: %s", e->acceralator);
       lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
-      if (lua_isfunction(L, -1)) {
-        dd("perform keymap: %s", e->acceralator);
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-          *error = g_strdup(lua_tostring(L, -1));
-          lua_pop(L, 1); // error
-        }
-      } else {
+      if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
         g_warning("Tried to call keymap (%s) which is not function.", e->acceralator);
+        return true;
       }
-      return true;
+      if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+        *error = g_strdup(lua_tostring(L, -1));
+        lua_pop(L, 1); // error
+        return true;
+      }
+      bool result = true;
+      if (lua_isboolean(L, -1)) {
+        result = lua_toboolean(L, -1);
+      }
+      lua_pop(L, 1); // result
+      return result;
     }
   }
   return false;
