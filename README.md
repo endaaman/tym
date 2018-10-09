@@ -40,7 +40,7 @@ All available config values are shown below.
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
 | `term` | string | `'xterm-256color'` | Value to assign to `$TERM` |
 | `role` | string | `''` | Unique identifier for the window. If empty string is set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
-| `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. There are complicated problems about this, so if you are not familiar with it, it's better to use the default. |
+| `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. |
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
@@ -149,11 +149,12 @@ tym.set_keymaps({
 | `tym.set_keymaps(table)`             | void         | Set keymaps by table.                           |
 | `tym.unset_keymap(acceralator)`      | void         | Unset keymap.                                   |
 | `tym.reset_keymaps()`                | void         | Reset all keymaps.                              |
+| `tym.send_key()`                     | void         | Send key press event.                           |
 | `tym.reload()`                       | void         | Reload config file.                             |
 | `tym.reload_theme()`                 | void         | Reload theme file.                              |
 | `tym.apply()`                        | void         | Apply config to app.                            |
 | `tym.put(text)`                      | void         | Feed text.                                      |
-| `tym.beep()`                     | void         | Sound beep.                                     |
+| `tym.beep()`                         | void         | Sound beep.                                     |
 | `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
 | `tym.copy()`                         | void         | Copy current selection.                         |
 | `tym.paste()`                        | void         | Paste clipboard.                                |

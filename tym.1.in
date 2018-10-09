@@ -106,16 +106,23 @@ Initial rows.
 .IP "\ignore_default_keymap\fR"
 Type:	\fBboolean\fR
 .fi
-Default:	\fItrue\fR
+Default:	\fIfalse\fR
 .fi
 If it is provided, the default keymap will not be used.
 
 .IP \fBignore_bold_font\fR
 Type:	\fBboolean\fR
 .fi
-Default:	\fItrue\fR
+Default:	\fIfalse\fR
 .fi
 If it is provided, bold font is drawn with normal weight.
+
+.IP \fBignore_bold_font\fR
+Type:	\fBboolean\fR
+.fi
+Default:	\fIfalse\fR
+.fi
+If it is provided, mouse cursor will be hidden when you presses a key.
 
 .IP \fBcolor_foreground\fR
 .IP \fBcolor_background\fR
@@ -217,6 +224,16 @@ Set keymap. \fIacceralator\fB must be in a format parsable by \fBgtk_accelerator
 Returns:	\fBvoid\fR
 .fi
 Set keymaps by table.
+
+.IP "\fBtym.reset_keymaps()\fR"
+Returns:	\fBvoid\fR
+.fi
+Reset custom keymaps.
+
+.IP "\fBtym.send_key(acceralator)\fR"
+Returns:	\fBvoid\fR
+.fi
+Send key press event.
 
 .IP \fBtym.reload()\fR
 Returns:	\fBvoid\fR
