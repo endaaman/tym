@@ -1,6 +1,6 @@
 .TH tym 1 "@DATE@" "@VERSION@" "tym"
 .SH DESCRIPTION
-\fBtym\fR is a tiny VTE-based terminal emulator, which is written in C and configurable by Lua.
+\fBtym\fR is a tiny VTE-based terminal emulator, which configurable by Lua.
 
 .SH SYNOPSIS
 \fBtym\fR [OPTIONS]
@@ -24,106 +24,107 @@ Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
 .fi
 See \fBCONFIGURATION\fR for more information about config options.
 
-.SH CONFIGURATION
-When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed with the
-global table \fBconfig\fR defined. You can do configuration by modifying
-\fBconfig\fR table.
+.SH AVAILABLE OPTIONS
 
-.IP \fBconfig.width\fR
-Type:	\fBinteger\fR
-.fi
-Default:	\fI80\fR
-.fi
-Initial columns.
-
-.IP \fBconfig.height\fR
-Type:	\fBinteger\fR
-.fi
-Default:	\fI22\fR
-.fi
-Initial rows.
-
-.IP \fBconfig.title\fR
-Type:	\fBstring\fR
-.fi
-Default:	\fI'tym'\fR
-.fi
-Initial window title.
-
-.IP \fBconfig.term\fR
-Type:	\fBstring\fR
-.fi
-Default:	\fI'xterm-256color'\fR
-.fi
-Default value of `$TERM`.
-
-.IP \fBconfig.icon\fR
-Type:	\fBstring\fR
-.fi
-Default:	\fI'terminal'\fR
-.fi
-Name of icon. cf. https://developer.gnome.org/icon-naming-spec/.
-
-.IP \fBconfig.role\fR
-Type:	\fBstring\fR
-.fi
-Default:	\fI''\fR
-.fi
-Unique identifier for the window. If empty string set, no value set. cf. gtk_window_set_role()
-
-.IP \fBconfig.shell\fR
+.IP \fBshell\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI$SHELL\fR → \fBvte_get_user_shell()\fR → \fB/bin/sh\fR
 .fi
 Shell to excute.
 
-.IP \fBconfig.font\fR
+.IP \fBtitle\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'tym'\fR
+.fi
+Initial window title.
+
+.IP \fBfont\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI''\fR (empty string)
 .fi
-You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example
-\fI'Ubuntu Mono 12'\fR. The value specified here is internally passed to
-\fBpango_font_description_from_string()\fR. If you set empty string, the system
-default fixed width font will be used.
+You can specify it like \fI'FAMILY-LIST [SIZE]'\fR, for example \fI'Ubuntu Mono 12'\fR. The value is parsed by \fBpango_font_description_from_string()\fR. If you set empty string, the system default fixed width font will be used.
 
-.IP \fBconfig.cursor_blink_mode\fR
+.IP \fBicon\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'terminal'\fR
+.fi
+Name of icon. cf. https://developer.gnome.org/icon-naming-spec/.
+
+.IP \fBcursor_shape\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'system'\fR
+.fi
+\fI'block'\fR, \fI'ibeam'\fR or \fI'underline'\fR are available.
+
+.IP \fBcursor_blink_mode\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'system'\fR
 .fi
 \fI'system'\fR, \fI'on'\fR or \fI'off'\fR are available.
 
-.IP \fBconfig.cjk_width\fR
+.IP \fBterm\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'xterm-256color'\fR
+.fi
+Default value of `$TERM`.
+
+.IP \fBrole\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI''\fR
+.fi
+Unique identifier for the window. If empty string set, no value set. cf. gtk_window_set_role()
+
+.IP \fBcjk_width\fR
 Type:	\fBstring\fR
 .fi
 Default:	\fI'narrow'\fR
 .fi
-\fI'narrow'\fR or \fI'wide'\fR are available. There are complicated problems
-about this, so if you are not familiar with it, it's better to use the default.
+\fI'narrow'\fR or \fI'wide'\fR are available.
 
-.IP "\fBconfig.use_default_keymap\fR (boolean)"
+.IP \fBwidth\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI80\fR
+.fi
+Initial columns.
+
+.IP \fBheight\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI22\fR
+.fi
+Initial rows.
+
+.IP "\ignore_default_keymap\fR"
 Type:	\fBboolean\fR
 .fi
 Default:	\fItrue\fR
 .fi
-Whether or not use default keymap.
+If it is provided, the default keymap will not be used.
 
-.IP \fBconfig.allow_bold_font\fR
+.IP \fBignore_bold_font\fR
 Type:	\fBboolean\fR
 .fi
 Default:	\fItrue\fR
 .fi
-Whether or not to attempt to draw bold text.
-.IP \fBconfig.color_bold\fR
-.IP \fBconfig.color_foreground\fR
-.IP \fBconfig.color_background\fR
-.IP \fBconfig.color_cursor\fR
-.IP \fBconfig.color_cursor_foreground\fR
-.IP \fBconfig.color_highlight\fR
-.IP \fBconfig.color_highlight_foreground\fR
-.IP "\fBconfig.color_0\fR .. \fBconfig.color_15\fR"
+If it is provided, bold font is drawn with normal weight.
+
+.IP \fBcolor_foreground\fR
+.IP \fBcolor_background\fR
+.IP \fBcolor_cursor\fR
+.IP \fBcolor_cursor_foreground\fR
+.IP \fBcolor_highlight\fR
+.IP \fBcolor_highlight_foreground\fR
+.IP \fBcolor_bold\fR
+.IP "\fBcolor_0\fR .. \fBcolor_15\fR"
 Type: \fBstring\fR
 .fi
 Default:	\fI''\fR (empty string)
@@ -131,6 +132,7 @@ Default:	\fI''\fR (empty string)
 You can specify standard color string, for example \fI'#f00'\fR, \fI'#ff0000'\fR
 or \fI'red'\fR. These will be parsed with \fBgdk_rgba_parse()\fR. If you set
 empty string, the VTE default color will be used.
+
 
 .SH DEFAULT KEYBINDINGS
 .TS
@@ -147,39 +149,111 @@ Key	Action
 \fBCtrl\fR+\fB=\fR	Reset font scale
 .TE
 
-.SH BUILTIN FUNCTIONS
+.SH CONFIGURATION
 
-.IP \fBtym.get_version()\fR
-Returns:	\fBstring\fR
+When \fB$XDG_CONFIG_HOME/tym/config.lua\fR exists, it is executed. Here is an example.
+
+.nf
+\fB
+local tym = require('tym')
+tym.set('font', 'DejaVu Sans Mono 11')
+tym.set_config({
+  shell = '/usr/bin/fish',
+  cursor = 'underline',
+  autohide = true,
+  color_foreground = 'red',
+})
+tym.set_keymap('<Ctrl><Shift>o', function()
+  local h = tym.get('height')
+  tym.set('height', h + 1)
+  tym.apply() -- needed for applying config value
+  tym.notify('Set window height :' .. h)
+end)
+tym.set_keymaps({
+  ['<Ctrl><Shift>y'] = function()
+    tym.reload()
+    tym.notify('reload config')
+  end,
+  ['<Ctrl><Shift>v'] = function()
+    tym.notify("Overwrite pasting event")
+  end,
+})
+\fR
 .fi
-Get version string.
 
-.IP \fBtym.get_config_path()\fR
-Returns:	\fBstring\fR
+.SH LUA API
+
+.IP \fBtym.get(key)\fR
+Returns:	\fBany\fR
 .fi
-Get path of config file currently being read.
+Get config value.
 
-.IP "\fBtym.notify('\fImessage\fB', title = '\fItym\fB')\fR"
+.IP "\fBtym.set(key, value)\fR"
 Returns:	\fBvoid\fR
 .fi
-Show desktop notification.
+Get config value.
 
-.IP \fBtym.put('\fItext\fB')\fR
+.IP "\fBtym.get_config()\fR"
+Returns:	\fBtable\fR
+.fi
+Get config table.
+
+.IP "\fBtym.set_config(table)\fR"
 Returns:	\fBvoid\fR
 .fi
-Feed text.
+Set config by table.
+
+.IP "\fBtym.reset_config()\fR"
+Returns:	\fBvoid\fR
+.fi
+Reset config to default.
+
+.IP "\fBtym.set_keymap(acceralator, func)\fR"
+Returns:	\fBvoid\fR
+.fi
+Set keymap. \fIacceralator\fB must be in a format parsable by \fBgtk_accelerator_parse()\fR.
+
+.IP "\fBtym.set_keymaps(table)\fR"
+Returns:	\fBvoid\fR
+.fi
+Set keymaps by table.
 
 .IP \fBtym.reload()\fR
 Returns:	\fBvoid\fR
 .fi
-Reload config file.
+Reload config file and theme file.
 
-.IP \fBtym.copy_clipboard()\fR
+.IP \fBtym.reload_theme()\fR
+Returns:	\fBvoid\fR
+.fi
+Reload theme file.
+
+.IP \fBtym.apply()\fR
+Returns:	\fBvoid\fR
+.fi
+Appyl config to app.
+
+.IP \fBtym.put(text)\fR
+Returns:	\fBvoid\fR
+.fi
+Feed text.
+
+.IP \fBtym.beep()\fR
+Returns:	\fBvoid\fR
+.fi
+Sound beep.
+
+.IP "\fBtym.notify(message, title = \fI'tym'\fB)\fR"
+Returns:	\fBvoid\fR
+.fi
+Show desktop notification.
+
+.IP \fBtym.copy()\fR
 Returns:	\fBvoid\fR
 .fi
 Copy current selection.
 
-.IP \fBtym.paste_clipboard()\fR
+.IP \fBtym.paste()\fR
 Returns:	\fBvoid\fR
 .fi
 Paste clipboard.
@@ -199,25 +273,39 @@ Returns:	\fBvoid\fR
 .fi
 Reset font scale.
 
-.SH EXAMPLES
-You can register functions in a table named \fBkeymap\fR (defaultly defined like
-\fBconfig\fR table) in a format parsable by \fBgtk_accelerator_parse()\fR.
+.IP \fBtym.get_version()\fR
+Returns:	\fBstring\fR
+.fi
+Get version string.
+
+.IP \fBtym.get_config_path()\fR
+Returns:	\fBstring\fR
+.fi
+Get path of config file currently being read.
+
+.IP \fBtym.get_theme_path()\fR
+Returns:	\fBstring\fR
+.fi
+Get path of theme file currently being read.
+
+.SH THEME CUSTOMIZATION
+
+When \fB$XDG_CONFIG_HOME/tym/theme.lua\fR exists, it is executed. Here is an example.
 
 .nf
 \fB
-keymap['<Shift><Ctrl>u'] = function()
-  tym.notify('Pressed C-S-u')
-end
-
--- Override default keymap
-keymap['<Shift><Ctrl>r'] = function()
-  tym.reload()
-  tym.notify('Config reloaded')
-end
-
--- Disable a default keymap
--- NOTE: It must be non-nil value because of Lua language spec that it can not
--- distinguish between no-value registered state and `nil` registered state.
-keymap['<Ctrl>='] = 0
+local fg = '#d2d4de'
+local bg = '#161821'
+return {
+  color_background = bg,
+  color_foreground = fg,
+  color_0  = '#161821',
+  color_1  = '#e27878',
+  -- SNIP
+  color_14 = '#95c4ce',
+  color_15 = '#d2d4de',
+}
 \fR
 .fi
+
+You need to return table within global context.

@@ -51,7 +51,7 @@ All available config values are shown below.
 
 ## Theme customization
 
-By defaultl, `$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. The path can be changed by the value of `'theme'` in config or `--theme` `-t`  option.
+By default, `$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. The path can be changed by the value of `'theme'` in config or `--theme` `-t`  option.
 
 ```lua
 local fg = '#d2d4de'
@@ -120,14 +120,20 @@ end)
 
 -- set by table
 tym.set_keymaps({
-  ['<Ctrl><Shift>y'] = function()
+  ['<Ctrl><Shift>t'] = function()
     tym.reload()
     tym.notify('reload config')
   end,
   ['<Ctrl><Shift>v'] = function()
-    tym.notify("Overwrite pasting event")
+    -- reload and notify
+    tym.send_key('<Ctrl><Shift>t')
+  end,
+  ['<Shift>W'] = function()
+    tym.notify('pressed W')
+    return false -- notification shown and `W` printed
   end,
 })
+
 ```
 
 ## Lua API
@@ -147,7 +153,7 @@ tym.set_keymaps({
 | `tym.reload_theme()`                 | void         | Reload theme file.                              |
 | `tym.apply()`                        | void         | Apply config to app.                            |
 | `tym.put(text)`                      | void         | Feed text.                                      |
-| `tym.beep(text)`                     | void         | Sound beep.                                     |
+| `tym.beep()`                     | void         | Sound beep.                                     |
 | `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
 | `tym.copy()`                         | void         | Copy current selection.                         |
 | `tym.paste()`                        | void         | Paste clipboard.                                |
@@ -260,10 +266,6 @@ Clone this repo and do
 $ autoreconf -fvi
 $ ./configure --enable-debug
 ```
-
-## Tips
-
-If you want to learn more, see my [config.lua](https://github.com/endaaman/dotfiles/blob/master/tym/config.lua)
 
 ## License
 
