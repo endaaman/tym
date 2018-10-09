@@ -233,6 +233,35 @@ static int builtin_reset_keymaps(lua_State* L)
   return 0;
 }
 
+static int builtin_send_key(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  UNUSED(context);
+  const char* acceralator = luaL_checkstring(L, 1);
+  unsigned key;
+  GdkModifierType mod;
+  gtk_accelerator_parse(acceralator, &key, &mod);
+  if (0 == key || 0 == mod) {
+    luaL_error(L, "Invalid acceralator: '%s'", acceralator);
+    return 0;
+  }
+  GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);
+  GdkDisplay* display = gdk_display_get_default();
+  GdkSeat* seat = gdk_display_get_default_seat(display);
+  GdkDevice* device = gdk_seat_get_keyboard(seat);
+  gdk_event_set_device(event, device);
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  event->key.send_event = false;
+  event->key.time = GDK_CURRENT_TIME;
+  event->key.state = mod;
+  event->key.keyval = key;
+  gtk_main_do_event((GdkEvent*)event);
+  /* event->type = GDK_KEY_RELEASE; */
+  /* gtk_main_do_event((GdkEvent*)event); */
+  gdk_event_free((GdkEvent*)event);
+  return 0;
+}
+
 /* static int builtin_set_hook(lua_State* L) */
 /* { */
 /*   return 0 */
@@ -364,6 +393,7 @@ int builtin_register_module(lua_State* L)
     { "set_keymaps"         , builtin_set_keymaps          },
     { "unset_keymap"        , builtin_unset_keymap         },
     { "reset_keymaps"       , builtin_reset_keymaps        },
+    { "send_key"            , builtin_send_key             },
     /* { "set_hook"            , builtin_set_hook             }, */
     /* { "set_hooks"           , builtin_set_hooks            }, */
     { "reload"              , builtin_reload               },
