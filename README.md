@@ -7,7 +7,7 @@
 
 ## Configuration
 
-By defaultl, `$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. The path can be changed by `--use` `-u` option.
+By default, `$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. The path can be changed by `--use` `-u` option.
 
 ```lua
 -- At first, you need to require tym module
@@ -128,8 +128,8 @@ tym.set_keymaps({
     -- reload and notify
     tym.send_key('<Ctrl><Shift>t')
   end,
-  ['<Shift>W'] = function()
-    tym.notify('pressed W')
+  ['<Shift>w'] = function()
+    tym.notify('W has been pressed')
     return false -- notification shown and `W` printed
   end,
 })
