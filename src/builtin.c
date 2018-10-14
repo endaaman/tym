@@ -158,7 +158,6 @@ static int builtin_set_config(lua_State* L)
     }
     lua_pop(L, 2);
   }
-  lua_pop(L, 1);
 
   return 0;
 }
@@ -209,7 +208,7 @@ static int builtin_set_keymaps(lua_State* L)
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
     if (!lua_isfunction(L, -2)) {
-      luaX_warn(L, "Invalid keymap value for '%s': function expected, got %s", key, lua_typename(L, lua_type(L, -2)));
+      luaX_warn(L, "Invalid value for '%s': function expected, got %s", key, lua_typename(L, lua_type(L, -2)));
     } else {
       lua_pushvalue(L, -2); // push function to stack top
       int ref = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -221,7 +220,6 @@ static int builtin_set_keymaps(lua_State* L)
     }
     lua_pop(L, 2);
   }
-  lua_pop(L, 1);
 
   return 0;
 }
@@ -262,15 +260,43 @@ static int builtin_send_key(lua_State* L)
   return 0;
 }
 
-/* static int builtin_set_hook(lua_State* L) */
-/* { */
-/*   return 0 */
-/* } */
+static int builtin_set_hook(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  const char* key = luaL_checkstring(L, 1);
+  luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
+  int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  if (hook_set_ref(context->hook, key, ref)) {
+    return 0;
+  }
+  luaL_unref(L, LUA_REGISTRYINDEX, ref);
+  luaL_error(L, "Invalid hook key: '%s'", key);
+  return 0;
+}
 
-/* static int builtin_set_hooks(lua_State* L) */
-/* { */
-/*   return 0 */
-/* } */
+static int builtin_set_hooks(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  luaL_argcheck(L, lua_istable(L, 1), 1, "table expected");
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    lua_pushvalue(L, -2);
+    const char* key = lua_tostring(L, -1);
+    if (!lua_isfunction(L, -2)) {
+      luaX_warn(L, "Invalid value for '%s': function expected, got %s", key, lua_typename(L, lua_type(L, -2)));
+    } else {
+      lua_pushvalue(L, -2); // push function to stack top
+      int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+      bool ok = hook_set_ref(context->hook, key, ref);
+      if (!ok) {
+        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+        luaX_warn(L, "Invalid hook key: '%s'", key);
+      }
+    }
+    lua_pop(L, 2);
+  }
+  return 0;
+}
 
 static int builtin_reload(lua_State* L)
 {
@@ -445,8 +471,8 @@ int builtin_register_module(lua_State* L)
     { "unset_keymap"        , builtin_unset_keymap         },
     { "reset_keymaps"       , builtin_reset_keymaps        },
     { "send_key"            , builtin_send_key             },
-    /* { "set_hook"            , builtin_set_hook             }, */
-    /* { "set_hooks"           , builtin_set_hooks            }, */
+    { "set_hook"            , builtin_set_hook             },
+    { "set_hooks"           , builtin_set_hooks            },
     { "reload"              , builtin_reload               },
     { "reload_theme"        , builtin_reload_theme         },
     { "apply"               , builtin_apply                },

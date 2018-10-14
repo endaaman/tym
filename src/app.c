@@ -43,6 +43,14 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
 
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
   const char* title = vte_terminal_get_window_title(context->vte);
+  char* next_title;
+  bool result = hook_perform_title(context->hook, context->lua, title, &next_title);
+  if (result) {
+    if (next_title) {
+      gtk_window_set_title(window, next_title);
+    }
+    return;
+  }
   if (title) {
     gtk_window_set_title(window, title);
   }
@@ -50,14 +58,22 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
 
 static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
-  dd("on bell");
-
   UNUSED(vte);
   Context* context = (Context*)user_data;
+
+  if (hook_perform_bell(context->hook, context->lua)) {
+    return;
+  }
   GtkWindow* window = context_get_window(context);
   if (!gtk_window_is_active(window)) {
     gtk_window_set_urgency_hint(window, true);
   }
+}
+
+static void on_vte_click(VteTerminal* vte, void* user_data)
+{
+  UNUSED(vte);
+  UNUSED(user_data);
 }
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
@@ -76,19 +92,21 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  dd("on focus in");
   UNUSED(event);
-  UNUSED(user_data);
+
+  Context* context = (Context*)user_data;
   gtk_window_set_urgency_hint(window, false);
+  hook_perform_activated(context->hook, context->lua);
   return false;
 }
 
 static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  dd("on focus out");
   UNUSED(window);
   UNUSED(event);
-  UNUSED(user_data);
+
+  Context* context = (Context*)user_data;
+  hook_perform_deactivated(context->hook, context->lua);
   return false;
 }
 
@@ -103,6 +121,13 @@ void on_open(GtkApplication* app, GFile** files, int n, const char* hint, void* 
 void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
+  GList* list = gtk_application_get_windows(app);
+  if (list) {
+    dd("present");
+    gtk_window_present(GTK_WINDOW(list->data));
+    return;
+  }
+
   GError* error = NULL;
   Context* context = (Context*)user_data;
 
@@ -117,6 +142,7 @@ void on_activate(GtkApplication* app, void* user_data)
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
   g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
+  g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
 

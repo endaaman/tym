@@ -27,12 +27,6 @@ typedef enum {
 } ConfigType;
 
 typedef struct {
-  GOptionEntry* entries;
-  bool version;
-  char* config_path;
-} Option;
-
-typedef struct {
   char* name;
   char short_name;
   ConfigType type;
@@ -44,6 +38,12 @@ typedef struct {
 } ConfigField;
 
 typedef struct {
+  GOptionEntry* entries;
+  bool version;
+  char* config_path;
+} Option;
+
+typedef struct {
   GHashTable* data;
 } Config;
 
@@ -52,13 +52,18 @@ typedef struct {
 } Keymap;
 
 typedef struct {
-  GList* entries;
+  int title_ref;
+  int bell_ref;
+  int uri_ref;
+  int activated_ref;
+  int deactivated_ref;
 } Hook;
 
 typedef struct {
+  Option* option;
   Config* config;
   Keymap* keymap;
-  Option* option;
+  Hook* hook;
   GtkApplication* app;
   VteTerminal* vte;
   lua_State* lua;
@@ -106,6 +111,17 @@ bool keymap_remove_entry(Keymap* keymap, const char* acceralator);
 void keymap_prepare(Keymap* keymap, lua_State* L);
 void keymap_load(Keymap* keymap, lua_State* L, char** error);
 bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, char** error);
+
+
+// hook
+Hook* hook_init();
+void hook_close(Hook* hook);
+bool hook_set_ref(Hook* hook, const char* name, int ref);
+bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next_title);
+bool hook_perform_bell(Hook* hook, lua_State* L);
+bool hook_perform_activated(Hook* hook, lua_State* L);
+bool hook_perform_deactivated(Hook* hook, lua_State* L);
+
 
 
 // context

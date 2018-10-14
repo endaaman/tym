@@ -4,14 +4,15 @@ tym_SOURCES = \
 	common.h \
 	tym.h \
 	common.c \
-	tym.c \
-	app.c \
-	command.c \
+	option.c \
 	config.c \
-	context.c \
-	builtin.c \
 	keymap.c \
-	option.c
+	hook.c \
+	builtin.c \
+	command.c \
+	context.c \
+	app.c \
+	tym.c
 
 tym_LDADD = $(TYM_LIBS)
 

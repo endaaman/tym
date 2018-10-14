@@ -104,6 +104,7 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
         return true;
       }
       bool result = lua_toboolean(L, -1);
+      lua_pop(L, 1);
       return !result;
     }
   }

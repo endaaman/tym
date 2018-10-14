@@ -64,6 +64,7 @@ static void context_prepare_lua(Context* context)
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
+  lua_pop(L, 1);
   ///* BACKWARD COMPAT BEGIN
   lua_newtable(L);
   lua_setglobal(L, "config");
@@ -77,9 +78,10 @@ Context* context_init()
 {
   dd("init");
   Context* context = g_malloc0(sizeof(Context));
+  context->option = option_init();
   context->config = config_init();
   context->keymap = keymap_init();
-  context->option = option_init();
+  context->hook = hook_init();
   context->app = gtk_application_new(TYM_APP_ID, G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN);
   context_prepare_lua(context);
   return context;
@@ -88,9 +90,10 @@ Context* context_init()
 void context_close(Context* context)
 {
   dd("close");
+  option_close(context->option);
   config_close(context->config);
   keymap_close(context->keymap);
-  option_close(context->option);
+  hook_close(context->hook);
   g_object_unref(context->app);
   lua_close(context->lua);
   g_free(context->config_path);
@@ -147,15 +150,10 @@ void context_load_config(Context* context)
   }
 
   lua_State* L = context->lua;
-  int result = luaL_loadfile(L, context->config_path);
+  int result = luaL_dofile(L, context->config_path);
   if (result != LUA_OK) {
-    g_warning("Could not load `%s`.", context->config_path);
-    goto EXIT;
-  }
-
-  if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
     const char* error = lua_tostring(L, -1);
-    g_message("Got error excuting config script. Stopped config loading.");
+    lua_pop(L, 1);
     context_on_lua_error(context, error);
     goto EXIT;
   }
@@ -220,7 +218,8 @@ void context_load_theme(Context* context)
     }
     lua_pop(L, 2);
   }
-  lua_pop(L, 1); // last key
+  lua_pop(L, 1);
+
 EXIT:
   g_free(theme_path);
   dd("load theme end");
