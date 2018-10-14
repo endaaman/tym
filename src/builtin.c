@@ -256,8 +256,8 @@ static int builtin_send_key(lua_State* L)
   event->key.state = mod;
   event->key.keyval = key;
   gtk_main_do_event((GdkEvent*)event);
-  /* event->type = GDK_KEY_RELEASE; */
-  /* gtk_main_do_event((GdkEvent*)event); */
+  event->type = GDK_KEY_RELEASE;
+  gtk_main_do_event((GdkEvent*)event);
   gdk_event_free((GdkEvent*)event);
   return 0;
 }
