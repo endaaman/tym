@@ -95,7 +95,7 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
       lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
       if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
-        g_warning("Tried to call keymap [%s] which is not function.", e->acceralator);
+        dd("tried to call keymap [%s] which is not function.", e->acceralator);
         return true;
       }
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
@@ -103,12 +103,11 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
         lua_pop(L, 1); // error
         return true;
       }
-      bool result = true;
-      if (lua_isboolean(L, -1)) {
-        result = lua_toboolean(L, -1);
+      bool result = lua_toboolean(L, -1);
+      if (result) {
+        return false;
       }
-      lua_pop(L, 1); // result
-      return result;
+      return true;
     }
   }
   return false;
