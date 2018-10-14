@@ -57,7 +57,7 @@ void debug_dump_stack(lua_State *L, char* file, unsigned line) {
 }
 #endif
 
-void luaL_requiref_with_userdata(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata)
+void luaX_requirec(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata)
 {
   luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
   lua_getfield(L, -1, modname);  /* LOADED[modname] */
@@ -77,7 +77,7 @@ void luaL_requiref_with_userdata(lua_State *L, const char *modname, lua_CFunctio
   }
 }
 
-int luaL_warn(lua_State *L, const char *fmt, ...) {
+int luaX_warn(lua_State *L, const char *fmt, ...) {
   va_list argp;
   va_start(argp, fmt);
   luaL_where(L, 1);

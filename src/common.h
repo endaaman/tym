@@ -78,7 +78,7 @@ void debug_dump_stack(lua_State *L, char* file, unsigned line);
 #define ds(...) ((void)0)
 #endif
 
-void luaL_requiref_with_userdata(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata);
-int luaL_warn (lua_State *L, const char *fmt, ...);
+void luaX_requirec(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata);
+int luaX_warn (lua_State *L, const char *fmt, ...);
 
 #endif

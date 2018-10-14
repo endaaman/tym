@@ -63,7 +63,7 @@ static void context_prepare_lua(Context* context)
 {
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
-  luaL_requiref_with_userdata(L, TYM_MODULE_NAME, builtin_register_module, true, context);
+  luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
   ///* BACKWARD COMPAT BEGIN
   lua_newtable(L);
   lua_setglobal(L, "config");
