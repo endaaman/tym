@@ -66,9 +66,9 @@ bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref)
   e->ref = ref;
   keymap->entries = g_list_append(keymap->entries, e);
   if (removed) {
-    dd("keymap [%s] has been overwritten", acceralator);
+    dd("keymap (%s mod: %x, key: %x) has been overwritten", acceralator, mod, key);
   } else {
-    dd("keymap [%s] has been newly assined", acceralator);
+    dd("keymap (%s mod: %x, key: %x) has been newly assined", acceralator, mod, key);
   }
   return true;
 }
@@ -90,12 +90,12 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
 {
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
-    if ((key == e->key) && !(~mod & e->mod)) {
-      dd("perform keymap: %s", e->acceralator);
+    if (key == e->key && mod == e->mod) {
+      dd("perform keymap: %s (mod: %x, key: %x)", e->acceralator, mod, key);
       lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
       if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
-        g_warning("Tried to call keymap (%s) which is not function.", e->acceralator);
+        g_warning("Tried to call keymap [%s] which is not function.", e->acceralator);
         return true;
       }
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
