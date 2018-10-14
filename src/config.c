@@ -27,7 +27,7 @@ typedef enum {
 #define TYM_CJK_WIDTH_WIDE "wide"
 
 static const char* TYM_DEFAULT_TITLE = "tym";
-static const char* TYM_DEFAULT_ICON = "terminal";
+static const char* TYM_DEFAULT_ICON = "utilities-terminal";
 static const char* TYM_DEFAULT_TERM = "xterm-256color";
 static const char* TYM_DEFAULT_CURSOR_SHAPE = TYM_CURSOR_SHAPE_BLOCK;
 static const char* TYM_DEFAULT_CURSOR_BLINK_MODE = TYM_CURSOR_BLINK_MODE_SYSTEM;

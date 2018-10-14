@@ -35,7 +35,7 @@ All available config values are shown below.
 | `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to excute. |
 | `title` | string | `'tym'` | Window title. |
 | `font` | string | `''` | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value is parsed by [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
-| `icon` | string | `'terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
+| `icon` | string | `'utilities-terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `cursor_shape` | string | `'block'` | `'block'`, `'ibeam'` or `'underline'` are available. |
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` are available. |
 | `term` | string | `'xterm-256color'` | Value to assign to `$TERM` |
