@@ -298,6 +298,57 @@ static int builtin_apply(lua_State* L)
   return 0;
 }
 
+typedef struct {
+  Context* context;
+  int ref;
+} TimeoutNotation;
+
+static int timeout_callback(void* user_data)
+{
+  TimeoutNotation* notation = (TimeoutNotation*) user_data;
+
+  lua_State* L = notation->context->lua;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, notation->ref);
+  if (!lua_isfunction(L, -1)) {
+    lua_pop(L, 1); // pop none-function
+    dd("tried to call non-function");
+    return false;
+  }
+
+  if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+    luaL_error(L, "Error in timeout function: '%s'", lua_tostring(L, -1));
+    lua_pop(L, 1); // error
+    return false;
+  }
+  bool result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
+  return result;
+}
+
+static int builtin_set_timeout(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+
+  luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
+  int interval = lua_tointeger(L, 2); // if non-number, falling back to 0
+
+  lua_pushvalue(L, 1);
+  int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  TimeoutNotation* notation = g_malloc0(sizeof(TimeoutNotation));
+  notation->context = context;
+  notation->ref = ref;
+  int tag = g_timeout_add_full(G_PRIORITY_DEFAULT, interval, (GSourceFunc)timeout_callback, notation, g_free);
+  lua_pushinteger(L, tag);
+  return 1;
+}
+
+static int builtin_clear_timeout(lua_State* L)
+{
+  int tag = luaL_checkinteger(L, 1);
+  g_source_remove(tag);
+  return 0;
+}
+
 static int builtin_get_config_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -399,6 +450,8 @@ int builtin_register_module(lua_State* L)
     { "reload"              , builtin_reload               },
     { "reload_theme"        , builtin_reload_theme         },
     { "apply"               , builtin_apply                },
+    { "set_timeout"         , builtin_set_timeout          },
+    { "clear_timeout"       , builtin_clear_timeout        },
     { "put"                 , builtin_put                  },
     { "beep"                , builtin_beep                 },
     { "notify"              , builtin_notify               },
