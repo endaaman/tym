@@ -1,9 +1,11 @@
 [Desktop Entry]
 Categories=GTK;System;TerminalEmulator;
-Comment=A tiny term for minimalists
+Categories=System;GTK;Utility;TerminalEmulator;
+Comment=A tiny terminal for minimalists
 Encoding=UTF-8
 Exec=tym
-Icon=terminal
+GenericName=Terminal
+Icon=utilities-terminal
 Name=tym
 StartupNotify=true
 Terminal=false
