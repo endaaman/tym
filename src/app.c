@@ -121,10 +121,9 @@ void on_open(GtkApplication* app, GFile** files, int n, const char* hint, void* 
 void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
-  GList* list = gtk_application_get_windows(app);
-  if (list) {
-    dd("present");
-    gtk_window_present(GTK_WINDOW(list->data));
+  GtkWindow* w = gtk_application_get_active_window(app);
+  if (w) {
+    gtk_window_present(w);
     return;
   }
 

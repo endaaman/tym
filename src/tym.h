@@ -123,7 +123,6 @@ bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
 
 
-
 // context
 Context* context_init();
 void context_close(Context* context);
