@@ -11,6 +11,7 @@
 #define TYM_H
 
 #include "common.h"
+#include "regex.h"
 
 
 #define TYM_APP_ID "me.endaaman.tym"

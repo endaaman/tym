@@ -35,6 +35,15 @@ static const char* TYM_DEFAULT_CJK = TYM_CJK_WIDTH_NARROW;
 static const int TYM_DEFAULT_WIDTH = 80;
 static const int TYM_DEFAULT_HEIGHT = 22;
 
+static char* regexps[] = {
+  REGEX_URL_AS_IS,
+  REGEX_URL_FILE,
+  REGEX_URL_HTTP,
+  REGEX_URL_VOIP,
+  REGEX_EMAIL,
+  REGEX_NEWS_MAN,
+};
+
 
 static char* get_default_shell()
 {
@@ -425,6 +434,27 @@ void config_apply(Config* config, VteTerminal* vte)
   vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(config, "cjk_width")));
   vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));
   vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
+
+  vte_terminal_match_remove_all(vte);
+  unsigned i = 0;
+  while (i < sizeof(regexps) / sizeof(char*)) {
+    GError* error = NULL;
+    VteRegex* regexp = vte_regex_new_for_match(
+      regexps[i],
+      -1,
+      PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_MULTILINE,
+      &error
+    );
+    if (error) {
+      g_warning("%s (/%s/)", error->message, regexps[i]);
+      i++;
+      continue;
+    }
+    int tag = vte_terminal_match_add_regex(vte, regexp, 0);
+    vte_regex_unref(regexp);
+    vte_terminal_match_set_cursor_name(vte, tag, "pointer");
+    i++;
+  }
 
   int width = config_get_int(config, "width");
   int height = config_get_int(config, "height");

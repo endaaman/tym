@@ -10,6 +10,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define PCRE2_CODE_UNIT_WIDTH 0
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -18,6 +20,8 @@
 #include <lauxlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include <pcre2.h>
 #include <vte/vte.h>
 #include "../config.h"
 
