@@ -269,6 +269,29 @@ $ autoreconf -fvi
 $ ./configure --enable-debug
 ```
 
+## Advanced config
+
+```lua
+local tym = require('tym')
+
+tym.set_config({
+  shell = '/bin/sh',
+})
+
+local i = 0;
+local message = 'echo "hello World!"'
+tym.set_timeout(function()
+  i = i + 1
+  tym.put(message:sub(i, i))
+  if i == #message then
+    tym.send_key("<Ctrl>m");
+  end
+  if i < #message then
+    return true;
+  end
+end, 100)
+```
+
 ## License
 
 MIT
