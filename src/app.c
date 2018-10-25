@@ -69,10 +69,12 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   }
 }
 
-static void on_vte_click(VteTerminal* vte, void* user_data)
+static bool on_vte_click(VteTerminal* vte, void* user_data)
 {
   UNUSED(vte);
   UNUSED(user_data);
+
+  return false;
 }
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
