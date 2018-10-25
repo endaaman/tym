@@ -33,28 +33,30 @@
 /* #define TYM_USE_OLD_API */
 
 #ifndef TYM_USE_OLD_VTE
+#if GDK_MAJOR_VERSION == 3
+#if GDK_MINOR_VERSION >= 20
+#define TYM_USE_GDK_SEAT
+#endif
+#endif
+
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 48
 #define TYM_USE_VTE_SPAWN_ASYNC
 #endif
 #endif
-#endif
 
-#ifndef TYM_USE_OLD_VTE
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 50
 #define TYM_USE_VTE_COPY_CLIPBOARD_FORMAT
 #endif
 #endif
-#endif
 
-#ifndef TYM_USE_OLD_VTE
 #if VTE_MAJOR_VERSION == 0
 #if VTE_MINOR_VERSION >= 46
 #define TYM_USE_VTE_COLOR_CURSOR_FOREGROUND
 #endif
 #endif
-#endif
+#endif /* TYM_USE_OLD_VTE */
 
 #ifdef DEBUG
 #define dd( fmt, ... ) \

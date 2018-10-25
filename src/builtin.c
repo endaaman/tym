@@ -245,8 +245,26 @@ static int builtin_send_key(lua_State* L)
   }
   GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);
   GdkDisplay* display = gdk_display_get_default();
+#ifdef TYM_USE_GDK_SEAT
   GdkSeat* seat = gdk_display_get_default_seat(display);
   GdkDevice* device = gdk_seat_get_keyboard(seat);
+#else
+  GdkDeviceManager* manager = gdk_display_get_device_manager(display);
+  GList* devices = gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_MASTER);
+  GdkDevice* device = NULL;
+  for (GList* li = devices; li != NULL; li = li->next) {
+  GdkDevice* d = (GdkDevice*)li->data;
+    if (gdk_device_get_source(d) == GDK_SOURCE_KEYBOARD) {
+      device = d;
+      break;
+    }
+  }
+  g_list_free(devices);
+#endif
+  if (device == NULL) {
+    g_warning("Could not get input device.");
+    return 0;
+  }
   gdk_event_set_device(event, device);
   event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
   event->key.send_event = false;
