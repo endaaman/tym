@@ -66,6 +66,8 @@ typedef struct {
   Hook* hook;
   GtkApplication* app;
   VteTerminal* vte;
+  GtkWindow* window;
+  GdkDevice* device;
   lua_State* lua;
   char* config_path;
   bool loading;
@@ -127,13 +129,12 @@ bool hook_perform_deactivated(Hook* hook, lua_State* L);
 Context* context_init();
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
+void context_prepare_componets(Context* context);
 void context_load_config(Context* context);
 void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
 void context_apply_config(Context* context);
 void context_apply_theme(Context* context);
-void context_set_vte(Context* context, VteTerminal* vte);
-GtkWindow* context_get_window(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
 
 

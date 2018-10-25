@@ -244,29 +244,12 @@ static int builtin_send_key(lua_State* L)
     return 0;
   }
   GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);
-  GdkDisplay* display = gdk_display_get_default();
-#ifdef TYM_USE_GDK_SEAT
-  GdkSeat* seat = gdk_display_get_default_seat(display);
-  GdkDevice* device = gdk_seat_get_keyboard(seat);
-#else
-  GdkDeviceManager* manager = gdk_display_get_device_manager(display);
-  GList* devices = gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_MASTER);
-  GdkDevice* device = NULL;
-  for (GList* li = devices; li != NULL; li = li->next) {
-  GdkDevice* d = (GdkDevice*)li->data;
-    if (gdk_device_get_source(d) == GDK_SOURCE_KEYBOARD) {
-      device = d;
-      break;
-    }
-  }
-  g_list_free(devices);
-#endif
-  if (device == NULL) {
+  if (context->device == NULL) {
     g_warning("Could not get input device.");
     return 0;
   }
-  gdk_event_set_device(event, device);
-  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  gdk_event_set_device(event, context->device);
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context->window)));
   event->key.send_event = false;
   event->key.time = GDK_CURRENT_TIME;
   event->key.state = mod;
@@ -427,7 +410,7 @@ static int builtin_put(lua_State* L)
 static int builtin_beep(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context->window)));
   return 0;
 }
 

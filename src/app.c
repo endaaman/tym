@@ -64,9 +64,8 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   if (hook_perform_bell(context->hook, context->lua)) {
     return;
   }
-  GtkWindow* window = context_get_window(context);
-  if (!gtk_window_is_active(window)) {
-    gtk_window_set_urgency_hint(window, true);
+  if (!gtk_window_is_active(context->window)) {
+    gtk_window_set_urgency_hint(context->window, true);
   }
 }
 
@@ -129,13 +128,9 @@ void on_activate(GtkApplication* app, void* user_data)
 
   GError* error = NULL;
   Context* context = (Context*)user_data;
-
-  VteTerminal* vte = VTE_TERMINAL(vte_terminal_new());
-  context_set_vte(context, vte);
-
-  GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
-  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
-  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+  context_prepare_componets(context);
+  VteTerminal* vte = context->vte;
+  GtkWindow *window = context->window;
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);

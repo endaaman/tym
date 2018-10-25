@@ -121,6 +121,31 @@ int context_start(Context* context, int argc, char** argv) {
   return g_application_run(G_APPLICATION(context->app), argc, argv);
 }
 
+void context_prepare_componets(Context* context)
+{
+  context->vte = VTE_TERMINAL(vte_terminal_new());
+  context->window = GTK_WINDOW(gtk_application_window_new(context->app));
+  gtk_container_add(GTK_CONTAINER(context->window), GTK_WIDGET(context->vte));
+  gtk_container_set_border_width(GTK_CONTAINER(context->window), 0);
+
+  GdkDisplay* display = gdk_display_get_default();
+#ifdef TYM_USE_GDK_SEAT
+  GdkSeat* seat = gdk_display_get_default_seat(display);
+  context->device = gdk_seat_get_keyboard(seat);
+#else
+  GdkDeviceManager* manager = gdk_display_get_device_manager(display);
+  GList* devices = gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_MASTER);
+  for (GList* li = devices; li != NULL; li = li->next) {
+  GdkDevice* d = (GdkDevice*)li->data;
+    if (gdk_device_get_source(d) == GDK_SOURCE_KEYBOARD) {
+      context->device = d;
+      break;
+    }
+  }
+  g_list_free(devices);
+#endif
+}
+
 static void context_on_lua_error(Context* context, const char* error)
 {
   char* message = g_strdup_printf("%s", error);
@@ -265,16 +290,6 @@ void context_apply_theme(Context* context)
   config_apply_theme(context->config, context->vte);
 }
 
-GtkWindow* context_get_window(Context* context)
-{
-  return gtk_application_get_active_window(context->app);
-}
-
-void context_set_vte(Context* context, VteTerminal* vte)
-{
-  context->vte = vte;
-}
-
 void context_notify(Context* context, const char* body, const char* title)
 {
   GtkApplication* app = context->app;
@@ -282,7 +297,7 @@ void context_notify(Context* context, const char* body, const char* title)
   GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
   GIcon* icon = g_themed_icon_new_with_default_fallbacks(config_get_str(context->config, "icon"));
 
-  g_notification_set_icon(notification, G_ICON (icon));
+  g_notification_set_icon(notification, G_ICON(icon));
   g_notification_set_body(notification, body);
   g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_URGENT);
   g_application_send_notification(G_APPLICATION(app), TYM_APP_ID, notification);
