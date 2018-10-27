@@ -155,7 +155,7 @@ tym.set_keymaps({
 | `tym.set_timeout(func, [interval])`  | tag:int      | Set timeout. return true in func to excute again. |
 | `tym.clear_timeout(tag)`             | void         | Clear the timeout.                              |
 | `tym.put(text)`                      | void         | Feed text.                                      |
-| `tym.beep()`                         | void         | Sound beep.                                     |
+| `tym.bell()`                         | void         | Sound bell.                                     |
 | `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
 | `tym.copy()`                         | void         | Copy current selection.                         |
 | `tym.paste()`                        | void         | Paste clipboard.                                |

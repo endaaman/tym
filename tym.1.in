@@ -255,10 +255,10 @@ Returns:	\fBvoid\fR
 .fi
 Feed text.
 
-.IP \fBtym.beep()\fR
+.IP \fBtym.bell()\fR
 Returns:	\fBvoid\fR
 .fi
-Sound beep.
+Sound bell.
 
 .IP "\fBtym.notify(message, title = \fI'tym'\fB)\fR"
 Returns:	\fBvoid\fR

@@ -407,10 +407,10 @@ static int builtin_put(lua_State* L)
   return 0;
 }
 
-static int builtin_beep(lua_State* L)
+static int builtin_bell(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context->window)));
+  gdk_window_bell(gtk_widget_get_window(GTK_WIDGET(context->window)));
   return 0;
 }
 
@@ -480,7 +480,7 @@ int builtin_register_module(lua_State* L)
     { "set_timeout"         , builtin_set_timeout          },
     { "clear_timeout"       , builtin_clear_timeout        },
     { "put"                 , builtin_put                  },
-    { "beep"                , builtin_beep                 },
+    { "bell"                , builtin_bell                 },
     { "notify"              , builtin_notify               },
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },
