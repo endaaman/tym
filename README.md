@@ -137,11 +137,11 @@ tym.set_keymaps({
 
 ## Lua API
 
-| name                                 | return value | description                                     |
+| Name                                 | Return value | Description                                     |
 | ------------------------------------ | -------------| ----------------------------------------------- |
-| `tym.get(key)`                       | value:any    | Get config value.                               |
+| `tym.get(key)`                       | any          | Get config value.                               |
 | `tym.set(key, value)`                | void         | Set config value.                               |
-| `tym.get_config()`                   | config:table | Get whole config.                               |
+| `tym.get_config()`                   | table        | Get whole config.                               |
 | `tym.set_config(table)`              | void         | Set config by table.                            |
 | `tym.reset_config()`                 | void         | Reset all config to default (but not apply it)  |
 | `tym.set_keymap(acceralator, func)`  | void         | Set keymap.                                     |
@@ -152,7 +152,7 @@ tym.set_keymaps({
 | `tym.reload()`                       | void         | Reload config file.                             |
 | `tym.reload_theme()`                 | void         | Reload theme file.                              |
 | `tym.apply()`                        | void         | Apply config to app.                            |
-| `tym.set_timeout(func, [interval])`  | tag:int      | Set timeout. return true in func to excute again. |
+| `tym.set_timeout(func, [interval])`  | int(tag)     | Set timeout. return true in func to excute again. |
 | `tym.clear_timeout(tag)`             | void         | Clear the timeout.                              |
 | `tym.put(text)`                      | void         | Feed text.                                      |
 | `tym.bell()`                         | void         | Sound bell.                                     |
@@ -166,6 +166,28 @@ tym.set_keymaps({
 | `tym.get_config_path()`              | string       | Get full path to config file.                   |
 | `tym.get_theme_path()`               | string       | Get full path to theme file.                    |
 
+### Hooks
+
+| Name | Param | Default action | Description |
+| --- | --- | --- | --- |
+| `'title'` | title | Title will be changed. | If string is returned in hook func, it will be the new title. |
+| `'bell'` | nil | The window will be urgent **only when it is inactive**. | If true is returned in hook func, the window will not be urgent. |
+| `'activated'` | nil | n/a | n/a |
+| `'deactivated'` | nil | n/a | n/a |
+
+```lua
+tym.set_hooks({
+  title = function(t)
+    return 'tym - ' .. t
+  end,
+})
+
+tym.set_hook('bell', function()
+  -- Even if you excute `tput bel`, the window will not be urgent.
+  print('bell')
+  return true
+end)
+```
 
 ## Options
 

@@ -28,8 +28,8 @@ bool hook_set_ref(Hook* hook, const char* name, int ref)
     hook->title_ref = ref;
   } else if (0 == g_strcmp0(name, "bell")) {
     hook->bell_ref = ref;
-  } else if (0 == g_strcmp0(name, "uri")) {
-    hook->uri_ref = ref;
+  /* } else if (0 == g_strcmp0(name, "uri")) { */
+  /*   hook->uri_ref = ref; */
   } else if (0 == g_strcmp0(name, "activated")) {
     hook->activated_ref = ref;
   } else if (0 == g_strcmp0(name, "deactivated")) {
