@@ -410,7 +410,7 @@ static int builtin_put(lua_State* L)
 static int builtin_bell(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  gdk_window_bell(gtk_widget_get_window(GTK_WIDGET(context->window)));
+  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context->window)));
   return 0;
 }
 
