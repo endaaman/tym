@@ -10,7 +10,6 @@
 #include "tym.h"
 
 
-typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 typedef enum {
   VTE_CJK_WIDTH_NARROW = 1,
   VTE_CJK_WIDTH_WIDE = 2
@@ -107,7 +106,6 @@ static void initialize() {
   };
 #undef color_special
 #undef color_normal
-
 
   unsigned i = 0;
   config_fields_len = sizeof(c) / sizeof(ConfigField);
@@ -350,129 +348,30 @@ void config_load_option_values(Config* config, Option* option)
   }
 }
 
-static void config_apply_color(
-  Config* config,
-  VteTerminal* vte,
-  VteSetColorFunc vte_set_color_func,
-  const char* key
-) {
+bool config_acquire_color(Config* config, const char* key, GdkRGBA* color)
+{
   if (!config_has_str(config, key)) {
-    return;
+    return false;
   }
-  GdkRGBA color;
   const char* value = config_get_str(config, key);
-  bool valid = gdk_rgba_parse(&color, value);
-  if (valid) {
-    vte_set_color_func(vte, &color);
-  } else {
+  bool valid = gdk_rgba_parse(color, value);
+  if (!valid) {
     g_message( "Invalid color string for '%s': %s", key, value);
   }
+  return valid;
 }
 
-static void config_apply_colors(Config* config, VteTerminal* vte)
+VteCursorShape config_get_cursor_shape(Config* config)
 {
-  GdkRGBA* palette = g_new0(GdkRGBA, 16);
-  char key[10];
-  for (unsigned i = 0; i < 16; i++) {
-    // read color_0 .. color_15
-    g_snprintf(key, 10, "color_%d", i);
-    char* value = config_get_str(config, key);
-    if (config_has_str(config, key)) {
-      bool valid = gdk_rgba_parse(&palette[i], value);
-      if (valid) {
-        continue;
-      } else {
-        g_message( "Invalid color string for '%s': %s", key, value);
-      }
-    }
-    // calc default color
-    palette[i].blue  = (((i & 5) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
-    palette[i].green = (((i & 2) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
-    palette[i].red   = (((i & 1) ? 0xc000 : 0) + (i > 7 ? 0x3fff : 0)) / 65535.0;
-    palette[i].alpha = 0;
-  }
-  vte_terminal_set_colors(vte, NULL, NULL, palette, 16);
+  return match_cursor_shape(config_get_str(config, "cursor_shape"));
 }
 
-void config_apply_theme(Config* config, VteTerminal* vte)
+VteCursorBlinkMode config_get_cursor_blink_mode(Config* config)
 {
-  config_apply_colors(config, vte);
-  config_apply_color(config, vte, vte_terminal_set_color_bold, "color_bold");
-  config_apply_color(config, vte, vte_terminal_set_color_background, "color_background");
-  config_apply_color(config, vte, vte_terminal_set_color_foreground, "color_foreground");
-  config_apply_color(config, vte, vte_terminal_set_color_cursor, "color_cursor");
-  config_apply_color(config, vte, vte_terminal_set_color_highlight, "color_highlight");
-  config_apply_color(config, vte, vte_terminal_set_color_highlight_foreground, "color_highlight_foreground");
-
-#ifdef TYM_USE_VTE_COLOR_CURSOR_FOREGROUND
-  config_apply_color(config, vte, vte_terminal_set_color_cursor_foreground, "color_cursor_foreground");
-#endif
+  return match_cursor_blink_mode(config_get_str(config, "cursor_shape"));
 }
 
-void config_apply(Config* config, VteTerminal* vte)
+unsigned config_get_cjk_width(Config* config)
 {
-  GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
-
-  gtk_window_set_title(window, config_get_str(config, "title"));
-  char* role = config_has_str(config, "role")
-    ? config_get_str(config, "role")
-    : NULL;
-  gtk_window_set_role(window, role);
-  gtk_window_set_icon_name(window, config_get_str(config, "icon"));
-
-  vte_terminal_set_cursor_shape(vte, match_cursor_shape(config_get_str(config, "cursor_shape")));
-  vte_terminal_set_cursor_blink_mode(vte, match_cursor_blink_mode(config_get_str(config, "cursor_blink_mode")));
-  vte_terminal_set_cjk_ambiguous_width(vte, match_cjk_width(config_get_str(config, "cjk_width")));
-  vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));
-  vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
-
-  int width = config_get_int(config, "width");
-  int height = config_get_int(config, "height");
-  if (0 < width && 0 < height) {
-    if (gtk_window_is_active(window)){
-      GtkBorder border;
-      gtk_style_context_get_padding(
-        gtk_widget_get_style_context(GTK_WIDGET(vte)),
-        gtk_widget_get_state_flags(GTK_WIDGET(vte)),
-        &border
-      );
-      const int char_width = vte_terminal_get_char_width(vte);
-      const int char_height = vte_terminal_get_char_height(vte);
-      gtk_window_resize(
-        window,
-        width * char_width + border.left + border.right,
-        height * char_height + border.top + border.bottom
-      );
-    } else {
-      vte_terminal_set_size(vte, width, height);
-    }
-  }
-
-  if (config_has_str(config, "font")) {
-    PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(config, "font"));
-    vte_terminal_set_font(vte, font_desc);
-    pango_font_description_free(font_desc);
-  }
-}
-
-char* config_acquire_theme_path(Config* config)
-{
-  if (!config_has_str(config, "theme")) {
-    return g_strdup(default_theme_path);
-  }
-
-  char* path = config_get_str(config, "theme");
-
-  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
-    return NULL;
-  }
-
-  if (g_path_is_absolute(path)) {
-    return g_strdup(path);
-  }
-
-  char* cwd = g_get_current_dir();
-  char* p = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
-  g_free(cwd);
-  return p;
+  return match_cjk_width(config_get_str(config, "cjk_width"));
 }

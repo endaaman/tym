@@ -8,6 +8,7 @@ tym_SOURCES = \
 	config.c \
 	keymap.c \
 	hook.c \
+	layout.c \
 	builtin.c \
 	command.c \
 	context.c \

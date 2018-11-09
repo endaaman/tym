@@ -60,13 +60,17 @@ typedef struct {
 } Hook;
 
 typedef struct {
+  VteTerminal* vte;
+  GtkWindow* window;
+} Layout;
+
+typedef struct {
   Option* option;
   Config* config;
   Keymap* keymap;
   Hook* hook;
+  Layout* layout;
   GtkApplication* app;
-  VteTerminal* vte;
-  GtkWindow* window;
   GdkDevice* device;
   lua_State* lua;
   char* config_path;
@@ -91,9 +95,6 @@ ConfigField* get_config_field(const char* key);
 Config* config_init();
 void config_close(Config* config);
 void config_reset(Config* config);
-void config_load_option_values(Config* config, Option* option);
-void config_apply(Config* config, VteTerminal* vte);
-void config_apply_theme(Config* config, VteTerminal* vte);
 bool config_has_str(Config* config, const char* key);
 char* config_get_str(Config* config, const char* key);
 bool config_set_str(Config* config, const char* key, const char* value);
@@ -101,7 +102,11 @@ int config_get_int(Config* config, const char* key);
 bool config_set_int(Config* config, const char* key, int value);
 bool config_get_bool(Config* config, const char* key);
 bool config_set_bool(Config* config, const char* key, bool value);
-char* config_acquire_theme_path(Config* config);
+void config_load_option_values(Config* config, Option* option);
+bool config_acquire_color(Config* config, const char* key, GdkRGBA* color);
+VteCursorShape config_get_cursor_shape(Config* config);
+VteCursorBlinkMode config_get_cursor_blink_mode(Config* config);
+unsigned config_get_cjk_width(Config* config);
 
 
 // keymap
@@ -110,8 +115,6 @@ void keymap_close(Keymap* keymap);
 void keymap_reset(Keymap* keymap);
 bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref);
 bool keymap_remove_entry(Keymap* keymap, const char* acceralator);
-void keymap_prepare(Keymap* keymap, lua_State* L);
-void keymap_load(Keymap* keymap, lua_State* L, char** error);
 bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, char** error);
 
 
@@ -125,16 +128,28 @@ bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
 
 
+// layout
+Layout* layout_init();
+void layout_close(Layout* layout);
+void layout_build(Layout* layout, GtkApplication* app, Config* config);
+void layout_apply_theme(Layout* layout, Config* config);
+void layout_apply_config(Layout* layout, Config* config);
+
+
 // context
 Context* context_init();
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
-void context_prepare_componets(Context* context);
+void context_load_device(Context* context);
+void context_acquire_theme_path(Context* context, char** ppath);
 void context_load_config(Context* context);
 void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
 void context_apply_config(Context* context);
 void context_apply_theme(Context* context);
+void context_build_layout(Context* context);
+VteTerminal* context_get_vte(Context* context);
+GtkWindow* context_get_window(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
 
 

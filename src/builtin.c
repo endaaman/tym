@@ -249,7 +249,7 @@ static int builtin_send_key(lua_State* L)
     return 0;
   }
   gdk_event_set_device(event, context->device);
-  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context->window)));
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
   event->key.send_event = false;
   event->key.time = GDK_CURRENT_TIME;
   event->key.state = mod;
@@ -386,7 +386,8 @@ static int builtin_get_config_path(lua_State* L)
 static int builtin_get_theme_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  char* path = config_acquire_theme_path(context->config);
+  char* path;
+  context_acquire_theme_path(context, &path);
   lua_pushstring(L, path);
   g_free(path);
   return 1;
@@ -403,14 +404,14 @@ static int builtin_put(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
 
   const char* text = luaL_checkstring(L, -1);
-  vte_terminal_feed_child(context->vte, text, -1);
+  vte_terminal_feed_child(context_get_vte(context), text, -1);
   return 0;
 }
 
 static int builtin_bell(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context->window)));
+  gdk_window_beep(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
   return 0;
 }
 

@@ -42,7 +42,7 @@ static void on_vte_title_changed(VteTerminal *vte, void* user_data)
   Context* context = (Context*)user_data;
 
   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
-  const char* title = vte_terminal_get_window_title(context->vte);
+  const char* title = vte_terminal_get_window_title(context_get_vte(context));
   char* next_title;
   bool result = hook_perform_title(context->hook, context->lua, title, &next_title);
   if (result) {
@@ -64,8 +64,9 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   if (hook_perform_bell(context->hook, context->lua)) {
     return;
   }
-  if (!gtk_window_is_active(context->window)) {
-    gtk_window_set_urgency_hint(context->window, true);
+  GtkWindow* window = context_get_window(context);
+  if (!gtk_window_is_active(window)) {
+    gtk_window_set_urgency_hint(window, true);
   }
 }
 
@@ -128,11 +129,14 @@ void on_activate(GtkApplication* app, void* user_data)
     return;
   }
 
-  GError* error = NULL;
   Context* context = (Context*)user_data;
-  context_prepare_componets(context);
-  VteTerminal* vte = context->vte;
-  GtkWindow *window = context->window;
+  context_load_config(context);
+  context_load_theme(context);
+  context_load_device(context);
+  context_build_layout(context);
+
+  VteTerminal* vte = context_get_vte(context);
+  GtkWindow *window = context_get_window(context);
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
@@ -142,11 +146,10 @@ void on_activate(GtkApplication* app, void* user_data)
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
 
-  context_load_config(context);
-  context_load_theme(context);
   context_apply_config(context);
   context_apply_theme(context);
 
+  GError* error = NULL;
   char** argv;
   char* line = config_get_str(context->config, "shell");
   g_shell_parse_argv(line, NULL, &argv, &error);

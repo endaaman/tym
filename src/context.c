@@ -59,6 +59,30 @@ static void context_load_config_path(Context* context)
   }
 }
 
+void context_acquire_theme_path(Context* context, char** ppath)
+{
+  if (!config_has_str(context->config, "theme")) {
+    *ppath = NULL;
+    return;
+  }
+
+  char* path = config_get_str(context->config, "theme");
+
+  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+    *ppath = NULL;
+    return;
+  }
+
+  if (g_path_is_absolute(path)) {
+    *ppath = g_strdup(path);
+    return;
+  }
+
+  char* cwd = g_get_current_dir();
+  *ppath = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  g_free(cwd);
+}
+
 static void context_prepare_lua(Context* context)
 {
   lua_State* L = luaL_newstate();
@@ -82,6 +106,7 @@ Context* context_init()
   context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();
+  context->layout = layout_init();
   context->app = gtk_application_new(TYM_APP_ID, G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN);
   context_prepare_lua(context);
   return context;
@@ -94,6 +119,7 @@ void context_close(Context* context)
   config_close(context->config);
   keymap_close(context->keymap);
   hook_close(context->hook);
+  layout_close(context->layout);
   g_object_unref(context->app);
   lua_close(context->lua);
   g_free(context->config_path);
@@ -121,13 +147,8 @@ int context_start(Context* context, int argc, char** argv) {
   return g_application_run(G_APPLICATION(context->app), argc, argv);
 }
 
-void context_prepare_componets(Context* context)
+void context_load_device(Context* context)
 {
-  context->vte = VTE_TERMINAL(vte_terminal_new());
-  context->window = GTK_WINDOW(gtk_application_window_new(context->app));
-  gtk_container_add(GTK_CONTAINER(context->window), GTK_WIDGET(context->vte));
-  gtk_container_set_border_width(GTK_CONTAINER(context->window), 0);
-
   GdkDisplay* display = gdk_display_get_default();
 #ifdef TYM_USE_GDK_SEAT
   GdkSeat* seat = gdk_display_get_default_seat(display);
@@ -195,7 +216,8 @@ void context_load_theme(Context* context)
 {
   dd("load theme start");
 
-  char* theme_path = config_acquire_theme_path(context->config);
+  char* theme_path;
+  context_acquire_theme_path(context, &theme_path);
 
   if (!theme_path) {
     g_message("Skipped theme loading.");
@@ -282,12 +304,27 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 
 void context_apply_config(Context* context)
 {
-  config_apply(context->config, context->vte);
+  layout_apply_config(context->layout, context->config);
 }
 
 void context_apply_theme(Context* context)
 {
-  config_apply_theme(context->config, context->vte);
+  layout_apply_theme(context->layout, context->config);
+}
+
+void context_build_layout(Context* context)
+{
+  layout_build(context->layout, context->app, context->config);
+}
+
+VteTerminal* context_get_vte(Context* context)
+{
+  return context->layout->vte;
+}
+
+GtkWindow* context_get_window(Context* context)
+{
+  return context->layout->window;
 }
 
 void context_notify(Context* context, const char* body, const char* title)
