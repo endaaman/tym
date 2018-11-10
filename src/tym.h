@@ -60,8 +60,10 @@ typedef struct {
 } Hook;
 
 typedef struct {
-  VteTerminal* vte;
   GtkWindow* window;
+  VteTerminal* vte;
+  GtkBox* hbox;
+  GtkBox* vbox;
 } Layout;
 
 typedef struct {

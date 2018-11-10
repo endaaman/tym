@@ -103,6 +103,20 @@ Default:	\fI22\fR
 .fi
 Initial rows.
 
+.IP \padding_horizontal\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI80\fR
+.fi
+Horizontal padding.
+
+.IP \padding_vertical\fR
+Type:	\fBinteger\fR
+.fi
+Default:	\fI80\fR
+.fi
+Vertical padding.
+
 .IP "\ignore_default_keymap\fR"
 Type:	\fBboolean\fR
 .fi
@@ -123,6 +137,13 @@ Type:	\fBboolean\fR
 Default:	\fIfalse\fR
 .fi
 If it is provided, mouse cursor will be hidden when you presses a key.
+
+.IP \fBcolor_window_background\fR
+Type:	\string\fR
+.fi
+Default:	\fI''\fR
+.fi
+Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. For the value you can set the colors that can be used in GTK+ CSS. (cf. https://developer.gnome.org/gtk3/stable/chap-css-overview.html)
 
 .IP \fBcolor_foreground\fR
 .IP \fBcolor_background\fR

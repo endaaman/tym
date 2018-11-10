@@ -73,6 +73,7 @@ static void initialize() {
 
   char* (*dup)(const char*) = g_strdup;
   const bool default_false = false;
+  const int default_zero = 0;
 
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
@@ -88,9 +89,12 @@ static void initialize() {
     { "cjk_width",             0,  T_STR, F_NONE, dup(TYM_DEFAULT_CJK), "", "'narrow' or 'wide'", NULL, },
     { "width",                 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", NULL, },
     { "height",                0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", NULL, },
+    { "padding_horizontal",    0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Horizontal padding", NULL, },
+    { "padding_vertical",      0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Vertical padding", NULL, },
     { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap", NULL, },
     { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", NULL, },
     { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", NULL, },
+    color_special("window_background"),
     color_special("foreground"),
     color_special("background"),
     color_special("cursor"),

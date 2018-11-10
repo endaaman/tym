@@ -29,12 +29,16 @@ void layout_build(Layout* layout, GtkApplication* app, Config* config)
 {
   GtkWindow* window = layout->window = GTK_WINDOW(gtk_application_window_new(app));
   VteTerminal* vte = layout->vte = VTE_TERMINAL(vte_terminal_new());
+  GtkBox* hbox = layout->hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+  GtkBox* vbox = layout->vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
 
   int width = config_get_int(config, "width");
   int height = config_get_int(config, "height");
   vte_terminal_set_size(vte, width, height);
 
-  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vte));
+  gtk_container_add(GTK_CONTAINER(hbox), GTK_WIDGET(vte));
+  gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vbox));
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 }
 
@@ -89,6 +93,8 @@ void layout_apply_config(Layout* layout, Config* config)
 {
   GtkWindow* window = layout->window;
   VteTerminal* vte = layout->vte;
+  GtkBox* hbox = layout->hbox;
+  GtkBox* vbox = layout->vbox;
 
   gtk_window_set_title(window, config_get_str(config, "title"));
   char* role = config_has_str(config, "role")
@@ -96,6 +102,27 @@ void layout_apply_config(Layout* layout, Config* config)
     : NULL;
   gtk_window_set_role(window, role);
   gtk_window_set_icon_name(window, config_get_str(config, "icon"));
+
+  int hpad = config_get_int(config, "padding_horizontal");
+  int vpad = config_get_int(config, "padding_vertical");
+  gtk_box_set_child_packing(hbox, GTK_WIDGET(vte), true, true, hpad, GTK_PACK_START);
+  gtk_box_set_child_packing(vbox, GTK_WIDGET(hbox), true, true, vpad, GTK_PACK_START);
+
+  if (config_has_str(config, "color_window_background")) {
+    GtkCssProvider* css_provider = gtk_css_provider_new();
+   // TODO: escape
+    char* css = g_strdup_printf("window { background-color: %s; }", config_get_str(config, "color_window_background"));
+    GError* err = NULL;
+    gtk_css_provider_load_from_data(css_provider, css, -1, &err);
+    g_free(css);
+    if (err) {
+      g_warning("Error when parsing css: %s", err->message);
+      g_error_free(err);
+    } else {
+      GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
+      gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+    }
+  }
 
   vte_terminal_set_cursor_shape(vte, config_get_cursor_shape(config));
   vte_terminal_set_cursor_blink_mode(vte, config_get_cursor_blink_mode(config));
