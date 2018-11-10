@@ -19,6 +19,7 @@ autom4te.cache/
 m4/
 
 tym.1
+src/common.h
 /config.*
 tym
 tym-*.tar.gz

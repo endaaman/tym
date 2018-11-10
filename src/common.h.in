@@ -23,8 +23,8 @@
 
 
 #define UNUSED(x) (void)(x)
-#define BUILD_DATE "2018-11-10"
-#define BUILD_REV "8f707f2"
+#define BUILD_DATE "@DATE@"
+#define BUILD_REV "@REV@"
 
 
 // compat definition

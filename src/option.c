@@ -79,7 +79,7 @@ bool option_check(Option* option, int* argc, char*** argv, GError** error) {
 
   if (option->version) {
     g_option_context_free(option_context);
-    g_print("version %s\n", PACKAGE_VERSION);
+    g_print("version %s (rev.%s)\n", PACKAGE_VERSION, BUILD_REV);
     return false;
   }
 

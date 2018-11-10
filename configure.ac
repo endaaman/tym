@@ -10,12 +10,15 @@ AC_PREREQ([2.69])
 AC_INIT([tym], [tym_version()], [], [tym], [https://github.com/endaaman/tym])
 AM_INIT_AUTOMAKE([foreign])
 DATE="`date '+%Y-%m-%d'`"
+REV="`git rev-parse --short HEAD`"
 AC_SUBST(DATE)
+AC_SUBST(REV)
 AC_CONFIG_SRCDIR([src/tym.c])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([config.h], [])
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  src/common.h
   tym.1
 ])
 
