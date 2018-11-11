@@ -1,0 +1,341 @@
+#!/usr/bin/env lua
+local os = require('os')
+local io = require('io')
+
+local fmt = string.format
+
+-- HELPER BEGIN
+local function split(str, sep)
+  local t = {}
+  for s in string.gmatch(str, "([^"..sep.."]+)") do
+    table.insert(t, s)
+  end
+  return t
+end
+
+local function join(delimiter, list)
+   local len = #list
+   if len == 0 then
+      return ""
+   end
+   local s = list[1]
+   for i = 2, len do
+      s = s .. delimiter .. list[i]
+   end
+   return s
+end
+
+local function exec(command)
+  local handle = io.popen(command, 'r')
+  local result = handle:read("*a")
+  handle:close()
+  return result
+end
+-- HELPER END
+
+
+-- MODULE BEGIN
+local home = os.getenv('HOME')
+local THEMES_DIR = home .. '/.local/share/tym/themes'
+local THEME_PATH = home .. '/.config/tym/theme.lua'
+local REPO_NAME = 'endaaman/tym-themes'
+local REPO_DIR = 'themes'
+local THEME_URI = 'https://raw.githubusercontent.com/' .. REPO_NAME .. '/master/' .. REPO_DIR ..'/%s.lua'
+local CMD_LIST = fmt('find ' .. THEMES_DIR .. ' -maxdepth 1 -mindepth 1 -type f -iname \'*.lua\'')
+local CMD_DELETE = 'rm -f %s'
+
+local Theme = {}
+function Theme.new(path)
+  local splitted = split(path, '/')
+  local name = split(splitted[#splitted], '.')[1]
+  local this = {
+    path = path,
+    name = name,
+  }
+  return setmetatable(this, {__index = Theme})
+end
+
+local _M = {}
+
+function _M.init(this)
+  os.execute('mkdir -p ' .. THEMES_DIR)
+  this:load_themes()
+end
+
+function _M.load_themes(this)
+  for k in pairs(this.themes) do
+    this.themes[k] = nil
+  end
+  local paths = split(exec(CMD_LIST), '\n')
+  for i, path in pairs(paths) do
+    table.insert(this.themes, Theme.new(path))
+  end
+end
+
+function _M.get_linked(this)
+  local r = os.execute(fmt('test -L %s', THEME_PATH))
+  if not r then
+    return
+  end
+  local splitted = split(exec(fmt('readlink -f %s', THEME_PATH)), '/')
+  return split(splitted[#splitted], '.')[1]
+end
+
+function _M.check_linkable(thi)
+  local r
+  -- exists?
+  r = os.execute(fmt('test -e %s', THEME_PATH))
+  if not r then
+    return
+  end
+  -- is link?
+  r = os.execute(fmt('test -L %s', THEME_PATH))
+  if not r then
+    return fmt('"%s" is a hard file.', THEME_PATH)
+  end
+  -- is link to themes dir?
+  local splitted = split(exec(fmt('readlink -f %s', THEME_PATH)), '/')
+  splitted[#splitted] = nil -- erase filename
+  r = ('/' .. join('/', splitted)) == THEMES_DIR
+  if not r then
+    return fmt('"%s" is a symbolic not to a file in "%s".', THEME_PATH)
+  end
+end
+
+function _M.link(this, name)
+  local err = this:check_linkable()
+  if err then
+    return err
+  end
+  local t = this:find(name)
+  if not t then
+    return fmt('%s is not installed.', name)
+  end
+  r = os.execute(fmt('ln -sf %s %s', t.path, THEME_PATH))
+  if not r then
+    return fmt('Failed to create symbolic-link from "%s" to "%s"', t.path, THEME_PATH)
+  end
+end
+
+function _M.unlink(this)
+  local err = this:check_linkable()
+  if err then
+    return err
+  end
+  local r = os.execute(fmt('rm -f %s', THEME_PATH))
+  if not r then
+    return fmt('Failed to delete "%s"', THEME_PATH)
+  end
+end
+
+function _M.find(this, name)
+  for i, t in pairs(this.themes) do
+    if t.name == name then
+      return t
+    end
+  end
+  return nil
+end
+
+function _M.delete(this, name)
+  local t = this:find(name)
+  if not t then
+    return fmt('%s is not installed.', name)
+  end
+  local r = os.execute(fmt(CMD_DELETE, t.path))
+  if not r then
+    return fmt('Could not delete "%s"', t.path)
+  end
+  this:load_themes()
+end
+
+function _M.install(this, name)
+  local t = this:find(name)
+  if t then
+    return fmt('"%s" is already installed.', name)
+  end
+  local src = fmt(THEME_URI, name)
+  local dest = fmt('%s/%s.lua', THEMES_DIR, name)
+  local cmd
+  if os.execute('which wget &>/dev/null') then
+    cmd = fmt('wget -O %s -q %s', dest, src)
+  elseif os.execute('which curl &>/dev/null') then
+    cmd = fmt('curl -s -L -o %s %s', dest, src)
+  end
+  local r = os.execute(cmd)
+  if not r then
+    return fmt('Failed to donwload "%s" to "%s"', src, dest)
+  end
+  this:load_themes()
+end
+
+function _M.new()
+  local this = setmetatable({
+    themes = {}
+  }, {__index = _M})
+  this:init()
+  return this
+end
+-- MODULE END
+
+
+-- CLI BEGIN
+local USAGE = [[
+Usage:
+  tym-theme [subcommand]
+
+Available Subcommands:
+  ls               List installed themes
+  ls-remote        List themes on remote repository
+  install <theme>  Download and install the new theme
+  delete <theme>   Delete the theme
+  link <theme>     Activate the theme
+  edit <theme>     Edit the theme
+  help             Show this message
+]]
+
+local function quit(msg, show_usage)
+  io.stderr:write('[ERROR] ', msg, '\n')
+  if usage then
+    io.stderr:write(USAGE, '\n')
+  end
+  os.exit(1)
+end
+
+local theme = _M.new()
+
+local cmds = {}
+
+function cmds.ls(cmd)
+  if #theme.themes < 1 then
+    print(fmt('No themes installed in "%s"', THEMES_DIR))
+    return
+  end
+  print(fmt('Installed themes in "%s"', THEMES_DIR))
+  local linked = theme:get_linked()
+  for i, t in pairs(theme.themes) do
+    local mark = ''
+    if linked == t.name then
+      mark = ' (linked)'
+    end
+    print(fmt('    %s%s', t.name, mark))
+  end
+end
+
+function cmds.ls_remote(cmd)
+  if not os.execute('which curl &>/dev/null') then
+    quit('Subcommand "%s" needs curl.')
+  end
+  local cmd = fmt(
+    'curl -s https://api.github.com/repos/%s/contents/%s | grep -e \'"name": ".*\\.lua",$\' | cut -d\'"\' -f4 | cut -f 1 -d "."',
+    REPO_NAME, REPO_DIR)
+  local names = split(exec(cmd), '\n')
+  print('Available themes')
+  for i, name in pairs(names) do
+    local mark = ''
+    if theme:find(name) then
+      mark = ' (installed)'
+    end
+    print(fmt('    %s%s', name, mark))
+  end
+end
+
+function cmds.install(cmd, name)
+  if not name then
+    quit(fmt('Invalid parametor for subcommand "%s"', cmd), true)
+  end
+  local err = theme:install(name)
+  if err then
+    quit(err)
+  end
+  print(fmt('Successfull installed "%s" !', name))
+  print()
+  cmds.ls()
+end
+
+function cmds.delete(cmd, name)
+  if not name then
+    quit(fmt('Invalid parametor for subcommand "%s"', cmd), true)
+  end
+  local t = theme:find(name)
+  if not t then
+    quit(fmt('%s is not installed.', name))
+  end
+  io.write(fmt('Are you sure to delete "%s" ? [Y/n]:', t.path))
+  local answer = io.read()
+  if not (answer == 'Y' or answer == 'y') then
+    print('Canceled.')
+    return
+  end
+  local err = theme:delete(name)
+  if err then
+    quit(err)
+  end
+  print(fmt('Successfull deleted %s', t.path))
+  print()
+  cmds.ls()
+end
+
+function cmds.link(cmd, name)
+  if not name then
+    quit(fmt('Invalid parametor for subcommand "%s"', cmd), true)
+  end
+  local t = theme:find(name)
+  if not t then
+    quit(fmt('%s is not installed.', name))
+    return
+  end
+  local err = theme:link(name)
+  if err then
+    quit(err)
+  end
+  print(fmt('Successfully linked "%s" to "%s"', name, THEME_PATH))
+  print()
+  cmds.ls()
+end
+
+function cmds.unlink(cmd, name)
+  local err = theme:check_linkable()
+  if err then
+    quit(err)
+  end
+  err = theme:unlink(name)
+  if err then
+    quit(err)
+  end
+  print('Successfully unlinked.')
+  print()
+  cmds.ls()
+end
+
+function cmds.edit(cmd, name)
+  local t = theme:find(name)
+  if not t then
+    quit(fmt('%s is not installed.', name))
+    return
+  end
+  os.execute(fmt('%s %s', os.getenv('EDITOR'), t.path))
+end
+
+function cmds.help()
+  print(USAGE)
+end
+
+local aliases = {
+  ['-h'] = 'help',
+  ['--help'] = 'help',
+  ['list'] = 'ls',
+  ['uninstall'] = 'delete',
+  ['ls-remote'] = 'ls_remote',
+  ['list-remote'] = 'ls_remote',
+}
+local f = cmds[aliases[arg[1]] or arg[1] or 'help']
+if f then
+  local err = theme:check_linkable()
+  if err then
+    print(fmt('[WARNING] %s', err))
+  end
+  f(arg[1], arg[2], arg[3])
+else
+  quit(fmt('Error: unknown subcommand "%s" for "%s"', cmd, arg[0]))
+end
