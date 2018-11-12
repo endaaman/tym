@@ -11,17 +11,22 @@
 
 
 typedef void (*TymCommandFunc)(Context* context);
-
 typedef struct {
   unsigned key;
   GdkModifierType mod;
   TymCommandFunc func;
 } KeyPair;
 
+typedef void (*TymSinalFunc)(Context* context);
+typedef struct {
+  const char* name;
+  TymSinalFunc func;
+} SignalDefinition;
+
 static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
-static KeyPair default_key_pairs[] = {
+static KeyPair DEFAULT_KEY_PAIRS[] = {
   { GDK_KEY_plus , GDK_CONTROL_MASK                 , command_increase_font_scale },
   { GDK_KEY_minus, GDK_CONTROL_MASK                 , command_decrease_font_scale },
   { GDK_KEY_equal, GDK_CONTROL_MASK                 , command_reset_font_scale    },
@@ -31,6 +36,10 @@ static KeyPair default_key_pairs[] = {
   { 0            , 0                                , NULL                        },
 };
 
+static SignalDefinition SIGNALS[] = {
+  { "ReloadTheme", signal_reload_theme },
+  { NULL, NULL },
+};
 
 static void context_load_config_path(Context* context)
 {
@@ -275,8 +284,8 @@ EXIT:
 static bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
 {
   unsigned i = 0;
-  while (default_key_pairs[i].func) {
-    KeyPair* pair = &default_key_pairs[i];
+  while (DEFAULT_KEY_PAIRS[i].func) {
+    KeyPair* pair = &DEFAULT_KEY_PAIRS[i];
     if ((key == pair->key) && !(~mod & pair->mod)) {
       pair->func(context);
       return true;
@@ -300,6 +309,21 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
     return false;
   }
   return context_perform_default(context, key, mod);
+}
+
+void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters)
+{
+  UNUSED(parameters);
+  dd("SIGNAL: %s", signal_name);
+  unsigned i = 0;
+  while (SIGNALS[i].func) {
+    SignalDefinition* def = &SIGNALS[i];
+    if (0 == g_strcmp0(def->name, signal_name)) {
+      def->func(context);
+      return;
+    }
+    i++;
+  }
 }
 
 void context_apply_config(Context* context)

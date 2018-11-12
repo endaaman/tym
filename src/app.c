@@ -120,6 +120,22 @@ void on_open(GtkApplication* app, GFile** files, int n, const char* hint, void* 
   on_activate(app, user_data);
 }
 
+void on_dbus_signal(
+  GDBusConnection* conn,
+  const char* sender_name,
+  const char* object_path,
+  const char* interface_name,
+  const char* signal_name,
+  GVariant* parameters,
+  void* user_data)
+{
+  UNUSED(conn);
+  UNUSED(sender_name);
+  UNUSED(object_path);
+  UNUSED(interface_name);
+  context_handle_signal((Context*)user_data, signal_name, parameters);
+}
+
 void on_activate(GtkApplication* app, void* user_data)
 {
   dd("app activate");
@@ -146,6 +162,26 @@ void on_activate(GtkApplication* app, void* user_data)
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
 
+  GApplication* gapp = G_APPLICATION(app);
+  if (g_application_get_is_registered(gapp)) {
+    const char* path = g_application_get_dbus_object_path(gapp);
+    dd("DBus is active: %s", path);
+    GDBusConnection* conn = g_application_get_dbus_connection(gapp);
+    g_dbus_connection_signal_subscribe(
+      conn,
+      NULL,       // sender
+      TYM_APP_ID, // interface_name
+      NULL,       // member
+      path,       // object_path
+      NULL,       // arg0
+      G_DBUS_SIGNAL_FLAGS_NONE,
+      on_dbus_signal,
+      context,
+      NULL        // user data free func
+    );
+  } else {
+    g_warning("DBus is unavailable.");
+  }
   context_apply_config(context);
   context_apply_theme(context);
 

@@ -11,6 +11,7 @@ tym_SOURCES = \
 	layout.c \
 	builtin.c \
 	command.c \
+	signal.c \
 	context.c \
 	app.c \
 	tym.c

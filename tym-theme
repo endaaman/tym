@@ -43,6 +43,8 @@ local REPO_DIR = 'themes'
 local THEME_URI = 'https://raw.githubusercontent.com/' .. REPO_NAME .. '/master/' .. REPO_DIR ..'/%s.lua'
 local CMD_LIST = fmt('find ' .. THEMES_DIR .. ' -maxdepth 1 -mindepth 1 -type f -iname \'*.lua\'')
 local CMD_DELETE = 'rm -f %s'
+local CMD_DBUS = 'dbus-send --session --type=signal /me/endaaman/tym me.endaaman.tym.%s'
+
 
 local Theme = {}
 function Theme.new(path)
@@ -169,6 +171,10 @@ function _M.install(this, name)
   this:load_themes()
 end
 
+function _M.reload_theme(this)
+  return os.execute(fmt(CMD_DBUS, 'ReloadTheme'))
+end
+
 function _M.new()
   local this = setmetatable({
     themes = {}
@@ -292,6 +298,7 @@ function cmds.link(cmd, name)
   print(fmt('Successfully linked "%s" to "%s"', name, THEME_PATH))
   print()
   cmds.ls()
+  theme.reload_theme()
 end
 
 function cmds.unlink(cmd, name)

@@ -145,6 +145,7 @@ void context_acquire_theme_path(Context* context, char** ppath);
 void context_load_config(Context* context);
 void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
+void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters);
 void context_apply_config(Context* context);
 void context_apply_theme(Context* context);
 void context_build_layout(Context* context);
@@ -160,6 +161,10 @@ void command_paste_clipboard(Context* context);
 void command_increase_font_scale(Context* context);
 void command_decrease_font_scale(Context* context);
 void command_reset_font_scale(Context* context);
+
+
+// signal
+void signal_reload_theme(Context* context);
 
 
 // app
