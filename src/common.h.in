@@ -35,7 +35,7 @@
 /* Switch to use old api */
 /* #define TYM_USE_OLD_API */
 
-#ifndef TYM_USE_OLD_VTE
+#ifndef TYM_USE_OLD_API
 #if GDK_MAJOR_VERSION == 3
 #if GDK_MINOR_VERSION >= 20
 #define TYM_USE_GDK_SEAT
