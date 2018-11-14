@@ -48,14 +48,12 @@ static char* get_default_shell()
   return g_strdup(TYM_FALL_BACK_SHELL);
 }
 
-char* default_theme_path;
 GList* config_fields = NULL;
 unsigned config_fields_len = 0;
 
-
 __attribute__((constructor))
 static void initialize() {
-  default_theme_path = g_build_path(
+  char* default_theme_path = g_build_path(
     G_DIR_SEPARATOR_S,
     g_get_user_config_dir(),
     TYM_CONFIG_DIR_NAME,
@@ -77,7 +75,7 @@ static void initialize() {
 
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
-    { "theme",               't',  T_STR, F_NONE, dup(default_theme_path), "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", NULL, },
+    { "theme",               't',  T_STR, F_NONE, default_theme_path, "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", NULL, },
     { "shell",               'e',  T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
     { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", NULL, },
     { "font",                  0,  T_STR, F_NONE, dup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", NULL, },
@@ -121,12 +119,12 @@ static void initialize() {
 
 static void free_data(void* data, void* user_data) {
   UNUSED(user_data);
+  g_free(((ConfigField*)data)->default_value);
   g_free(data);
 }
 
 __attribute__((destructor))
 static void finalize() {
-  g_free(default_theme_path);
   g_list_foreach(config_fields, free_data, NULL);
   g_list_free(config_fields);
 }
