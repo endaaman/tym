@@ -70,11 +70,11 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   }
 }
 
-static bool on_vte_click(VteTerminal* vte, void* user_data)
+static bool on_vte_click(VteTerminal* vte, GdkEvent* event, void* user_data)
 {
   UNUSED(vte);
+  UNUSED(event);
   UNUSED(user_data);
-
   return false;
 }
 
