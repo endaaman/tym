@@ -12,7 +12,6 @@
 
 Option* option_init() {
   Option* option = g_malloc0(sizeof(Option));
-  // --version and --use
   const unsigned offset_option = 2;
   GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), config_fields_len + offset_option + 1);
 
@@ -43,7 +42,6 @@ Option* option_init() {
     e->flags = field->option_flag;
     e->arg_description = field->arg_desc;
     e->description = field->desc;
-    e->arg_data = &field->option_data; // TODO: do not use &field->option_data, use GOptionArgFunc()
     switch (field->type) {
       case CONFIG_TYPE_STRING:
         e->arg = G_OPTION_ARG_STRING;
@@ -64,25 +62,51 @@ Option* option_init() {
 }
 
 void option_close(Option* option) {
+  if (option->values) {
+    g_variant_dict_unref(option->values);
+  }
   g_free(option->entries);
   g_free(option);
 }
 
-bool option_check(Option* option, int* argc, char*** argv, GError** error) {
-  GOptionContext* option_context = g_option_context_new(NULL);
-  g_option_context_add_main_entries(option_context, option->entries, NULL);
-
-  if (!g_option_context_parse(option_context, argc, argv, error)) {
-    g_option_context_free(option_context);
-    return false;
+void option_set_values(Option* option, GVariantDict* values) {
+  if (option->values) {
+    g_variant_dict_unref(option->values);
   }
+  option->values = g_variant_dict_ref(values);
+}
 
+int option_process(Option* option) {
   if (option->version) {
-    g_option_context_free(option_context);
     g_print("version %s (rev.%s)\n", PACKAGE_VERSION, BUILD_REV);
-    return false;
+    return 1;
   }
+  return -1;
+}
 
-  g_option_context_free(option_context);
-  return true;
+bool option_get_str_value(Option* option, const char* key, char** value) {
+  char* v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "s", &v);
+  if (has_value) {
+    *value = v;
+  }
+  return has_value;
+}
+
+bool option_get_int_value(Option* option, const char* key, int* value) {
+  int v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "i", &v);
+  if (has_value) {
+    *value = v;
+  }
+  return has_value;
+}
+
+bool option_get_bool_value(Option* option, const char* key, bool* value) {
+  gboolean v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "b", &v);
+  if (has_value) {
+    *value = v;
+  }
+  return has_value;
 }

@@ -379,7 +379,10 @@ static int builtin_clear_timeout(lua_State* L)
 static int builtin_get_config_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  lua_pushstring(L, context->config_path);
+  char* path;
+  context_acquire_config_path(context, &path);
+  lua_pushstring(L, path);
+  g_free(path);
   return 1;
 }
 

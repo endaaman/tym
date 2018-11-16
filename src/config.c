@@ -60,8 +60,8 @@ static void initialize() {
     TYM_THEME_FILE_NAME,
     NULL
   );
-#define color_special(name) { ("color_" name), 0, T_STR, F_NONE, dup(""), "", ("value of color_" name ), NULL, }
-#define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, dup(""), NULL, NULL, NULL, }
+#define color_special(name) { ("color_" name), 0, T_STR, F_NONE, dup(""), "", ("value of color_" name ), }
+#define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, dup(""), NULL, NULL, }
   const ConfigType T_STR = CONFIG_TYPE_STRING;
   const ConfigType T_INT = CONFIG_TYPE_INTEGER;
   const ConfigType T_BOOL = CONFIG_TYPE_BOOLEAN;
@@ -75,23 +75,23 @@ static void initialize() {
 
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
-    { "theme",               't',  T_STR, F_NONE, default_theme_path, "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", NULL, },
-    { "shell",               'e',  T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", NULL, },
-    { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", NULL, },
-    { "font",                  0,  T_STR, F_NONE, dup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", NULL, },
-    { "icon",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", NULL, },
-    { "cursor_shape",          0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_SHAPE), "", "'block', 'ibeam' or 'underline'", NULL, },
-    { "cursor_blink_mode",     0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_BLINK_MODE), "", "'system', 'on' or 'off'", NULL, },
-    { "term",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", NULL, },
-    { "role",                  0,  T_STR, F_NONE, dup(""), "", "Unique identifier for the window", NULL, },
-    { "cjk_width",             0,  T_STR, F_NONE, dup(TYM_DEFAULT_CJK), "", "'narrow' or 'wide'", NULL, },
-    { "width",                 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", NULL, },
-    { "height",                0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", NULL, },
-    { "padding_horizontal",    0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Horizontal padding", NULL, },
-    { "padding_vertical",      0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Vertical padding", NULL, },
-    { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap", NULL, },
-    { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", NULL, },
-    { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", NULL, },
+    { "theme",               't',  T_STR, F_NONE, default_theme_path, "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", },
+    { "shell",               'e',  T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", },
+    { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", },
+    { "font",                  0,  T_STR, F_NONE, dup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", },
+    { "icon",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", },
+    { "cursor_shape",          0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_SHAPE), "", "'block', 'ibeam' or 'underline'", },
+    { "cursor_blink_mode",     0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_BLINK_MODE), "", "'system', 'on' or 'off'", },
+    { "term",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", },
+    { "role",                  0,  T_STR, F_NONE, dup(""), "", "Unique identifier for the window", },
+    { "cjk_width",             0,  T_STR, F_NONE, dup(TYM_DEFAULT_CJK), "", "'narrow' or 'wide'", },
+    { "width",                 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", },
+    { "height",                0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", },
+    { "padding_horizontal",    0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Horizontal padding", },
+    { "padding_vertical",      0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Vertical padding", },
+    { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
+    { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
+    { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
     color_special("window_background"),
     color_special("foreground"),
     color_special("background"),
@@ -104,7 +104,7 @@ static void initialize() {
     color_normal("4"),  color_normal("5"),  color_normal("6"),  color_normal("7"),
     color_normal("8"),  color_normal("9"),  color_normal("10"), color_normal("11"),
     color_normal("12"), color_normal("13"), color_normal("14"), color_normal("15"),
-    { "color_1..15", 0, T_NONE, F_NONE, NULL, "", "value of color from color_1 to color_15", NULL, },
+    { "color_1..15", 0, T_NONE, F_NONE, NULL, "", "value of color from color_1 to color_15", },
   };
 #undef color_special
 #undef color_normal
@@ -302,7 +302,7 @@ bool config_set_bool(Config* config, const char* key, bool value)
 
 void config_reset(Config* config)
 {
-  dd("reset");
+  df();
   g_hash_table_remove_all(config->data);
 
   for (GList* li = config_fields; li != NULL; li = li->next) {
@@ -323,25 +323,38 @@ void config_reset(Config* config)
   }
 }
 
-void config_load_option_values(Config* config, Option* option)
+void config_override_by_option(Config* config, Option* option)
 {
-  UNUSED(option);
-
+  if (!option->values) {
+    dd("option->values is NULL.");
+    return;
+  }
   for (GList* li = config_fields; li != NULL; li = li->next) {
     ConfigField* field = (ConfigField*)li->data;
     char* key = field->name;
-    if (!field->option_data) {
-      continue;
-    }
     switch (field->type) {
-      case CONFIG_TYPE_STRING:
-        config_set_str(config, key, (char*)field->option_data);
+      case CONFIG_TYPE_STRING: {
+        char* v = NULL;
+        bool has_value = option_get_str_value(option, key, &v);
+        if (has_value) {
+          config_set_str(config, key, v);
+        }
         break;
-      case CONFIG_TYPE_INTEGER:
-        config_set_int(config, key, (uintptr_t)field->option_data);
+      }
+      case CONFIG_TYPE_INTEGER: {
+        int v = 0;
+        bool has_value = option_get_int_value(option, key, &v);
+        if (has_value) {
+          config_set_int(config, key, v);
+        }
         break;
+      }
       case CONFIG_TYPE_BOOLEAN: {
-        config_set_bool(config, key, (bool)field->option_data);
+        bool v = false;
+        bool has_value = option_get_bool_value(option, key, &v);
+        if (has_value) {
+          config_set_bool(config, key, v);
+        }
         break;
       }
       case CONFIG_TYPE_NONE:

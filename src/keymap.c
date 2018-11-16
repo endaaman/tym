@@ -28,7 +28,6 @@ static void free_keymap_entry(KeymapEntry* e, void* user_data)
 
 Keymap* keymap_init()
 {
-  dd("init");
   Keymap* keymap = g_malloc0(sizeof(Keymap));
   keymap->entries = NULL;
 
@@ -38,7 +37,7 @@ Keymap* keymap_init()
 
 void keymap_reset(Keymap* keymap)
 {
-  dd("reset");
+  df();
   g_list_foreach(keymap->entries, (GFunc)free_keymap_entry, NULL);
   g_list_free(keymap->entries);
   keymap->entries = NULL;

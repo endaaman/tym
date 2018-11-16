@@ -32,31 +32,30 @@ static KeyPair default_key_pairs[] = {
 };
 
 
-static void context_load_config_path(Context* context)
+void context_acquire_config_path(Context* context, char** ppath)
 {
   char* path = context->option->config_path;
   if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
-    context->config_path = NULL;
-  } else {
-    if (path) {
-      if (g_path_is_absolute(path)) {
-        context->config_path = g_strdup(path);
-      } else {
-        char* cwd = g_get_current_dir();
-        context->config_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
-        g_free(cwd);
-      }
-    } else {
-      context->config_path = g_build_path(
-        G_DIR_SEPARATOR_S,
-        g_get_user_config_dir(),
-        TYM_CONFIG_DIR_NAME,
-        TYM_CONFIG_FILE_NAME,
-        NULL
-      );
-    }
-    dd("config path: `%s`", context->config_path);
+    ppath = NULL;
+    return;
   }
+  if (path) {
+    if (g_path_is_absolute(path)) {
+      *ppath = g_strdup(path);
+    } else {
+      char* cwd = g_get_current_dir();
+      *ppath = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+      g_free(cwd);
+    }
+    return;
+  }
+  *ppath = g_build_path(
+    G_DIR_SEPARATOR_S,
+    g_get_user_config_dir(),
+    TYM_CONFIG_DIR_NAME,
+    TYM_CONFIG_FILE_NAME,
+    NULL
+  );
 }
 
 void context_acquire_theme_path(Context* context, char** ppath)
@@ -107,7 +106,10 @@ Context* context_init()
   context->keymap = keymap_init();
   context->hook = hook_init();
   context->layout = layout_init();
-  context->app = gtk_application_new(TYM_APP_ID, G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN);
+  context->app = G_APPLICATION(gtk_application_new(
+    TYM_APP_ID,
+    G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN | G_APPLICATION_HANDLES_COMMAND_LINE)
+  );
   context_prepare_lua(context);
   return context;
 }
@@ -122,29 +124,17 @@ void context_close(Context* context)
   layout_close(context->layout);
   g_object_unref(context->app);
   lua_close(context->lua);
-  g_free(context->config_path);
   g_free(context);
 }
 
 int context_start(Context* context, int argc, char** argv) {
-  GError* error = NULL;
-  bool is_continuous = option_check(context->option, &argc, &argv, &error);
-  if (error) {
-    g_message("%s", error->message);
-    g_error_free(error);
-    return EXIT_FAILURE;
-  }
+  GApplication* app = context->app;
+  g_application_add_main_option_entries(app, context->option->entries);
 
-  if (!is_continuous) {
-    return EXIT_SUCCESS;
-  }
-
-  // read option after option parsed
-  context_load_config_path(context);
-
-  g_signal_connect(context->app, "activate", G_CALLBACK(on_activate), context);
-  g_signal_connect(context->app, "open", G_CALLBACK(on_open), context);
-  return g_application_run(G_APPLICATION(context->app), argc, argv);
+  g_signal_connect(app, "activate", G_CALLBACK(on_activate), context);
+  g_signal_connect(app, "open", G_CALLBACK(on_open), context);
+  g_signal_connect(app, "command-line", G_CALLBACK(on_commnad_line), context);
+  return g_application_run(app, argc, argv);
 }
 
 void context_load_device(Context* context)
@@ -179,24 +169,28 @@ void context_load_config(Context* context)
 {
   dd("load config start");
 
-  if (!context->config_path) {
-    g_message("Skipped config loading.");
-    return;
-  }
-
   if (context->loading) {
     g_message("Tried to load config recursively. Ignoring loading.");
     return;
   }
+
+  char* config_path = NULL;
+  context_acquire_config_path(context, &config_path);
+  dd("config path: `%s`", config_path);
+  if (!config_path) {
+    g_message("Skipped config loading.");
+    return;
+  }
+
   context->loading = true;
 
-  if (!g_file_test(context->config_path, G_FILE_TEST_EXISTS)) {
-    g_message("Config file (`%s`) does not exist. Skipped config loading.", context->config_path);
+  if (!g_file_test(config_path, G_FILE_TEST_EXISTS)) {
+    g_message("Config file (`%s`) does not exist. Skipped config loading.", config_path);
     goto EXIT;
   }
 
   lua_State* L = context->lua;
-  int result = luaL_dofile(L, context->config_path);
+  int result = luaL_dofile(L, config_path);
   if (result != LUA_OK) {
     const char* error = lua_tostring(L, -1);
     lua_pop(L, 1);
@@ -205,10 +199,11 @@ void context_load_config(Context* context)
   }
 
   dd("load option to config");
-  config_load_option_values(context->config, context->option);
+  config_override_by_option(context->config, context->option);
 
 EXIT:
   context->loading = false;
+  g_free(config_path);
   dd("load config end");
 }
 
@@ -218,10 +213,10 @@ void context_load_theme(Context* context)
 
   char* theme_path;
   context_acquire_theme_path(context, &theme_path);
-
+  dd("theme path: `%s`", theme_path);
   if (!theme_path) {
     g_message("Skipped theme loading.");
-    goto EXIT;
+    return;
   }
 
   if (!g_file_test(theme_path, G_FILE_TEST_EXISTS)) {
@@ -233,7 +228,7 @@ void context_load_theme(Context* context)
   lua_State* L = context->lua;
   int result = luaL_loadfile(L, theme_path);
   if (result != LUA_OK) {
-    g_warning("Could not load `%s`.", context->config_path);
+    g_warning("Could not load `%s`.", theme_path);
     goto EXIT;
   }
 
@@ -329,15 +324,13 @@ GtkWindow* context_get_window(Context* context)
 
 void context_notify(Context* context, const char* body, const char* title)
 {
-  GtkApplication* app = context->app;
-
   GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
   GIcon* icon = g_themed_icon_new_with_default_fallbacks(config_get_str(context->config, "icon"));
 
   g_notification_set_icon(notification, G_ICON(icon));
   g_notification_set_body(notification, body);
   g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_URGENT);
-  g_application_send_notification(G_APPLICATION(app), TYM_APP_ID, notification);
+  g_application_send_notification(context->app, TYM_APP_ID, notification);
 
   g_object_unref(notification);
   g_object_unref(icon);

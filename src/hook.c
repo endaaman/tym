@@ -12,7 +12,6 @@
 
 Hook* hook_init()
 {
-  dd("init");
   Hook* hook = g_malloc0(sizeof(Hook));
   return hook;
 }

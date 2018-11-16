@@ -34,13 +34,13 @@ typedef struct {
   void* default_value;
   char* arg_desc;
   char* desc;
-  void* option_data; // TODO: do not store data here
 } ConfigField;
 
 typedef struct {
   GOptionEntry* entries;
   bool version;
   char* config_path;
+  GVariantDict* values;
 } Option;
 
 typedef struct {
@@ -72,10 +72,9 @@ typedef struct {
   Keymap* keymap;
   Hook* hook;
   Layout* layout;
-  GtkApplication* app;
+  GApplication* app;
   GdkDevice* device;
   lua_State* lua;
-  char* config_path;
   bool loading;
 } Context;
 
@@ -87,7 +86,11 @@ int builtin_register_module(lua_State* L);
 // option
 Option* option_init();
 void option_close(Option* option);
-bool option_check(Option* option, int* argc, char*** argv, GError** error);
+void option_set_values(Option* option, GVariantDict* values);
+int option_process(Option* option);
+bool option_get_str_value(Option* option, const char* key, char** value);
+bool option_get_int_value(Option* option, const char* key, int* value);
+bool option_get_bool_value(Option* option, const char* key, bool* value);
 
 
 // config
@@ -104,7 +107,7 @@ int config_get_int(Config* config, const char* key);
 bool config_set_int(Config* config, const char* key, int value);
 bool config_get_bool(Config* config, const char* key);
 bool config_set_bool(Config* config, const char* key, bool value);
-void config_load_option_values(Config* config, Option* option);
+void config_override_by_option(Config* config, Option* option);
 bool config_acquire_color(Config* config, const char* key, GdkRGBA* color);
 VteCursorShape config_get_cursor_shape(Config* config);
 VteCursorBlinkMode config_get_cursor_blink_mode(Config* config);
@@ -133,7 +136,7 @@ bool hook_perform_deactivated(Hook* hook, lua_State* L);
 // layout
 Layout* layout_init();
 void layout_close(Layout* layout);
-void layout_build(Layout* layout, GtkApplication* app, Config* config);
+void layout_build(Layout* layout, GApplication* app, Config* config);
 void layout_apply_theme(Layout* layout, Config* config);
 void layout_apply_config(Layout* layout, Config* config);
 
@@ -143,6 +146,7 @@ Context* context_init();
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);
+void context_acquire_config_path(Context* context, char** ppath);
 void context_acquire_theme_path(Context* context, char** ppath);
 void context_load_config(Context* context);
 void context_load_theme(Context* context);
@@ -165,7 +169,8 @@ void command_reset_font_scale(Context* context);
 
 
 // app
-void on_open(GtkApplication* app, GFile** files, int n, const char* hint, void* user_data);
-void on_activate(GtkApplication* app, void* user_data);
+void on_open(GApplication* app, GFile** files, int n, const char* hint, void* user_data);
+void on_activate(GApplication* gapp, void* user_data);
+int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
 
 #endif

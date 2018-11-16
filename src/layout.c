@@ -15,7 +15,6 @@ typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
 Layout* layout_init()
 {
-  dd("init");
   Layout* layout = g_malloc0(sizeof(Layout));
   return layout;
 }
@@ -25,9 +24,9 @@ void layout_close(Layout* layout)
   g_free(layout);
 }
 
-void layout_build(Layout* layout, GtkApplication* app, Config* config)
+void layout_build(Layout* layout, GApplication* app, Config* config)
 {
-  GtkWindow* window = layout->window = GTK_WINDOW(gtk_application_window_new(app));
+  GtkWindow* window = layout->window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(app)));
   VteTerminal* vte = layout->vte = VTE_TERMINAL(vte_terminal_new());
   GtkBox* hbox = layout->hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = layout->vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));

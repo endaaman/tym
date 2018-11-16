@@ -10,12 +10,7 @@
 #include "tym.h"
 
 
-static void do_quit(GtkApplication* app)
-{
-  g_application_quit(G_APPLICATION(app));
-}
-
-static bool on_vte_key_press(GtkWidget *widget, GdkEventKey *event, void* user_data)
+static bool on_vte_key_press(GtkWidget* widget, GdkEventKey *event, void* user_data)
 {
   UNUSED(widget);
   Context* context = (Context*)user_data;
@@ -29,21 +24,22 @@ static bool on_vte_key_press(GtkWidget *widget, GdkEventKey *event, void* user_d
   return false;
 }
 
-static void on_vte_child_exited(VteTerminal *vte, int status, void* user_data)
+static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
   UNUSED(vte);
   UNUSED(status);
   Context* context = (Context*)user_data;
-  do_quit(context->app);
+  g_application_quit(G_APPLICATION(context->app));
 }
 
-static void on_vte_title_changed(VteTerminal *vte, void* user_data)
+static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
+  UNUSED(vte);
   Context* context = (Context*)user_data;
 
-  GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte)));
+  GtkWindow* window = context_get_window(context);
   const char* title = vte_terminal_get_window_title(context_get_vte(context));
-  char* next_title;
+  char* next_title = NULL;
   bool result = hook_perform_title(context->hook, context->lua, title, &next_title);
   if (result) {
     if (next_title) {
@@ -86,7 +82,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   Context* context = (Context*)user_data;
   if (error) {
     g_error("%s", error->message);
-    do_quit(context->app);
+    g_application_quit(context->app);
     return;
   }
 }
@@ -112,18 +108,34 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
   return false;
 }
 
-void on_open(GtkApplication* app, GFile** files, int n, const char* hint, void* user_data)
+void on_open(GApplication* app, GFile** files, int n, const char* hint, void* user_data)
 {
   UNUSED(files);
   UNUSED(n);
   UNUSED(hint);
-  on_activate(app, user_data);
+  UNUSED(user_data);
+  g_application_activate(app);
 }
 
-void on_activate(GtkApplication* app, void* user_data)
+int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
 {
-  dd("app activate");
-  GtkWindow* w = gtk_application_get_active_window(app);
+  UNUSED(cli);
+  Context* context = (Context*)user_data;
+
+  GVariantDict* options = g_application_command_line_get_options_dict(cli);
+  option_set_values(context->option, options);
+  int result = option_process(context->option);
+  if (result != -1) {
+    return result;
+  }
+  g_application_activate(app);
+  return 0;
+}
+
+void on_activate(GApplication* app, void* user_data)
+{
+  df();
+  GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(app));
   if (w) {
     gtk_window_present(w);
     return;
@@ -136,7 +148,7 @@ void on_activate(GtkApplication* app, void* user_data)
   context_build_layout(context);
 
   VteTerminal* vte = context_get_vte(context);
-  GtkWindow *window = context_get_window(context);
+  GtkWindow* window = context_get_window(context);
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
@@ -156,7 +168,7 @@ void on_activate(GtkApplication* app, void* user_data)
   if (error) {
     g_error("%s", error->message);
     g_error_free(error);
-    do_quit(app);
+    g_application_quit(app);
     return;
   }
   char** env = g_get_environ();
@@ -199,7 +211,7 @@ void on_activate(GtkApplication* app, void* user_data)
     g_strfreev(argv);
     g_error("%s", error->message);
     g_error_free(error);
-    do_quit(app);
+    g_application_quit(app);
     return;
   }
 #endif

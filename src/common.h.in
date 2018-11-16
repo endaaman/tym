@@ -70,7 +70,7 @@
 
 #ifdef DEBUG
 #define df( fmt, ... ) \
-  g_print("[%-10s:%3u] %s\n", __FILE__, __LINE__, __func__)
+  g_print("[%-10s:%3u] %s()\n", __FILE__, __LINE__, __func__)
 #else
 #define df( ... ) ((void)0)
 #endif
