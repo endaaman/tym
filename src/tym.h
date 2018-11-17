@@ -40,6 +40,7 @@ typedef struct {
   GOptionEntry* entries;
   bool version;
   char* config_path;
+  char* signal;
   GVariantDict* values;
 } Option;
 
@@ -91,6 +92,9 @@ int option_process(Option* option);
 bool option_get_str_value(Option* option, const char* key, char** value);
 bool option_get_int_value(Option* option, const char* key, int* value);
 bool option_get_bool_value(Option* option, const char* key, bool* value);
+bool option_get_version(Option* option);
+char* option_get_config_path(Option* option);
+char* option_get_signal(Option* option);
 
 
 // config
@@ -151,6 +155,7 @@ void context_acquire_theme_path(Context* context, char** ppath);
 void context_load_config(Context* context);
 void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
+void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters);
 void context_apply_config(Context* context);
 void context_apply_theme(Context* context);
 void context_build_layout(Context* context);
@@ -161,6 +166,7 @@ void context_notify(Context* context, const char* body, const char* title);
 
 // command
 void command_reload(Context* context);
+void command_reload_theme(Context* context);
 void command_copy_clipboard(Context* context);
 void command_paste_clipboard(Context* context);
 void command_increase_font_scale(Context* context);
@@ -169,8 +175,7 @@ void command_reset_font_scale(Context* context);
 
 
 // app
-void on_open(GApplication* app, GFile** files, int n, const char* hint, void* user_data);
-void on_activate(GApplication* gapp, void* user_data);
 int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
+void on_activate(GApplication* gapp, void* user_data);
 
 #endif

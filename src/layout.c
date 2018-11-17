@@ -111,12 +111,12 @@ void layout_apply_config(Layout* layout, Config* config)
     GtkCssProvider* css_provider = gtk_css_provider_new();
    // TODO: escape
     char* css = g_strdup_printf("window { background-color: %s; }", config_get_str(config, "color_window_background"));
-    GError* err = NULL;
-    gtk_css_provider_load_from_data(css_provider, css, -1, &err);
+    GError* error = NULL;
+    gtk_css_provider_load_from_data(css_provider, css, -1, &error);
     g_free(css);
-    if (err) {
-      g_warning("Error when parsing css: %s", err->message);
-      g_error_free(err);
+    if (error) {
+      g_warning("Error when parsing css: %s", error->message);
+      g_error_free(error);
     } else {
       GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
       gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);

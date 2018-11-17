@@ -108,25 +108,48 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
   return false;
 }
 
-void on_open(GApplication* app, GFile** files, int n, const char* hint, void* user_data)
+void on_dbus_signal(
+  GDBusConnection* conn,
+  const char* sender_name,
+  const char* object_path,
+  const char* interface_name,
+  const char* signal_name,
+  GVariant* parameters,
+  void* user_data)
 {
-  UNUSED(files);
-  UNUSED(n);
-  UNUSED(hint);
-  UNUSED(user_data);
-  g_application_activate(app);
+  UNUSED(conn);
+  UNUSED(sender_name);
+  UNUSED(object_path);
+  UNUSED(interface_name);
+  context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
 int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
 {
+  df();
   UNUSED(cli);
   Context* context = (Context*)user_data;
 
   GVariantDict* options = g_application_command_line_get_options_dict(cli);
   option_set_values(context->option, options);
-  int result = option_process(context->option);
-  if (result != -1) {
-    return result;
+  bool version = option_get_version(context->option);
+  if (version) {
+    g_print("version %s (rev.%s)\n", PACKAGE_VERSION, BUILD_REV);
+    return 0;
+  }
+  char* signal = option_get_signal(context->option);
+  if (signal) {
+    const char* path = g_application_get_dbus_object_path(app);
+    dd("DBus is active: %s", path);
+    GDBusConnection* conn = g_application_get_dbus_connection(app);
+    GError* error = NULL;
+    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
+    g_message("Signal `%s` has been sent.\n", signal);
+    if (error) {
+      g_error("%s", error->message);
+      g_error_free(error);
+    }
+    return 0;
   }
   g_application_activate(app);
   return 0;
@@ -158,6 +181,21 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
 
+  const char* path = g_application_get_dbus_object_path(app);
+  dd("DBus is active: %s", path);
+  GDBusConnection* conn = g_application_get_dbus_connection(app);
+  g_dbus_connection_signal_subscribe(
+    conn,
+    NULL,       // sender
+    TYM_APP_ID, // interface_name
+    NULL,       // member
+    path,       // object_path
+    NULL,       // arg0
+    G_DBUS_SIGNAL_FLAGS_NONE,
+    on_dbus_signal,
+    context,
+    NULL        // user data free func
+  );
   context_apply_config(context);
   context_apply_theme(context);
 

@@ -12,7 +12,7 @@
 
 Option* option_init() {
   Option* option = g_malloc0(sizeof(Option));
-  const unsigned offset_option = 2;
+  const unsigned offset_option = 3;
   GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), config_fields_len + offset_option + 1);
 
   ee[0].long_name = "version";
@@ -30,6 +30,14 @@ Option* option_init() {
   ee[1].arg_data = &option->config_path;
   ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config.";
   ee[1].arg_description = "<path>";
+
+  ee[2].long_name = "signal";
+  ee[2].short_name = 's';
+  ee[2].flags = G_OPTION_FLAG_NONE;
+  ee[2].arg = G_OPTION_ARG_STRING;
+  ee[2].arg_data = &option->signal;
+  ee[2].description = "Signal to send via D-Bus.";
+  ee[2].arg_description = "<signal>";
 
   unsigned i = offset_option;
 
@@ -76,14 +84,6 @@ void option_set_values(Option* option, GVariantDict* values) {
   option->values = g_variant_dict_ref(values);
 }
 
-int option_process(Option* option) {
-  if (option->version) {
-    g_print("version %s (rev.%s)\n", PACKAGE_VERSION, BUILD_REV);
-    return 1;
-  }
-  return -1;
-}
-
 bool option_get_str_value(Option* option, const char* key, char** value) {
   char* v;
   bool has_value = g_variant_dict_lookup(option->values, key, "s", &v);
@@ -109,4 +109,16 @@ bool option_get_bool_value(Option* option, const char* key, bool* value) {
     *value = v;
   }
   return has_value;
+}
+
+bool option_get_version(Option* option) {
+  return option->version;
+}
+
+char* option_get_config_path(Option* option) {
+  return option->config_path;
+}
+
+char* option_get_signal(Option* option) {
+  return option->signal;
 }

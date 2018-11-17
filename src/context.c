@@ -11,17 +11,21 @@
 
 
 typedef void (*TymCommandFunc)(Context* context);
-
 typedef struct {
   unsigned key;
   GdkModifierType mod;
   TymCommandFunc func;
 } KeyPair;
 
+typedef struct {
+  const char* name;
+  TymCommandFunc func;
+} SignalDefinition;
+
 static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
-static KeyPair default_key_pairs[] = {
+static KeyPair DEFAULT_KEY_PAIRS[] = {
   { GDK_KEY_plus , GDK_CONTROL_MASK                 , command_increase_font_scale },
   { GDK_KEY_minus, GDK_CONTROL_MASK                 , command_decrease_font_scale },
   { GDK_KEY_equal, GDK_CONTROL_MASK                 , command_reset_font_scale    },
@@ -31,10 +35,14 @@ static KeyPair default_key_pairs[] = {
   { 0            , 0                                , NULL                        },
 };
 
+static SignalDefinition SIGNALS[] = {
+  { "ReloadTheme", command_reload_theme },
+  { NULL, NULL },
+};
 
 void context_acquire_config_path(Context* context, char** ppath)
 {
-  char* path = context->option->config_path;
+  char* path = option_get_config_path(context->option);
   if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
     ppath = NULL;
     return;
@@ -108,7 +116,7 @@ Context* context_init()
   context->layout = layout_init();
   context->app = G_APPLICATION(gtk_application_new(
     TYM_APP_ID,
-    G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_OPEN | G_APPLICATION_HANDLES_COMMAND_LINE)
+    G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE)
   );
   context_prepare_lua(context);
   return context;
@@ -132,7 +140,6 @@ int context_start(Context* context, int argc, char** argv) {
   g_application_add_main_option_entries(app, context->option->entries);
 
   g_signal_connect(app, "activate", G_CALLBACK(on_activate), context);
-  g_signal_connect(app, "open", G_CALLBACK(on_open), context);
   g_signal_connect(app, "command-line", G_CALLBACK(on_commnad_line), context);
   return g_application_run(app, argc, argv);
 }
@@ -270,8 +277,8 @@ EXIT:
 static bool context_perform_default(Context* context, unsigned key, GdkModifierType mod)
 {
   unsigned i = 0;
-  while (default_key_pairs[i].func) {
-    KeyPair* pair = &default_key_pairs[i];
+  while (DEFAULT_KEY_PAIRS[i].func) {
+    KeyPair* pair = &DEFAULT_KEY_PAIRS[i];
     if ((key == pair->key) && !(~mod & pair->mod)) {
       pair->func(context);
       return true;
@@ -295,6 +302,21 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
     return false;
   }
   return context_perform_default(context, key, mod);
+}
+
+void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters)
+{
+  UNUSED(parameters);
+  dd("receive signal: %s", signal_name);
+  unsigned i = 0;
+  while (SIGNALS[i].func) {
+    SignalDefinition* def = &SIGNALS[i];
+    if (0 == g_strcmp0(def->name, signal_name)) {
+      def->func(context);
+      return;
+    }
+    i++;
+  }
 }
 
 void context_apply_config(Context* context)

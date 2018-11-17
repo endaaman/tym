@@ -18,6 +18,12 @@ void command_reload(Context* context)
   context_apply_theme(context);
 }
 
+void command_reload_theme(Context* context)
+{
+  context_load_theme(context);
+  context_apply_theme(context);
+}
+
 void command_copy_clipboard(Context* context)
 {
 #ifdef TYM_USE_VTE_COPY_CLIPBOARD_FORMAT
