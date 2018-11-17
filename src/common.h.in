@@ -76,14 +76,14 @@
 #endif
 
 #ifdef DEBUG
-void debug_dump_stack(lua_State *L, char* file, unsigned line);
+void debug_dump_stack(lua_State* L, char* file, unsigned line);
 #define ds(lua_state) \
   debug_dump_stack((lua_state), __FILE__, __LINE__)
 #else
 #define ds(...) ((void)0)
 #endif
 
-void luaX_requirec(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata);
-int luaX_warn (lua_State *L, const char *fmt, ...);
+void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata);
+int luaX_warn (lua_State* L, const char* fmt, ...);
 
 #endif

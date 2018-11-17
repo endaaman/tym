@@ -10,7 +10,7 @@
 #include "tym.h"
 
 
-static bool on_vte_key_press(GtkWidget* widget, GdkEventKey *event, void* user_data)
+static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
   UNUSED(widget);
   Context* context = (Context*)user_data;

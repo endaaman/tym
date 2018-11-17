@@ -11,7 +11,7 @@
 
 
 #ifdef DEBUG
-void debug_dump_stack(lua_State *L, char* file, unsigned line) {
+void debug_dump_stack(lua_State* L, char* file, unsigned line) {
   g_print("[%-10s:%3u] (stack dump)\n", file, line);
   int len = lua_gettop(L);
   int i = lua_gettop(L);
@@ -57,7 +57,7 @@ void debug_dump_stack(lua_State *L, char* file, unsigned line) {
 }
 #endif
 
-void luaX_requirec(lua_State *L, const char *modname, lua_CFunction openf, int glb, void* userdata)
+void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata)
 {
   luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
   lua_getfield(L, -1, modname);  /* LOADED[modname] */
@@ -77,7 +77,7 @@ void luaX_requirec(lua_State *L, const char *modname, lua_CFunction openf, int g
   }
 }
 
-int luaX_warn(lua_State *L, const char *fmt, ...) {
+int luaX_warn(lua_State* L, const char* fmt, ...) {
   va_list argp;
   va_start(argp, fmt);
   luaL_where(L, 1);
