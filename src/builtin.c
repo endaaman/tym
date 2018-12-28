@@ -396,6 +396,15 @@ static int builtin_get_theme_path(lua_State* L)
   return 1;
 }
 
+static int builtin_get_monitor_model(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  GdkDisplay* display = gdk_display_get_default();
+  GdkMonitor* monitor = gdk_display_get_monitor_at_window(display, context_get_gdk_window(context));
+  lua_pushstring(L, gdk_monitor_get_model(monitor));
+  return 1;
+}
+
 static int builtin_get_version(lua_State* L)
 {
   lua_pushstring(L, PACKAGE_VERSION);
@@ -491,6 +500,7 @@ int builtin_register_module(lua_State* L)
     { "reset_font_scale"    , builtin_reset_font_scale     },
     { "copy"                , builtin_copy                 },
     { "paste"               , builtin_paste                },
+    { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_version"         , builtin_get_version          },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
