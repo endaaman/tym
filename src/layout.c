@@ -128,6 +128,7 @@ void layout_apply_config(Layout* layout, Config* config)
   vte_terminal_set_cjk_ambiguous_width(vte, config_get_cjk_width(config));
   vte_terminal_set_allow_bold(vte, !config_get_bool(config, "ignore_bold"));
   vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
+  vte_terminal_set_scrollback_lines(vte, config_get_int(config, "scrollback_length"));
 
   if (config_has_str(config, "font")) {
     PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(config, "font"));
