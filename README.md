@@ -166,6 +166,7 @@ tym.set_keymaps({
 | `tym.decrease_font_scale()`          | void         | Decrease font scale.                            |
 | `tym.reset_font_scale()`             | void         | Reset font scale.                               |
 | `tym.get_version()`                  | string       | Get version string.                             |
+| `tym.get_monitor_model()`            | string       | Get monitor model on which the window is shown. |
 | `tym.get_config_path()`              | string       | Get full path to config file.                   |
 | `tym.get_theme_path()`               | string       | Get full path to theme file.                    |
 
@@ -294,7 +295,9 @@ $ autoreconf -fvi
 $ ./configure --enable-debug
 ```
 
-## Advanced config
+## Pro tips
+
+### Automated
 
 ```lua
 local tym = require('tym')
