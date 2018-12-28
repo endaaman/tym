@@ -300,21 +300,21 @@ $ ./configure --enable-debug
 local tym = require('tym')
 
 tym.set_config({
-  shell = '/bin/sh',
+  shell = '/bin/bash',
 })
 
-local i = 0;
-local message = 'echo "hello World!"'
-tym.set_timeout(function()
-  i = i + 1
-  tym.put(message:sub(i, i))
-  if i == #message then
-    tym.send_key("<Ctrl>m");
+tym.set_timeout(coroutine.wrap(function()
+  local i = 0
+  local message = 'echo "hello World!"'
+  while i < #message do
+    i = i + 1
+    tym.put(message:sub(i, i))
+    coroutine.yield(true)
   end
-  if i < #message then
-    return true;
-  end
-end, 100)
+  coroutine.yield(true)
+  tym.send_key('<Ctrl>m')
+  coroutine.yield(false)
+end), 100)
 ```
 
 ## License
