@@ -47,7 +47,7 @@ All available config values are shown below.
 | `padding_vertical`  | int | `0` | Vertical padding. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
-| `autohie` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
+| `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `color_window_background` | string | `''` | Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. For the value you can set the colors that can be used in GTK+ CSS (cf. [GTK+ CSS Overview: GTK+ 3 Reference Manual](https://developer.gnome.org/gtk3/stable/chap-css-overview.html)). |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. They will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
 
