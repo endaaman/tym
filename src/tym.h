@@ -161,6 +161,7 @@ void context_apply_theme(Context* context);
 void context_build_layout(Context* context);
 VteTerminal* context_get_vte(Context* context);
 GtkWindow* context_get_window(Context* context);
+GdkWindow* context_get_gdk_window(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
 
 

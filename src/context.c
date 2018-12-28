@@ -344,6 +344,11 @@ GtkWindow* context_get_window(Context* context)
   return context->layout->window;
 }
 
+GdkWindow* context_get_gdk_window(Context* context)
+{
+  return gtk_widget_get_window(GTK_WIDGET(context->layout->window));
+}
+
 void context_notify(Context* context, const char* body, const char* title)
 {
   GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
