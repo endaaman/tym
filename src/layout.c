@@ -108,18 +108,22 @@ void layout_apply_config(Layout* layout, Config* config)
   gtk_box_set_child_packing(vbox, GTK_WIDGET(hbox), true, true, vpad, GTK_PACK_START);
 
   if (config_has_str(config, "color_window_background")) {
-    GtkCssProvider* css_provider = gtk_css_provider_new();
-   // TODO: escape
-    char* css = g_strdup_printf("window { background-color: %s; }", config_get_str(config, "color_window_background"));
-    GError* error = NULL;
-    gtk_css_provider_load_from_data(css_provider, css, -1, &error);
-    g_free(css);
-    if (error) {
-      g_warning("Error when parsing css: %s", error->message);
-      g_error_free(error);
-    } else {
-      GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
-      gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+    GdkRGBA color;
+    if (config_acquire_color(config, "color_window_background", &color)) {
+      char* color_str = gdk_rgba_to_string(&color);
+      char* css = g_strdup_printf("window { background-color: %s; }", color_str);
+      g_free(color_str);
+      GtkCssProvider* css_provider = gtk_css_provider_new();
+      GError* error = NULL;
+      gtk_css_provider_load_from_data(css_provider, css, -1, &error);
+      g_free(css);
+      if (error) {
+        g_warning("Error when parsing css: %s", error->message);
+        g_error_free(error);
+      } else {
+        GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
+        gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+      }
     }
   }
 
