@@ -33,7 +33,7 @@ static const char* TYM_DEFAULT_CURSOR_BLINK_MODE = TYM_CURSOR_BLINK_MODE_SYSTEM;
 static const char* TYM_DEFAULT_CJK = TYM_CJK_WIDTH_NARROW;
 static const int TYM_DEFAULT_WIDTH = 80;
 static const int TYM_DEFAULT_HEIGHT = 22;
-static const int TYM_DEFAULT_SCROLLBACK = 500;
+static const int TYM_DEFAULT_SCROLLBACK = 512;
 
 
 static char* get_default_shell()
@@ -90,10 +90,10 @@ static void initialize() {
     { "height",                0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", },
     { "padding_horizontal",    0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Horizontal padding", },
     { "padding_vertical",      0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Vertical padding", },
+    { "scrollback_length"    , 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
     { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
     { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
     { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
-    { "scrollback_length"    , 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
     color_special("window_background"),
     color_special("foreground"),
     color_special("background"),
