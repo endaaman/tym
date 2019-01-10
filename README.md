@@ -43,13 +43,13 @@ All available config values are shown below.
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` are available. |
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
-| `padding_horizontal`  | int | `0` | Horizontal padding. |
-| `padding_vertical`  | int | `0` | Vertical padding. |
+| `padding_horizontal`  | integer | `0` | Horizontal padding. |
+| `padding_vertical`  | integer | `0` | Vertical padding. |
+| `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
-| `scrollback_length` | integer | `500` | Length of the scrollback buffer. |
-| `color_window_background` | string | `''` | Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. For the value you can set the colors that can be used in GTK+ CSS (cf. [GTK+ CSS Overview: GTK+ 3 Reference Manual](https://developer.gnome.org/gtk3/stable/chap-css-overview.html)). |
+| `color_window_background` | string | `''` | Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. They will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
 
 
@@ -242,7 +242,7 @@ $ tym --shell=/bin/bash --color_background=red --width=40 --ignore_default_keyma
 
 ## Compilation
 
-Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and do
+Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and run
 
 ```
 $ ./configure
@@ -269,7 +269,7 @@ $ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev
 
 #### Other distros or OS
 
-I did not check which packeges are needed to build on other distros or OS. Awaiting your contribution ;)
+I did not check which packeges are needed to build on other distros or OS. I'm waiting for your contribution ;)
 
 ## Installation
 
@@ -281,7 +281,7 @@ $ yay -S tym
 
 ### Other distros or OS
 
-Just compile and do
+Compile and run
 
 ```
 $ sudo make install
@@ -289,7 +289,7 @@ $ sudo make install
 
 ## Development
 
-Clone this repo and do
+Clone this repo and run
 
 ```
 $ autoreconf -fvi
