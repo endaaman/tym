@@ -134,7 +134,7 @@ int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_
   option_set_values(context->option, options);
   bool version = option_get_version(context->option);
   if (version) {
-    g_print("version %s (rev.%s)\n", PACKAGE_VERSION, BUILD_REV);
+    g_print("version %s\n", PACKAGE_VERSION);
     return 0;
   }
   char* signal = option_get_signal(context->option);
