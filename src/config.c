@@ -95,6 +95,7 @@ static void initialize() {
     { "ignore_default_keymap", 0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
     { "ignore_bold",           0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
     { "autohide",              0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
+    { "silent",                0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to beep when bell sequence is sent", },
     color_special("window_background"),
     color_special("foreground"),
     color_special("background"),
