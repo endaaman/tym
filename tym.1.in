@@ -141,7 +141,7 @@ If it is provided, mouse cursor will be hidden when you presses a key.
 .IP \fBscrollback_length\fR
 Type:	\fBinteger\fR
 .fi
-Default:	\fI500\fR
+Default:	\fI512\fR
 .fi
 If it is provided, the length of scrollback buffer is resized.
 
