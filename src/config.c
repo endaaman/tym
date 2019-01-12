@@ -61,8 +61,8 @@ static void initialize() {
     TYM_THEME_FILE_NAME,
     NULL
   );
-#define color_special(name) { ("color_" name), 0, T_STR, F_NONE, dup(""), "", ("value of color_" name ), }
-#define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, dup(""), NULL, NULL, }
+#define color_special(name) { ("color_" name), 0, T_STR, F_NONE, sdup(""), "", ("value of color_" name ), }
+#define color_normal(name) { ("color_" name), 0, T_STR, F_HIDDEN, sdup(""), NULL, NULL, }
   const ConfigType T_STR = CONFIG_TYPE_STRING;
   const ConfigType T_INT = CONFIG_TYPE_INTEGER;
   const ConfigType T_BOOL = CONFIG_TYPE_BOOLEAN;
@@ -70,30 +70,31 @@ static void initialize() {
   const GOptionFlags F_NONE = G_OPTION_FLAG_NONE;
   const GOptionFlags F_HIDDEN = G_OPTION_FLAG_HIDDEN;
 
-  char* (*dup)(const char*) = g_strdup;
-  const bool default_false = false;
-  const int default_zero = 0;
+  char* (*sdup)(const char*) = g_strdup;
+  void* (*mdup)(const void*, unsigned) = g_memdup;
+  const bool v_false = false;
+  const int v_zero = 0;
 
   // name, short, type, group, flag, default, desc
   ConfigField c[] = {
     { "theme",               't',  T_STR, F_NONE, default_theme_path, "<path>", "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.", },
     { "shell",               'e',  T_STR, F_NONE, get_default_shell(), "<shell path>", "Shell to be used", },
-    { "title",                 0,  T_STR, F_NONE, dup(TYM_DEFAULT_TITLE), "", "Window title", },
-    { "font",                  0,  T_STR, F_NONE, dup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", },
-    { "icon",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_ICON), "", "Name of icon", },
-    { "cursor_shape",          0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_SHAPE), "", "'block', 'ibeam' or 'underline'", },
-    { "cursor_blink_mode",     0,  T_STR, F_NONE, dup(TYM_DEFAULT_CURSOR_BLINK_MODE), "", "'system', 'on' or 'off'", },
-    { "term",                  0,  T_STR, F_NONE, dup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", },
-    { "role",                  0,  T_STR, F_NONE, dup(""), "", "Unique identifier for the window", },
-    { "cjk_width",             0,  T_STR, F_NONE, dup(TYM_DEFAULT_CJK), "", "'narrow' or 'wide'", },
-    { "width",                 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", },
-    { "height",                0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", },
-    { "padding_horizontal",    0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Horizontal padding", },
-    { "padding_vertical",      0,  T_INT, F_NONE, g_memdup(&default_zero, sizeof(int)), "<int>", "Vertical padding", },
-    { "scrollback_length"    , 0,  T_INT, F_NONE, g_memdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
-    { "ignore_default_keymap", 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
-    { "ignore_bold"          , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
-    { "autohide"             , 0, T_BOOL, F_NONE, g_memdup(&default_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
+    { "title",                 0,  T_STR, F_NONE, sdup(TYM_DEFAULT_TITLE), "", "Window title", },
+    { "font",                  0,  T_STR, F_NONE, sdup(""), "", "Font to render(e.g. 'Ubuntu Mono 12')", },
+    { "icon",                  0,  T_STR, F_NONE, sdup(TYM_DEFAULT_ICON), "", "Name of icon", },
+    { "cursor_shape",          0,  T_STR, F_NONE, sdup(TYM_DEFAULT_CURSOR_SHAPE), "", "'block', 'ibeam' or 'underline'", },
+    { "cursor_blink_mode",     0,  T_STR, F_NONE, sdup(TYM_DEFAULT_CURSOR_BLINK_MODE), "", "'system', 'on' or 'off'", },
+    { "term",                  0,  T_STR, F_NONE, sdup(TYM_DEFAULT_TERM), "$TERM", "Value to override $TERM", },
+    { "role",                  0,  T_STR, F_NONE, sdup(""), "", "Unique identifier for the window", },
+    { "cjk_width",             0,  T_STR, F_NONE, sdup(TYM_DEFAULT_CJK), "", "'narrow' or 'wide'", },
+    { "width",                 0,  T_INT, F_NONE, mdup(&TYM_DEFAULT_WIDTH, sizeof(int)), "<int>", "Initial columns", },
+    { "height",                0,  T_INT, F_NONE, mdup(&TYM_DEFAULT_HEIGHT, sizeof(int)), "<int>", "Initial rows", },
+    { "padding_horizontal",    0,  T_INT, F_NONE, mdup(&v_zero, sizeof(int)), "<int>", "Horizontal padding", },
+    { "padding_vertical",      0,  T_INT, F_NONE, mdup(&v_zero, sizeof(int)), "<int>", "Vertical padding", },
+    { "scrollback_length",     0,  T_INT, F_NONE, mdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
+    { "ignore_default_keymap", 0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
+    { "ignore_bold",           0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
+    { "autohide",              0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
     color_special("window_background"),
     color_special("foreground"),
     color_special("background"),
