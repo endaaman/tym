@@ -21,7 +21,7 @@ tym.set('font', 'DejaVu Sans Mono 11')
 -- set by table
 tym.set_config({
   shell = '/usr/bin/fish',
-  cursor = 'underline',
+  cursor_shape = 'underline',
   autohide = true,
   color_foreground = 'red',
 })
