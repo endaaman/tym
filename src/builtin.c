@@ -343,7 +343,7 @@ static int timeout_callback(void* user_data)
   }
 
   if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
-    luaL_error(L, "Error in timeout function: '%s'", lua_tostring(L, -1));
+    luaX_warn(L, "Error in timeout function: '%s'", lua_tostring(L, -1));
     lua_pop(L, 1); // error
     return false;
   }
