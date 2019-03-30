@@ -1,13 +1,45 @@
 # tym
 
-[![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym)
-[![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
+[![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym) [![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
 
 `tym` is a tiny VTE-based terminal emulator, which configurable by Lua.
 
+## Installation
+
+### Arch Linux
+
+```
+$ yay -S tym
+```
+
+### Other distros
+
+Downlaod the latest realease from [Releases](https://github.com/endaaman/tym/releases), extract it and run as bellow
+
+```
+$ ./configure
+$ sudo make install
+```
+
+<details><summary>Build dependencies</summary>
+<p>
+
+#### Ubuntu
+
+```
+$ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev
+```
+
+#### Other distros / macOS / Windows
+
+I did not check which packeges are needed to build on other distros or OS. I'm waiting for your contribution ;)
+
+</p>
+</details>
+
 ## Configuration
 
-By default, `$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. The path can be changed by `--use` `-u` option.
+`$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. You can change the path by `--use` `-u` option.
 
 ```lua
 -- At first, you need to require tym module
@@ -56,7 +88,7 @@ All available config values are shown below.
 
 ## Theme customization
 
-By default, `$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. The path can be changed by the value of `'theme'` in config or `--theme` `-t`  option.
+`$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. You can change the path by the value of `'theme'` in config or `--theme` `-t`  option.
 
 ```lua
 local fg = '#d2d4de'
@@ -72,11 +104,10 @@ return {
 }
 ```
 
-You need to return the color map with table.
+You need to return the color map as table.
 
-## Color map
-
-Please refer to the correspondence table of each color below.
+<details><summary>Color correspondence</summary>
+<div>
 
 ```
 color_0  : black (background)
@@ -97,9 +128,13 @@ color_14 : light cyan
 color_15 : white
 ```
 
+</div>
+</details>
+
+
 ## Keymap
 
-### Default
+### Default keymap
 
 | Key             | Action                       |
 | :-------------- | :--------------------------- |
@@ -110,9 +145,9 @@ color_15 : white
 | Ctrl -          | Decrease font scale.         |
 | Ctrl =          | Reset font scale.            |
 
-### Customize
+### Customizing keymap
 
-You can register keymap by `tym.set_keymap(acceralator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
+You can register a keymap by `tym.set_keymap(acceralator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
 
 ```lua
 -- also can set keymap
@@ -135,7 +170,7 @@ tym.set_keymaps({
   end,
   ['<Shift>w'] = function()
     tym.notify('W has been pressed')
-    return true -- notification shown and `W` printed
+    return true -- notification is shown and `W` is printed
   end,
 })
 ```
@@ -157,13 +192,13 @@ tym.set_keymaps({
 | `tym.reload()`                       | void         | Reload config file.                             |
 | `tym.reload_theme()`                 | void         | Reload theme file.                              |
 | `tym.apply()`                        | void         | Apply config to app.                            |
-| `tym.set_timeout(func, [interval])`  | int(tag)     | Set timeout. return true in func to excute again. |
+| `tym.set_timeout(func, interval=0)`  | int(tag)     | Set timeout. return true in func to excute again. |
 | `tym.clear_timeout(tag)`             | void         | Clear the timeout.                              |
 | `tym.put(text)`                      | void         | Feed text.                                      |
 | `tym.bell()`                         | void         | Sound bell.                                     |
 | `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
 | `tym.copy()`                         | void         | Copy current selection.                         |
-| `tym.paste()`                        | void         | Paste clipboard.                                |
+| `tym.paste()`                        | void         | Paste clipboard clipboard.                      |
 | `tym.increase_font_scale()`          | void         | Increase font scale.                            |
 | `tym.decrease_font_scale()`          | void         | Decrease font scale.                            |
 | `tym.reset_font_scale()`             | void         | Reset font scale.                               |
@@ -177,7 +212,7 @@ tym.set_keymaps({
 | Name | Param | Default action | Description |
 | --- | --- | --- | --- |
 | `'title'` | title | Title will be changed. | If string is returned in hook func, it will be the new title. |
-| `'bell'` | nil | The window will be urgent **only when it is inactive**. | If true is returned in hook func, the window will not be urgent. |
+| `'bell'` | nil | The window will be urgent only when it is inactive. | If true is returned in hook func, the window will not be urgent. |
 | `'activated'` | nil | n/a | n/a |
 | `'deactivated'` | nil | n/a | n/a |
 
@@ -199,35 +234,29 @@ end)
 
 ### `--help` `-h`
 
-You can find all options.
-
 ```
 $ tym -h
 ```
 
-### `--use` `-u`
-
-Pass `<path>` you want to execute as config.
+### `--use=<path>` `-u <path>`
 
 ```
 $ tym --use=/path/to/config.lua
 ```
 
-If `NONE` is passed, all config will be default.
+If `NONE` is provided, all config will be default (user-defined config file will not be loaded).
 
 ```
 $ tym -u NONE
 ```
 
-### `--theme` `-t`
-
-Pass `<path>` you want to load as theme.
+### `--theme=<path>` `-t <path>`
 
 ```
 $ tym --use=/path/to/theme.lua
 ```
 
-If `NONE` is passed, default theme will be used.
+If `NONE` is provided, default theme will be used.
 
 ```
 $ tym -t NONE
@@ -238,68 +267,21 @@ $ tym -t NONE
 You can set config value via command line option.
 
 ```console
-$ tym --shell=/bin/bash --color_background=red --width=40 --ignore_default_keymap
-```
-
-## Compilation
-
-Download source code from [release page](https://github.com/endaaman/tym/releases), unarchive it and run
-
-```
-$ ./configure
-$ make
-```
-
-### Dependencies
-
-- [GTK+3](https://www.gtk.org/)
-- [VTE](https://github.com/GNOME/vte)
-- [Lua](https://www.lua.org/)
-
-#### Arch Linux
-
-```
-$ sudo pacman -S lua vte3
-```
-
-#### Ubuntu
-
-```
-$ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev
-```
-
-#### Other distros or OS
-
-I did not check which packeges are needed to build on other distros or OS. I'm waiting for your contribution ;)
-
-## Installation
-
-### Arch Linux
-
-```
-$ yay -S tym
-```
-
-### Other distros or OS
-
-Compile and run
-
-```
-$ sudo make install
+$ tym --shell=/bin/zsh --color_background=red --width=40 --ignore_default_keymap
 ```
 
 ## Development
 
-Clone this repo and run
+Clone this repo and run as bellow
 
 ```
 $ autoreconf -fvi
 $ ./configure --enable-debug
 ```
 
-## Pro tips
-
-### Automated
+## Tips
+<details><summary>Automated</summary>
+<div>
 
 ```lua
 local tym = require('tym')
@@ -321,6 +303,32 @@ tym.set_timeout(coroutine.wrap(function()
   coroutine.yield(false)
 end), 100)
 ```
+
+</div>
+</details>
+
+
+<details><summary>Prevent tmux's key inputs delay</summary>
+<div>
+
+Key inputs alt-h,j,k,l for switching tmux's pane is often delayed when tmux is busy. This is the fix for it.
+
+```lua
+local tym = require('tym')
+
+local remap = function (a, b)
+  tym.set_keymap(a, function()
+    tym.send_key(b)
+  end)
+end
+remap('<Alt>h', '<Alt>Left') -- remap as meta key inputs
+remap('<Alt>l', '<Alt>Right')
+remap('<Alt><Shift>h', '<Alt><Shift>Left')
+remap('<Alt><Shift>l', '<Alt><Shift>Right')
+```
+
+</div>
+</details>
 
 ## License
 
