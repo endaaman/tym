@@ -180,7 +180,7 @@ static int builtin_set_keymap(lua_State* L)
   bool ok = keymap_add_entry(context->keymap, key, ref);
   if (!ok) {
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
-    luaL_error(L, "Invalid acceralator: '%s'", key);
+    luaX_warn(L, "Invalid acceralator: '%s'", key);
     return 0;
   }
   return 0;
@@ -271,7 +271,7 @@ static int builtin_set_hook(lua_State* L)
     return 0;
   }
   luaL_unref(L, LUA_REGISTRYINDEX, ref);
-  luaL_error(L, "Invalid hook key: '%s'", key);
+  luaX_warn(L, "Invalid hook key: '%s'", key);
   return 0;
 }
 

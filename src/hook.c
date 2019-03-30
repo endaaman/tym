@@ -49,7 +49,7 @@ static bool hook_perform(lua_State* L, int ref, int narg, int nresult)
   }
   lua_insert(L, - narg - 1);
   if (lua_pcall(L, narg, nresult, 0) != LUA_OK) {
-    luaL_error(L, "Error in hook function: '%s'", lua_tostring(L, -1));
+    luaX_warn(L, "Error in hook function: '%s'", lua_tostring(L, -1));
     lua_pop(L, 1); // error
     return false;
   }
