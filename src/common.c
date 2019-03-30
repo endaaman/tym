@@ -84,7 +84,7 @@ int luaX_warn(lua_State* L, const char* fmt, ...) {
   lua_pushvfstring(L, fmt, argp);
   va_end(argp);
   lua_concat(L, 2);
-  g_message("%s\n",lua_tostring(L,-1));
+  g_message("%s",lua_tostring(L,-1));
   lua_pop(L, 1);
   return 0;
 }
