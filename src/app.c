@@ -124,7 +124,7 @@ void on_dbus_signal(
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
-int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
+int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
 {
   df();
   UNUSED(cli);
