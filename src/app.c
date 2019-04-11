@@ -157,6 +157,8 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
 
 void on_activate(GApplication* app, void* user_data)
 {
+  GError* error = NULL;
+
   df();
   GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(app));
   if (w) {
@@ -172,6 +174,17 @@ void on_activate(GApplication* app, void* user_data)
 
   VteTerminal* vte = context_get_vte(context);
   GtkWindow* window = context_get_window(context);
+
+  VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
+  if (regex) {
+    vte_terminal_match_add_regex(vte, regex, 0);
+    vte_regex_unref(regex);
+  } else {
+    g_error("%s", error->message);
+    g_error_free(error);
+    g_application_quit(app);
+    return;
+  }
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
@@ -199,7 +212,6 @@ void on_activate(GApplication* app, void* user_data)
   context_apply_config(context);
   context_apply_theme(context);
 
-  GError* error = NULL;
   char** argv;
   char* line = config_get_str(context->config, "shell");
   g_shell_parse_argv(line, NULL, &argv, &error);

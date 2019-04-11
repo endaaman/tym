@@ -3,6 +3,7 @@ bin_PROGRAMS = tym
 tym_SOURCES = \
 	common.h \
 	tym.h \
+	regex.h \
 	common.c \
 	option.c \
 	config.c \
