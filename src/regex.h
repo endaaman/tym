@@ -8,8 +8,11 @@
  * `ISEGMENT_NZ_NC` are omitted because they are only used for relative IRIs,
  * which we do not consider in this implementation.
  * Also, `ipath` is omitted because it is not used in any other rules.
- *
  */
+
+
+#ifndef REGEX_H
+#define REGEX_H
 
 
 #define IRI             ABSOLUTE_IRI "(?:\\#" IFRAGMENT ")?"
@@ -115,3 +118,6 @@
 #define DIGIT           "0-9"
 
 #define HEXDIG          "0-9a-f"
+
+
+#endif

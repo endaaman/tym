@@ -34,8 +34,14 @@ rm -rf stamp-h1
 rm -rf tym.1
 
 rm -rf config.h.in
+rm -rf config.h.in~
 rm -rf config.h
+rm -rf src/common.h
 rm -rf src/version.h
 rm -rf src/tym
+rm -rf src/tym_test_regex
+rm -rf src/tym_test_regex.log
+rm -rf src/tym_test_regex.trs
+rm -rf src/test-suite.log
 
 echo 'Cleaned files.'
