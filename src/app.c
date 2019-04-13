@@ -177,7 +177,8 @@ void on_activate(GApplication* app, void* user_data)
 
   VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
   if (regex) {
-    vte_terminal_match_add_regex(vte, regex, 0);
+    int tag = vte_terminal_match_add_regex(vte, regex, 0);
+    vte_terminal_match_set_cursor_name(vte, tag, "hand");
     vte_regex_unref(regex);
   } else {
     g_error("%s", error->message);
