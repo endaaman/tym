@@ -1,6 +1,8 @@
-SUBDIRS = src
+SUBDIRS = src tests include
+ACLOCAL_AMFLAGS = -I m4
 man_MANS = tym.1
-dist_bin_SCRIPTS = tym-theme
-EXTRA_DIST = $(man_MANS)
 desktopdir = $(datadir)/applications
+EXTRA_DIST = $(man_MANS)
+DIST_SUBDIRS = dist
+dist_bin_SCRIPTS = tym-theme
 dist_desktop_DATA = tym.desktop

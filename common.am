@@ -1,0 +1,26 @@
+# vi: set ft=automake :
+if DEBUG
+ENV_OPT=-g3 -O0
+else
+ENV_OPT=-O3
+endif
+
+COMMON_CFLAGS = \
+	-std=c11 \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter \
+	-Wno-sign-compare \
+	-Wno-pointer-sign \
+	-Wno-missing-field-initializers \
+	-Wformat=2 \
+	-Wstrict-aliasing=2 \
+	-Wdisabled-optimization \
+	-Wfloat-equal \
+	-Wpointer-arith \
+	-Wbad-function-cast \
+	-Wcast-align \
+	-Wredundant-decls \
+	-Winline \
+	-I$(top_srcdir)/include
+	$(ENV_OPT)

@@ -1,11 +1,6 @@
 #include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include "common.h"
 
-#define PCRE2_CODE_UNIT_WIDTH 8
-#include <pcre2.h>
-
-#include "regex.h"
 
 int check_match(int anchored, const char* pattern, const char* subject, const char* expected, int invert) {
   if (expected == NULL) expected = subject;
@@ -84,7 +79,7 @@ int check_match(int anchored, const char* pattern, const char* subject, const ch
   pcre2_code_free(code);
 }
 
-int main(int argc, char* argv[]) {
+void test_regex() {
   printf("Testing HOST\n");
   assert(check_match(1, SCHEME , "http"    , NULL , 0));
   assert(check_match(1, SCHEME , "HTTP"    , NULL , 0));
@@ -154,5 +149,11 @@ int main(int argc, char* argv[]) {
    */
 
   printf("regex tests complete!\n");
+}
+
+int main(int argc, char* argv[]) {
+  UNUSED(argc);
+  UNUSED(argv);
+  test_regex();
   return 0;
 }
