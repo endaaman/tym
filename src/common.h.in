@@ -18,7 +18,11 @@
 #include <lauxlib.h>
 #include <gtk/gtk.h>
 #include <vte/vte.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+
 #include "../config.h"
+#include "regex.h"
 
 
 #define UNUSED(x) (void)(x)

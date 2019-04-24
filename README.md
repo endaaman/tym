@@ -27,7 +27,7 @@ $ sudo make install
 #### Ubuntu
 
 ```
-$ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev
+$ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev libpcre2-dev
 ```
 
 #### Other distros / macOS / Windows

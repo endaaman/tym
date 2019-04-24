@@ -140,7 +140,7 @@ int context_start(Context* context, int argc, char** argv) {
   g_application_add_main_option_entries(app, context->option->entries);
 
   g_signal_connect(app, "activate", G_CALLBACK(on_activate), context);
-  g_signal_connect(app, "command-line", G_CALLBACK(on_commnad_line), context);
+  g_signal_connect(app, "command-line", G_CALLBACK(on_command_line), context);
   return g_application_run(app, argc, argv);
 }
 

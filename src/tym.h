@@ -176,7 +176,7 @@ void command_reset_font_scale(Context* context);
 
 
 // app
-int on_commnad_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
+int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
 void on_activate(GApplication* gapp, void* user_data);
 
 #endif
