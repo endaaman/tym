@@ -349,6 +349,11 @@ GdkWindow* context_get_gdk_window(Context* context)
   return gtk_widget_get_window(GTK_WIDGET(context->layout->window));
 }
 
+int* context_get_uri_tag(Context* context)
+{
+  return context->layout->uri_tag;
+}
+
 void context_notify(Context* context, const char* body, const char* title)
 {
   GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
@@ -361,4 +366,21 @@ void context_notify(Context* context, const char* body, const char* title)
 
   g_object_unref(notification);
   g_object_unref(icon);
+}
+
+void context_launch_uri(Context* context, const char* uri)
+{
+  dd("launch: `%s`", uri);
+  GError* error = NULL;
+  GdkDisplay* display = gdk_display_get_default();
+  GdkAppLaunchContext* ctx = gdk_display_get_app_launch_context(display);
+  gdk_app_launch_context_set_screen(ctx, gdk_screen_get_default());
+  /* gdk_app_launch_context_set_timestamp(ctx, event->time); */
+  if (!g_app_info_launch_default_for_uri(uri, G_APP_LAUNCH_CONTEXT(ctx), &error)) {
+    char* message = g_strdup_printf("Failed to launch uri: %s", error->message);
+    context_notify(context, message, NULL);
+    g_message("%s", message);
+    g_free(message);
+    g_error_free(error);
+  }
 }

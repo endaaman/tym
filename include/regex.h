@@ -1,4 +1,6 @@
-/*
+/**
+ * regex.c
+ *
  * IRI regular expression in PCRE2
  * reference: RFC3987 http://www.faqs.org/rfcs/rfc3987.html
  *
@@ -8,6 +10,11 @@
  * `ISEGMENT_NZ_NC` are omitted because they are only used for relative IRIs,
  * which we do not consider in this implementation.
  * Also, `ipath` is omitted because it is not used in any other rules.
+ *
+ * Copyright (c) 2019 endaaman, iTakeshi
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
  */
 
 

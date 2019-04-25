@@ -211,10 +211,12 @@ tym.set_keymaps({
 
 | Name | Param | Default action | Description |
 | --- | --- | --- | --- |
-| `'title'` | title | Title will be changed. | If string is returned in hook func, it will be the new title. |
-| `'bell'` | nil | The window will be urgent only when it is inactive. | If true is returned in hook func, the window will not be urgent. |
-| `'activated'` | nil | n/a | n/a |
-| `'deactivated'` | nil | n/a | n/a |
+| `title` | title | changes title | If string is returned, it will be used as the new title. |
+| `bell` | nil | makes the window urgent when it is inactive. | If true is returned, the window will not be urgent. |
+| `activated` | nil | nothing | Triggered when the window is activated. |
+| `deactivated` | nil | nothing | Triggered when the window is deactivated. |
+| `clicked` | button | nothing | Triggered when mouse button is pressed. |
+| `uri_clicked` | uri, button | launches the default app for the URI | Triggered when the window is deactivated. If true is returned, default action **will be performed**. |
 
 ```lua
 tym.set_hooks({
@@ -227,6 +229,12 @@ tym.set_hook('bell', function()
   -- Even if you excute `tput bel`, the window will not be urgent.
   print('bell')
   return true
+end)
+
+tym.set_hook('uri_clicked', function(uri, button)
+  print(uri, ' is clicked by button ', button) -- 0:left, 1:middle, 2:right...
+  tym.open(uri) -- launch default app for the URI
+  -- return true -- if uncomment this, the URI will be opened twice.
 end)
 ```
 

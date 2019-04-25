@@ -267,7 +267,12 @@ static int builtin_set_hook(lua_State* L)
   const char* key = luaL_checkstring(L, 1);
   luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
   int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  if (hook_set_ref(context->hook, key, ref)) {
+  int old_ref = -1;
+  if (hook_set_ref(context->hook, key, ref, &old_ref)) {
+    if (old_ref > 0) {
+      dd("unref old ref");
+      luaL_unref(L, LUA_REGISTRYINDEX, old_ref);
+    }
     return 0;
   }
   luaL_unref(L, LUA_REGISTRYINDEX, ref);
@@ -288,7 +293,12 @@ static int builtin_set_hooks(lua_State* L)
     } else {
       lua_pushvalue(L, -2); // push function to stack top
       int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-      bool ok = hook_set_ref(context->hook, key, ref);
+      int old_ref = -1;
+      int ok = hook_set_ref(context->hook, key, ref, &old_ref);
+      if (old_ref > 0) {
+        dd("unref old ref");
+        luaL_unref(L, LUA_REGISTRYINDEX, old_ref);
+      }
       if (!ok) {
         luaL_unref(L, LUA_REGISTRYINDEX, ref);
         luaX_warn(L, "Invalid hook key: '%s'", key);
@@ -427,6 +437,14 @@ static int builtin_bell(lua_State* L)
   return 0;
 }
 
+static int builtin_open(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  const char* uri = luaL_checkstring(L, -1);
+  context_launch_uri(context, uri);
+  return 0;
+}
+
 static int builtin_notify(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -494,6 +512,7 @@ int builtin_register_module(lua_State* L)
     { "clear_timeout"       , builtin_clear_timeout        },
     { "put"                 , builtin_put                  },
     { "bell"                , builtin_bell                 },
+    { "open"                , builtin_open                 },
     { "notify"              , builtin_notify               },
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },

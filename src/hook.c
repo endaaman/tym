@@ -10,37 +10,84 @@
 #include "tym.h"
 
 
+#define HOOK_KEY_TITLE "title"
+#define HOOK_KEY_BELL "bell"
+#define HOOK_KEY_CLICKED "clicked"
+#define HOOK_KEY_URI_CLICKED "uri_clicked"
+#define HOOK_KEY_ACTIVATED "activated"
+#define HOOK_KEY_DEACTIVATED "deactivated"
+
+const char* HOOK_KEYS[] = {
+  HOOK_KEY_TITLE,
+  HOOK_KEY_BELL,
+  HOOK_KEY_CLICKED,
+  HOOK_KEY_URI_CLICKED,
+  HOOK_KEY_ACTIVATED,
+  HOOK_KEY_DEACTIVATED,
+  NULL
+};
+
 Hook* hook_init()
 {
   Hook* hook = g_malloc0(sizeof(Hook));
+  hook->refs = g_hash_table_new_full(
+    g_str_hash,
+    g_str_equal,
+    (GDestroyNotify)g_free,
+    (GDestroyNotify)g_free
+  );
+
+  int i = 0;
+  while (HOOK_KEYS[i]) {
+    int* p = g_malloc0(sizeof(int));
+    *p = -1;
+    g_hash_table_insert(hook->refs, g_strdup(HOOK_KEYS[i]), p);
+    i += 1;
+  }
   return hook;
 }
 
 void hook_close(Hook* hook)
 {
+  g_hash_table_destroy(hook->refs);
   g_free(hook);
 }
 
-bool hook_set_ref(Hook* hook, const char* name, int ref)
+static int hook_get_ref(Hook* hook, const char* key)
 {
-  if (0 == g_strcmp0(name, "title")) {
-    hook->title_ref = ref;
-  } else if (0 == g_strcmp0(name, "bell")) {
-    hook->bell_ref = ref;
-  /* } else if (0 == g_strcmp0(name, "uri")) { */
-  /*   hook->uri_ref = ref; */
-  } else if (0 == g_strcmp0(name, "activated")) {
-    hook->activated_ref = ref;
-  } else if (0 == g_strcmp0(name, "deactivated")) {
-    hook->deactivated_ref = ref;
-  } else {
+  int* ptr = g_hash_table_lookup(hook->refs, key);
+  if (!ptr) {
+    dd("invalid hook key: '%s'", key);
+    return -1;
+  }
+  return *ptr;
+}
+
+bool hook_set_ref(Hook* hook, const char* key, int ref, int* old_ref)
+{
+  assert(old_ref);
+  void* old_key = NULL;
+  void* old_value = NULL;
+  bool has_value = g_hash_table_lookup_extended(hook->refs, key, &old_key, &old_value);
+  if (old_value) {
+    *old_ref = *(int*)old_value;
+  }
+  if (!has_value) {
     return false;
   }
+  g_hash_table_remove(hook->refs, old_key);
+  g_hash_table_insert(hook->refs, g_strdup(key), g_memdup(&ref, sizeof(int)));
+  dd("hook (%s) is registered. ref: %d", key, ref);
   return true;
 }
 
-static bool hook_perform(lua_State* L, int ref, int narg, int nresult)
+static bool hook_perform(Hook* hook, lua_State* L, const char* key, int narg, int nresult)
 {
+  int ref = hook_get_ref(hook, key);
+  if (ref < 0) {
+    lua_pop(L, narg);
+    return false;
+  }
   lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
   if (!lua_isfunction(L, -1)) {
     lua_pop(L, 1); // pop none-function
@@ -48,6 +95,7 @@ static bool hook_perform(lua_State* L, int ref, int narg, int nresult)
     return false;
   }
   lua_insert(L, - narg - 1);
+  dd("perform custom hook: %s", key);
   if (lua_pcall(L, narg, nresult, 0) != LUA_OK) {
     luaX_warn(L, "Error in hook function: '%s'", lua_tostring(L, -1));
     lua_pop(L, 1); // error
@@ -58,51 +106,61 @@ static bool hook_perform(lua_State* L, int ref, int narg, int nresult)
 
 bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next_title)
 {
-  if (hook->title_ref == 0) {
-    return NULL;
-  }
-  dd("hook perform: title");
   lua_pushstring(L, title);
-  bool result = hook_perform(L, hook->title_ref, 1, 1);
+  bool result = hook_perform(hook, L, HOOK_KEY_TITLE, 1, 1);
   if (!result) {
-    return NULL;
+    return false;
   }
   const char* t = lua_tostring(L, -1);
-  bool r = lua_toboolean(L, -1);
   lua_pop(L, 1);
   if (next_title) {
     *next_title = t ? g_strdup(t) : NULL;
   }
-  return r;
+  return true;
 }
 
-bool hook_perform_bell(Hook* hook, lua_State* L)
+bool hook_perform_bell(Hook* hook, lua_State* L, bool* result)
 {
-  if (hook->bell_ref == 0) {
+  assert(result);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_BELL, 0, 1);
+  if (!succeeded) {
     return false;
   }
-  dd("hook perform: bell");
-  bool result = hook_perform(L, hook->bell_ref, 0, 1);
-  if (!result) {
-    return false;
-  }
-  return lua_toboolean(L, -1);
+  *result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
+  return succeeded;
 }
 
 bool hook_perform_activated(Hook* hook, lua_State* L)
 {
-  if (hook->activated_ref == 0) {
-    return false;
-  }
-  dd("hook perform: activated");
-  return hook_perform(L, hook->activated_ref, 0, 0);
+  return hook_perform(hook, L, HOOK_KEY_ACTIVATED, 0, 0);
 }
 
 bool hook_perform_deactivated(Hook* hook, lua_State* L)
 {
-  if (hook->deactivated_ref == 0) {
+  return hook_perform(hook, L, HOOK_KEY_DEACTIVATED, 0, 0);
+}
+
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button)
+{
+  lua_pushinteger(L, button);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_CLICKED, 1, 0);
+  if (!succeeded) {
     return false;
   }
-  dd("hook perform: deactivated");
-  return hook_perform(L, hook->deactivated_ref, 0, 0);
+  return true;
+}
+
+bool hook_perform_uri_clicked(Hook* hook, lua_State* L, const char* uri, int button, bool* result)
+{
+  assert(result);
+  lua_pushstring(L, uri);
+  lua_pushinteger(L, button);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_URI_CLICKED, 2, 1);
+  if (!succeeded) {
+    return false;
+  }
+  *result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
+  return succeeded;
 }

@@ -53,11 +53,7 @@ typedef struct {
 } Keymap;
 
 typedef struct {
-  int title_ref;
-  int bell_ref;
-  int uri_ref;
-  int activated_ref;
-  int deactivated_ref;
+  GHashTable* refs;
 } Hook;
 
 typedef struct {
@@ -65,6 +61,7 @@ typedef struct {
   VteTerminal* vte;
   GtkBox* hbox;
   GtkBox* vbox;
+  int* uri_tag;
 } Layout;
 
 typedef struct {
@@ -130,11 +127,13 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
 // hook
 Hook* hook_init();
 void hook_close(Hook* hook);
-bool hook_set_ref(Hook* hook, const char* name, int ref);
+bool hook_set_ref(Hook* hook, const char* key, int ref, int* old_ref);
 bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next_title);
-bool hook_perform_bell(Hook* hook, lua_State* L);
+bool hook_perform_bell(Hook* hook, lua_State* L, bool* result);
 bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button);
+bool hook_perform_uri_clicked(Hook* hook, lua_State* L, const char* uri, int button, bool* result);
 
 
 // layout
@@ -162,7 +161,9 @@ void context_build_layout(Context* context);
 VteTerminal* context_get_vte(Context* context);
 GtkWindow* context_get_window(Context* context);
 GdkWindow* context_get_gdk_window(Context* context);
+int* context_get_uri_tag(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
+void context_launch_uri(Context* context, const char* uri);
 
 
 // command

@@ -21,6 +21,9 @@ Layout* layout_init()
 
 void layout_close(Layout* layout)
 {
+  if (layout->uri_tag) {
+    g_free(layout->uri_tag);
+  }
   g_free(layout);
 }
 
@@ -39,6 +42,19 @@ void layout_build(Layout* layout, GApplication* app, Config* config)
   gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vbox));
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+
+  GError* error = NULL;
+  VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
+  if (error) {
+    g_warning("Error when parsing css: %s", error->message);
+    g_error_free(error);
+  } else {
+    int tag = vte_terminal_match_add_regex(vte, regex, 0);
+    layout->uri_tag = g_malloc0(sizeof(int));
+    *layout->uri_tag = tag;
+    vte_terminal_match_set_cursor_name(vte, tag, "hand");
+    vte_regex_unref(regex);
+  }
 }
 
 static void layout_apply_color(

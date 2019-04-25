@@ -222,12 +222,11 @@ static bool config_set_raw(Config* config, const char* key, void* value)
   }
   void* old_key = NULL;
   bool has_value = g_hash_table_lookup_extended(config->data, key, &old_key, NULL);
-  if (has_value) {
-    g_hash_table_remove(config->data, old_key);
-  } else {
+  if (!has_value) {
     dd("tried to add new field: '%s'", key);
     return false;
   }
+  g_hash_table_remove(config->data, old_key);
   g_hash_table_insert(config->data, g_strdup(key), value);
   return true;
 }

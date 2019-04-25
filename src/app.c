@@ -44,6 +44,7 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
   if (result) {
     if (next_title) {
       gtk_window_set_title(window, next_title);
+      g_free(next_title);
     }
     return;
   }
@@ -57,7 +58,8 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   UNUSED(vte);
   Context* context = (Context*)user_data;
 
-  if (hook_perform_bell(context->hook, context->lua)) {
+  bool result = false;
+  if (hook_perform_bell(context->hook, context->lua, &result) && result) {
     return;
   }
   GtkWindow* window = context_get_window(context);
@@ -66,11 +68,24 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   }
 }
 
-static bool on_vte_click(VteTerminal* vte, GdkEvent* event, void* user_data)
+static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
-  UNUSED(vte);
-  UNUSED(event);
-  UNUSED(user_data);
+  Context* context = (Context*)user_data;
+
+  hook_perform_clicked(context->hook, context->lua, event->button);
+  char* uri = NULL;
+  bool result = false;
+  int* uri_tag = context_get_uri_tag(context);
+  if (uri_tag) {
+    uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, uri_tag);
+    if (uri) {
+      if (hook_perform_uri_clicked(context->hook, context->lua, uri, event->button, &result) && !result) {
+        return true;
+      }
+      context_launch_uri(context, uri);
+      return true;
+    }
+  }
   return false;
 }
 
@@ -174,18 +189,6 @@ void on_activate(GApplication* app, void* user_data)
 
   VteTerminal* vte = context_get_vte(context);
   GtkWindow* window = context_get_window(context);
-
-  VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
-  if (regex) {
-    int tag = vte_terminal_match_add_regex(vte, regex, 0);
-    vte_terminal_match_set_cursor_name(vte, tag, "hand");
-    vte_regex_unref(regex);
-  } else {
-    g_error("%s", error->message);
-    g_error_free(error);
-    g_application_quit(app);
-    return;
-  }
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
