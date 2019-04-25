@@ -21,9 +21,9 @@ autom4te.cache/
 m4/
 
 tym.1
-src/common.h
-/config.*
 tym
+tym-test
+include/common.h
+/config.*
 tym-*.tar.gz
 test-driver
-tym_test_regex
