@@ -31,13 +31,13 @@ rm -f src/Makefile.in
 rm -f src/tym
 rm -rf src/.deps/
 
-rm -f tests/*.log
-rm -f tests/*.o
-rm -f tests/*.trs
-rm -f tests/Makefile
-rm -f tests/Makefile.in
-rm -f tests/tym-test
-rm -rf tests/.deps/
+rm -f test/*.log
+rm -f test/*.o
+rm -f test/*.trs
+rm -f test/Makefile
+rm -f test/Makefile.in
+rm -f test/tym-test
+rm -rf test/.deps/
 
 rm -f tym.1
 rm -f test-driver
