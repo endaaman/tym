@@ -119,8 +119,8 @@ unsigned config_get_cjk_width(Config* config);
 Keymap* keymap_init();
 void keymap_close(Keymap* keymap);
 void keymap_reset(Keymap* keymap);
-bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref);
-bool keymap_remove_entry(Keymap* keymap, const char* acceralator);
+bool keymap_add_entry(Keymap* keymap, const char* accelerator, int ref);
+bool keymap_remove_entry(Keymap* keymap, const char* accelerator);
 bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, char** error);
 
 

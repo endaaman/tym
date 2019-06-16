@@ -147,7 +147,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register a keymap by `tym.set_keymap(acceralator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
+You can register a keymap by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
 
 ```lua
 -- also can set keymap
@@ -184,9 +184,9 @@ tym.set_keymaps({
 | `tym.get_config()`                   | table        | Get whole config.                               |
 | `tym.set_config(table)`              | void         | Set config by table.                            |
 | `tym.reset_config()`                 | void         | Reset all config to default (but not apply it)  |
-| `tym.set_keymap(acceralator, func)`  | void         | Set keymap.                                     |
+| `tym.set_keymap(accelerator, func)`  | void         | Set keymap.                                     |
 | `tym.set_keymaps(table)`             | void         | Set keymaps by table.                           |
-| `tym.unset_keymap(acceralator)`      | void         | Unset keymap.                                   |
+| `tym.unset_keymap(accelerator)`      | void         | Unset keymap.                                   |
 | `tym.reset_keymaps()`                | void         | Reset all keymaps.                              |
 | `tym.send_key()`                     | void         | Send key press event.                           |
 | `tym.reload()`                       | void         | Reload config file.                             |

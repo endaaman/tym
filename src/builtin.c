@@ -180,7 +180,7 @@ static int builtin_set_keymap(lua_State* L)
   bool ok = keymap_add_entry(context->keymap, key, ref);
   if (!ok) {
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
-    luaX_warn(L, "Invalid acceralator: '%s'", key);
+    luaX_warn(L, "Invalid accelerator: '%s'", key);
     return 0;
   }
   return 0;
@@ -215,7 +215,7 @@ static int builtin_set_keymaps(lua_State* L)
       bool ok = keymap_add_entry(context->keymap, key, ref);
       if (!ok) {
         luaL_unref(L, LUA_REGISTRYINDEX, ref);
-        luaX_warn(L, "Invalid acceralator: '%s'", key);
+        luaX_warn(L, "Invalid accelerator: '%s'", key);
       }
     }
     lua_pop(L, 2);
@@ -235,12 +235,12 @@ static int builtin_send_key(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   UNUSED(context);
-  const char* acceralator = luaL_checkstring(L, 1);
+  const char* accelerator = luaL_checkstring(L, 1);
   unsigned key;
   GdkModifierType mod;
-  gtk_accelerator_parse(acceralator, &key, &mod);
+  gtk_accelerator_parse(accelerator, &key, &mod);
   if (0 == key && 0 == mod) {
-    luaL_error(L, "Invalid acceralator: '%s'", acceralator);
+    luaL_error(L, "Invalid accelerator: '%s'", accelerator);
     return 0;
   }
   GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);

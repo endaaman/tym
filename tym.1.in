@@ -250,10 +250,10 @@ Returns:	\fBvoid\fR
 .fi
 Reset config to default.
 
-.IP "\fBtym.set_keymap(acceralator, func)\fR"
+.IP "\fBtym.set_keymap(accelerator, func)\fR"
 Returns:	\fBvoid\fR
 .fi
-Set keymap. \fIacceralator\fB must be in a format parsable by \fBgtk_accelerator_parse()\fR.
+Set keymap. \accelerator\fB must be in a format parsable by \fBgtk_accelerator_parse()\fR.
 
 .IP "\fBtym.set_keymaps(table)\fR"
 Returns:	\fBvoid\fR
@@ -265,7 +265,7 @@ Returns:	\fBvoid\fR
 .fi
 Reset custom keymaps.
 
-.IP "\fBtym.send_key(acceralator)\fR"
+.IP "\fBtym.send_key(accelerator)\fR"
 Returns:	\fBvoid\fR
 .fi
 Send key press event.

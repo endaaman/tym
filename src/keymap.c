@@ -13,7 +13,7 @@
 typedef struct {
   unsigned key;
   GdkModifierType mod;
-  char* acceralator;
+  char* accelerator;
   int ref;
 } KeymapEntry;
 
@@ -22,7 +22,7 @@ static void free_keymap_entry(KeymapEntry* e, void* user_data)
 {
   // TODO: luaL_unref the ref
   UNUSED(user_data);
-  g_free(e->acceralator);
+  g_free(e->accelerator);
   g_free(e);
 }
 
@@ -49,34 +49,34 @@ void keymap_close(Keymap* keymap)
   g_free(keymap);
 }
 
-bool keymap_add_entry(Keymap* keymap, const char* acceralator, int ref)
+bool keymap_add_entry(Keymap* keymap, const char* accelerator, int ref)
 {
   unsigned key;
   GdkModifierType mod;
-  gtk_accelerator_parse(acceralator, &key, &mod);
+  gtk_accelerator_parse(accelerator, &key, &mod);
   if (0 == key && 0 == mod) {
     return false;
   }
-  bool removed = keymap_remove_entry(keymap, acceralator);
+  bool removed = keymap_remove_entry(keymap, accelerator);
   KeymapEntry* e = g_malloc0(sizeof(KeymapEntry));
   e->key = key;
   e->mod = mod;
-  e->acceralator = g_strdup(acceralator);
+  e->accelerator = g_strdup(accelerator);
   e->ref = ref;
   keymap->entries = g_list_append(keymap->entries, e);
   if (removed) {
-    dd("keymap (%s mod: %x, key: %x) has been overwritten", acceralator, mod, key);
+    dd("keymap (%s mod: %x, key: %x) has been overwritten", accelerator, mod, key);
   } else {
-    dd("keymap (%s mod: %x, key: %x) has been newly assined", acceralator, mod, key);
+    dd("keymap (%s mod: %x, key: %x) has been newly assined", accelerator, mod, key);
   }
   return true;
 }
 
-bool keymap_remove_entry(Keymap* keymap, const char* acceralator)
+bool keymap_remove_entry(Keymap* keymap, const char* accelerator)
 {
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
-    if (0 == g_strcmp0(e->acceralator, acceralator)) {
+    if (0 == g_strcmp0(e->accelerator, accelerator)) {
       keymap->entries = g_list_remove(keymap->entries, e);
       g_free(e);
       return true;
@@ -90,11 +90,11 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
     if (key == e->key && mod == e->mod) {
-      dd("perform keymap: %s (mod: %x, key: %x)", e->acceralator, mod, key);
+      dd("perform keymap: %s (mod: %x, key: %x)", e->accelerator, mod, key);
       lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
       if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
-        dd("tried to call keymap [%s] which is not function.", e->acceralator);
+        dd("tried to call keymap [%s] which is not function.", e->accelerator);
         return true;
       }
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
