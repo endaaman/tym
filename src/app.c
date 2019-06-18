@@ -36,17 +36,15 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
   UNUSED(vte);
   Context* context = (Context*)user_data;
-
   GtkWindow* window = context_get_window(context);
   const char* title = vte_terminal_get_window_title(context_get_vte(context));
   char* next_title = NULL;
-  bool result = hook_perform_title(context->hook, context->lua, title, &next_title);
-  if (result) {
+  if (hook_perform_title(context->hook, context->lua, title, &next_title)) {
     if (next_title) {
       gtk_window_set_title(window, next_title);
       g_free(next_title);
+      return;
     }
-    return;
   }
   if (title) {
     gtk_window_set_title(window, title);
@@ -57,7 +55,6 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
   UNUSED(vte);
   Context* context = (Context*)user_data;
-
   bool result = false;
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
     return;
@@ -71,10 +68,11 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
 static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
   Context* context = (Context*)user_data;
-
-  hook_perform_clicked(context->hook, context->lua, event->button);
-  char* uri = NULL;
   bool result = false;
+  if (hook_perform_clicked(context->hook, context->lua, event->button, &result) && result) {
+    return true;
+  }
+  char* uri = NULL;
   int* uri_tag = context_get_uri_tag(context);
   if (uri_tag) {
     uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, uri_tag);

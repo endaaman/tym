@@ -290,13 +290,20 @@ static bool context_perform_default(Context* context, unsigned key, GdkModifierT
 
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 {
+  bool result = false;
   char* error = NULL;
-  if (keymap_perform(context->keymap, context->lua, key, mod, &error)) {
+  if (keymap_perform(context->keymap, context->lua, key, mod, &result, &error)) {
     if (error) {
       context_on_lua_error(context, error);
       g_free(error);
+      // if the keymap func has error, default action will be canceled.
+      return true;
     }
-    return true;
+    // if the keymap func is normally excuted,  default action will be canceled.
+    // if `return true` in the keymap func, default action will be performed.
+    if (!result) {
+      return true;
+    }
   }
   if (config_get_bool(context->config, "ignore_default_keymap")) {
     return false;

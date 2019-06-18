@@ -147,7 +147,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register a keymap by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse).
+You can register a keymap by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, propagation will be stopped.
 
 ```lua
 -- also can set keymap
@@ -168,9 +168,14 @@ tym.set_keymaps({
     -- reload and notify
     tym.send_key('<Ctrl><Shift>t')
   end,
+
+  ['<Shift>y'] = function()
+    tym.notify('Y has been pressed')
+    return true -- notification is shown and `Y` will be inserted
+  end,
   ['<Shift>w'] = function()
     tym.notify('W has been pressed')
-    return true -- notification is shown and `W` is printed
+    return false -- notification is shown but `W` is not inserted
   end,
 })
 ```
@@ -228,13 +233,17 @@ tym.set_hooks({
 tym.set_hook('bell', function()
   -- Even if you excute `tput bel`, the window will not be urgent.
   print('bell')
-  return true
+
+  -- if return true, the event propagation will be stopped.
+  -- return true
 end)
 
 tym.set_hook('uri_clicked', function(uri, button)
   print(uri, ' is clicked by button ', button) -- 0:left, 1:middle, 2:right...
   tym.open(uri) -- launch default app for the URI
-  -- return true -- if uncomment this, the URI will be opened twice.
+
+  -- if return true, the URI will be opened twice (the event propagation is not be stopped).
+  -- return true
 end)
 ```
 

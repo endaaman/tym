@@ -85,8 +85,9 @@ bool keymap_remove_entry(Keymap* keymap, const char* accelerator)
   return false;
 }
 
-bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, char** error)
+bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, bool* result, char** error)
 {
+  assert(result);
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
     if (key == e->key && mod == e->mod) {
@@ -95,16 +96,16 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
       if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
         dd("tried to call keymap [%s] which is not function.", e->accelerator);
-        return true;
+        return false;
       }
       if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         *error = g_strdup(lua_tostring(L, -1));
         lua_pop(L, 1); // error
-        return true;
+        return false;
       }
-      bool result = lua_toboolean(L, -1);
+      *result = lua_toboolean(L, -1);
       lua_pop(L, 1);
-      return !result;
+      return true;
     }
   }
   return false;

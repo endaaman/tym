@@ -141,13 +141,16 @@ bool hook_perform_deactivated(Hook* hook, lua_State* L)
   return hook_perform(hook, L, HOOK_KEY_DEACTIVATED, 0, 0);
 }
 
-bool hook_perform_clicked(Hook* hook, lua_State* L, int button)
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button, bool* result)
 {
+  assert(result);
   lua_pushinteger(L, button);
   bool succeeded = hook_perform(hook, L, HOOK_KEY_CLICKED, 1, 0);
   if (!succeeded) {
     return false;
   }
+  *result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
   return true;
 }
 
