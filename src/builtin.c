@@ -458,6 +458,11 @@ static int builtin_notify(lua_State* L)
 static int builtin_copy(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  const char* target = lua_tostring(L, 1);
+  if (target && 0 == g_strcmp0(target, TYM_CLIPBOARD_PRIMARY)) {
+    vte_terminal_copy_primary(context_get_vte(context));
+    return 0;
+  }
   command_copy_clipboard(context);
   return 0;
 }

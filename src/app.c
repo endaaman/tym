@@ -68,21 +68,18 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
 static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
   Context* context = (Context*)user_data;
-  bool result = false;
-  if (hook_perform_clicked(context->hook, context->lua, event->button, &result) && result) {
-    return true;
-  }
   char* uri = NULL;
   int* uri_tag = context_get_uri_tag(context);
   if (uri_tag) {
     uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, uri_tag);
-    if (uri) {
-      if (hook_perform_uri_clicked(context->hook, context->lua, uri, event->button, &result) && !result) {
-        return true;
-      }
-      context_launch_uri(context, uri);
-      return true;
-    }
+  }
+  bool result = false;
+  if (hook_perform_clicked(context->hook, context->lua, event->button, uri, &result) && result) {
+    return true;
+  }
+  if (uri) {
+    context_launch_uri(context, uri);
+    return true;
   }
   return false;
 }

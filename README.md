@@ -221,7 +221,6 @@ tym.set_keymaps({
 | `activated` | nil | nothing | Triggered when the window is activated. |
 | `deactivated` | nil | nothing | Triggered when the window is deactivated. |
 | `clicked` | button | nothing | Triggered when mouse button is pressed. |
-| `uri_clicked` | uri, button | launches the default app for the URI | Triggered when the window is deactivated. If true is returned, default action **will be performed**. |
 
 ```lua
 tym.set_hooks({
@@ -231,19 +230,22 @@ tym.set_hooks({
 })
 
 tym.set_hook('bell', function()
-  -- Even if you excute `tput bel`, the window will not be urgent.
   print('bell')
 
   -- if return true, the event propagation will be stopped.
   -- return true
 end)
 
-tym.set_hook('uri_clicked', function(uri, button)
-  print(uri, ' is clicked by button ', button) -- 0:left, 1:middle, 2:right...
-  tym.open(uri) -- launch default app for the URI
-
-  -- if return true, the URI will be opened twice (the event propagation is not be stopped).
-  -- return true
+tym.set_hook('clicked', function(button, uri)
+  print('you pressed button:', button) -- 0:left, 1:middle, 2:right...
+  if uri then
+    print('you clicked URI: ', uri)
+    if button == 1 then
+      -- If return true, the event propagation will be stopped
+      -- So when left button is clicked, URI will be not opened
+      return true
+    end
+  end
 end)
 ```
 

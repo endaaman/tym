@@ -132,8 +132,7 @@ bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next
 bool hook_perform_bell(Hook* hook, lua_State* L, bool* result);
 bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
-bool hook_perform_clicked(Hook* hook, lua_State* L, int button, bool* result);
-bool hook_perform_uri_clicked(Hook* hook, lua_State* L, const char* uri, int button, bool* result);
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result);
 
 
 // layout

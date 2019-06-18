@@ -13,7 +13,6 @@
 #define HOOK_KEY_TITLE "title"
 #define HOOK_KEY_BELL "bell"
 #define HOOK_KEY_CLICKED "clicked"
-#define HOOK_KEY_URI_CLICKED "uri_clicked"
 #define HOOK_KEY_ACTIVATED "activated"
 #define HOOK_KEY_DEACTIVATED "deactivated"
 
@@ -21,7 +20,6 @@ const char* HOOK_KEYS[] = {
   HOOK_KEY_TITLE,
   HOOK_KEY_BELL,
   HOOK_KEY_CLICKED,
-  HOOK_KEY_URI_CLICKED,
   HOOK_KEY_ACTIVATED,
   HOOK_KEY_DEACTIVATED,
   NULL
@@ -141,25 +139,12 @@ bool hook_perform_deactivated(Hook* hook, lua_State* L)
   return hook_perform(hook, L, HOOK_KEY_DEACTIVATED, 0, 0);
 }
 
-bool hook_perform_clicked(Hook* hook, lua_State* L, int button, bool* result)
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result)
 {
   assert(result);
   lua_pushinteger(L, button);
-  bool succeeded = hook_perform(hook, L, HOOK_KEY_CLICKED, 1, 0);
-  if (!succeeded) {
-    return false;
-  }
-  *result = lua_toboolean(L, -1);
-  lua_pop(L, 1);
-  return true;
-}
-
-bool hook_perform_uri_clicked(Hook* hook, lua_State* L, const char* uri, int button, bool* result)
-{
-  assert(result);
   lua_pushstring(L, uri);
-  lua_pushinteger(L, button);
-  bool succeeded = hook_perform(hook, L, HOOK_KEY_URI_CLICKED, 2, 1);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_CLICKED, 2, 1);
   if (!succeeded) {
     return false;
   }
