@@ -62,6 +62,7 @@ typedef struct {
   GtkBox* hbox;
   GtkBox* vbox;
   int* uri_tag;
+  bool alpha_supported;
 } Layout;
 
 typedef struct {

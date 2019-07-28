@@ -68,16 +68,17 @@ void layout_build(Layout* layout, GApplication* app, Config* config)
     vte_regex_unref(regex);
   }
 
-#ifdef TYM_USE_TRANSPARENT
   GdkScreen* screen = gtk_widget_get_screen(GTK_WIDGET(window));
   GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
-  if (!visual) {
+  layout->alpha_supported = visual;
+  if (layout->alpha_supported) {
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), true);
+    g_signal_connect(G_OBJECT(window), "draw", G_CALLBACK(on_draw), config);
+  } else {
     g_message("Your screen does not support alpha channel.");
     visual = gdk_screen_get_system_visual(screen);
   }
   gtk_widget_set_visual(GTK_WIDGET(window), visual);
-  g_signal_connect(G_OBJECT(window), "draw", G_CALLBACK(on_draw), config);
-#endif
 }
 
 static void layout_apply_color(
@@ -146,28 +147,6 @@ void layout_apply_config(Layout* layout, Config* config)
   gtk_box_set_child_packing(hbox, GTK_WIDGET(vte), true, true, hpad, GTK_PACK_START);
   gtk_box_set_child_packing(vbox, GTK_WIDGET(hbox), true, true, vpad, GTK_PACK_START);
 
-#ifndef TYM_USE_TRANSPARENT
-  GdkRGBA color;
-  if (config_acquire_color(config, "color_window_background", &color)) {
-    char* color_str = gdk_rgba_to_string(&color);
-    char* css = g_strdup_printf("window { background-color: %s; }", color_str);
-    g_free(color_str);
-    GtkCssProvider* css_provider = gtk_css_provider_new();
-    GError* error = NULL;
-    gtk_css_provider_load_from_data(css_provider, css, -1, &error);
-    g_free(css);
-    if (error) {
-      g_warning("Error when parsing css: %s", error->message);
-      g_error_free(error);
-    } else {
-      GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
-      gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
-    }
-  }
-#else
-  gtk_widget_set_app_paintable(GTK_WIDGET(window), config_has_str(config, "color_window_background"));
-#endif
-
   vte_terminal_set_cursor_shape(vte, config_get_cursor_shape(config));
   vte_terminal_set_cursor_blink_mode(vte, config_get_cursor_blink_mode(config));
   vte_terminal_set_cjk_ambiguous_width(vte, config_get_cjk_width(config));
@@ -175,11 +154,38 @@ void layout_apply_config(Layout* layout, Config* config)
   vte_terminal_set_mouse_autohide(vte, config_get_bool(config, "autohide"));
   vte_terminal_set_scrollback_lines(vte, config_get_int(config, "scrollback_length"));
   vte_terminal_set_audible_bell(vte, !config_get_bool(config, "silent"));
-  vte_terminal_set_clear_background(vte, !config_get_bool(config, "transparent"));
+#ifdef TYM_USE_TRANSPARENT
+  vte_terminal_set_clear_background(vte, config_get_bool(config, "transparent"));
+#else
+  if (config_get_bool(config, "transparent")) {
+    g_message("`transparent` options is support on VTE version>=0.52 (your VTE version is %d.%d.%d)",
+      VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION);
+  }
+#endif
 
   if (config_has_str(config, "font")) {
     PangoFontDescription* font_desc = pango_font_description_from_string(config_get_str(config, "font"));
     vte_terminal_set_font(vte, font_desc);
     pango_font_description_free(font_desc);
+  }
+
+  if (!layout->alpha_supported) {
+    GdkRGBA color;
+    if (config_acquire_color(config, "color_window_background", &color)) {
+      char* color_str = gdk_rgba_to_string(&color);
+      char* css = g_strdup_printf("window { background-color: %s; }", color_str);
+      g_free(color_str);
+      GtkCssProvider* css_provider = gtk_css_provider_new();
+      GError* error = NULL;
+      gtk_css_provider_load_from_data(css_provider, css, -1, &error);
+      g_free(css);
+      if (error) {
+        g_warning("Error when parsing css: %s", error->message);
+        g_error_free(error);
+      } else {
+        GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
+        gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+      }
+    }
   }
 }

@@ -35,7 +35,7 @@
 #define LUA_LOADED_TABLE "_LOADED"
 #endif
 
-/* Switch to use old api */
+/* Switch to old api */
 /* #define TYM_USE_OLD_API */
 
 #ifndef TYM_USE_OLD_API
