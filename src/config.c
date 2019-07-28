@@ -92,6 +92,7 @@ static void initialize() {
     { "padding_horizontal",    0,  T_INT, F_NONE, mdup(&v_zero, sizeof(int)), "<int>", "Horizontal padding", },
     { "padding_vertical",      0,  T_INT, F_NONE, mdup(&v_zero, sizeof(int)), "<int>", "Vertical padding", },
     { "scrollback_length",     0,  T_INT, F_NONE, mdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
+    { "transparent",           0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to disable drawing terminal background",  },
     { "ignore_default_keymap", 0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to use default keymap",  },
     { "ignore_bold",           0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to attempt to draw bold text", },
     { "autohide",              0, T_BOOL, F_NONE, mdup(&v_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when the user presses a key", },
