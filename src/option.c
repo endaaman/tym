@@ -46,6 +46,7 @@ Option* option_init() {
   ConfigField* field = NULL;
   g_hash_table_iter_init(&iter, get_config_fields());
   while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
+    // TODO: sort by index
     GOptionEntry* e = &ee[i];
     i += 1;
     e->long_name = field->name;

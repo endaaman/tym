@@ -34,6 +34,7 @@ typedef struct {
   void* default_value;
   char* arg_desc;
   char* desc;
+  unsigned index;
 } ConfigField;
 
 typedef struct {

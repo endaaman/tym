@@ -96,7 +96,6 @@ static void initialize() {
     { "padding_horizontal",    0, T_INT,  F_N, mdup(&v_zero, sizeof(int)), "<int>", "Horizontal padding", },
     { "padding_vertical",      0, T_INT,  F_N, mdup(&v_zero, sizeof(int)), "<int>", "Vertical padding", },
     { "scrollback_length",     0, T_INT,  F_N, mdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)), "<int>", "Scrollback buffer length", },
-    { "transparent",           0, T_BOOL, F_N, mdup(&v_false, sizeof(bool)), NULL, "Whether to disable drawing terminal background",  },
     { "ignore_default_keymap", 0, T_BOOL, F_N, mdup(&v_false, sizeof(bool)), NULL, "Whether to use default keymap", },
     { "ignore_bold",           0, T_BOOL, F_N, mdup(&v_false, sizeof(bool)), NULL, "Whether to ignore bold style", },
     { "autohide",              0, T_BOOL, F_N, mdup(&v_false, sizeof(bool)), NULL, "Whether to hide mouse cursor when key is pressed", },
@@ -127,7 +126,9 @@ static void initialize() {
   unsigned i = 0;
   unsigned config_fields_len = sizeof(c) / sizeof(ConfigField);
   while (i < config_fields_len) {
-    g_hash_table_insert(config_fields, c[i].name, g_memdup(&c[i], sizeof(c[i])));
+    ConfigField* field = (ConfigField*)g_memdup(&c[i], sizeof(c[i]));
+    field->index = i;
+    g_hash_table_insert(config_fields, field->name, field);
     i++;
   }
 }
