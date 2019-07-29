@@ -78,11 +78,12 @@ All available config values are shown below.
 | `padding_horizontal`  | integer | `0` | Horizontal padding. |
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
+| `transparent` | boolean | `false` | Whether to disable drawing terminal background. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
-| `color_window_background` | string | `''` | Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. |
+| `color_window_background` | string | `''` | Color of the terminal window. It is seen when `padding_horizontal` `padding_vertical` is not `0` or `transparent` is `true`. **You can use color with alpha channel. You can make the window transparent with `transparent` option.**  |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. They will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
 
 
@@ -299,6 +300,31 @@ $ ./configure --enable-debug
 ```
 
 ## Tips
+
+<details><summary>Transparent window</summary>
+<div>
+
+```lua
+local tym = require('tym')
+
+-- parse to decimal
+function hex2rgb(hex)
+  hex = hex:gsub("#", "")
+  return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+end
+
+r, g, b = hex2rgb('#161821')
+
+tym.set_config({
+  transparent = true,
+  color_window_background = string.format('rgba(%d, %d, %d, 0.9)', r, g, b),
+})
+```
+
+</div>
+</details>
+
+
 <details><summary>Automated</summary>
 <div>
 

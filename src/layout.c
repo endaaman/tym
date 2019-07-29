@@ -155,7 +155,7 @@ void layout_apply_config(Layout* layout, Config* config)
   vte_terminal_set_scrollback_lines(vte, config_get_int(config, "scrollback_length"));
   vte_terminal_set_audible_bell(vte, !config_get_bool(config, "silent"));
 #ifdef TYM_USE_TRANSPARENT
-  vte_terminal_set_clear_background(vte, config_get_bool(config, "transparent"));
+  vte_terminal_set_clear_background(vte, !config_get_bool(config, "transparent"));
 #else
   if (config_get_bool(config, "transparent")) {
     g_message("`transparent` options is support on VTE version>=0.52 (your VTE version is %d.%d.%d)",

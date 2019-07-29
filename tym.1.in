@@ -117,6 +117,13 @@ Default:	\fI80\fR
 .fi
 Vertical padding.
 
+.IP "\transparent\fR"
+Type:	\fBboolean\fR
+.fi
+Default:	\fIfalse\fR
+.fi
+Whether to disable drawing terminal background.
+
 .IP "\ignore_default_keymap\fR"
 Type:	\fBboolean\fR
 .fi
@@ -157,7 +164,7 @@ Type:	\string\fR
 .fi
 Default:	\fI''\fR
 .fi
-Color of the padded part of the window when `padding_horizontal` `padding_vertical` is not `0`. For the value you can set the colors that can be used in GTK+ CSS. (cf. https://developer.gnome.org/gtk3/stable/chap-css-overview.html)
+Color of the terminal window. It is seen when `padding_horizontal` `padding_vertical` is not `0` or `transparent` is `true`. **You can use color with alpha channel. You can make the window transparent with `transparent` option.
 
 .IP \fBcolor_foreground\fR
 .IP \fBcolor_background\fR
