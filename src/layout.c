@@ -112,6 +112,7 @@ static void layout_apply_colors(Layout* layout, Config* config)
     palette[i].alpha = 0;
   }
   vte_terminal_set_colors(layout->vte, NULL, NULL, palette, 16);
+  g_free(palette);
 }
 
 void layout_apply_theme(Layout* layout, Config* config)
