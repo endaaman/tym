@@ -182,8 +182,8 @@ void layout_apply_config(Layout* layout, Config* config)
 #ifdef TYM_USE_TRANSPARENT
   vte_terminal_set_clear_background(vte, !config_is_none(config, "color_background"));
 #else
-  if (config_get_bool(config, "transparent")) {
-    g_message("`transparent` options is support on VTE version>=0.52 (your VTE version is %d.%d.%d)",
+  if (!config_is_none(config, "color_background")) {
+    g_message("`NONE` for `color_background` is supported on VTE version>=0.52 (your VTE version is %d.%d.%d)",
       VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION);
   }
 #endif

@@ -78,13 +78,12 @@ All available config values are shown below.
 | `padding_horizontal`  | integer | `0` | Horizontal padding. |
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
-| `transparent` | boolean | `false` | Whether to disable drawing terminal background. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
-| `color_window_background` | string | `''` | Color of the terminal window. It is seen when `padding_horizontal` `padding_vertical` is not `0` or `transparent` is `true`. **You can use color with alpha channel. You can make the window transparent with `transparent` option.**  |
-| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string, for example `'#f00'`, `'#ff0000'` or `'red'`. They will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. |
+| `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you specify `'NONE'`, the window background will not be drawn. |
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set 'NONE' for `color_background`, the terminal background will not be drawn.|
 
 
 ## Theme customization
@@ -317,7 +316,12 @@ r, g, b = hex2rgb('#161821')
 
 tym.set_config({
   transparent = true,
-  color_window_background = string.format('rgba(%d, %d, %d, 0.9)', r, g, b),
+  padding_vertical = 5,
+  padding_horizontal = 5,
+  color_window_background = 'NONE', -- the padded area will be completely transparent
+  color_background = string.format('rgba(%d, %d, %d, 0.9)', r, g, b),
+
+  -- color_background = 'NONE', -- the terminal area will be completely transparent
 })
 ```
 

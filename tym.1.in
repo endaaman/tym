@@ -117,13 +117,6 @@ Default:	\fI80\fR
 .fi
 Vertical padding.
 
-.IP "\transparent\fR"
-Type:	\fBboolean\fR
-.fi
-Default:	\fIfalse\fR
-.fi
-Whether to disable drawing terminal background.
-
 .IP "\ignore_default_keymap\fR"
 Type:	\fBboolean\fR
 .fi
@@ -164,7 +157,7 @@ Type:	\string\fR
 .fi
 Default:	\fI''\fR
 .fi
-Color of the terminal window. It is seen when `padding_horizontal` `padding_vertical` is not `0` or `transparent` is `true`. **You can use color with alpha channel. You can make the window transparent with `transparent` option.
+Color of the terminal window. It is seen when `padding_horizontal` `padding_vertical` is not `0`. If you specify 'NONE', the window background will not be drawn.
 
 .IP \fBcolor_foreground\fR
 .IP \fBcolor_background\fR
@@ -178,9 +171,7 @@ Type: \fBstring\fR
 .fi
 Default:	\fI''\fR (empty string)
 .fi
-You can specify standard color string, for example \fI'#f00'\fR, \fI'#ff0000'\fR
-or \fI'red'\fR. These will be parsed with \fBgdk_rgba_parse()\fR. If you set
-empty string, the VTE default color will be used.
+You can specify standard color string such as \fI'#f00'\fR, \fI'#ff0000'\fR, \fI'rgba(22, 24, 33, 0.7)'\fR, or \fI'red'\fR. It will be parsed by \fBgdk_rgba_parse()\fR. If you set empty string, the VTE default color will be used. If you set 'NONE' for `color_background`, the terminal background will not be drawn.
 
 
 .SH DEFAULT KEYBINDINGS
