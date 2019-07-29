@@ -315,12 +315,10 @@ end
 r, g, b = hex2rgb('#161821')
 
 tym.set_config({
-  transparent = true,
   padding_vertical = 5,
   padding_horizontal = 5,
   color_window_background = 'NONE', -- the padded area will be completely transparent
   color_background = string.format('rgba(%d, %d, %d, 0.9)', r, g, b),
-
   -- color_background = 'NONE', -- the terminal area will be completely transparent
 })
 ```
