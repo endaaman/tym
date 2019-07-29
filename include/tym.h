@@ -96,8 +96,8 @@ char* option_get_signal(Option* option);
 
 
 // config
-extern GList* config_fields;
-extern unsigned config_fields_len;
+GHashTable* get_config_fields();
+unsigned get_config_fields_count();
 ConfigField* get_config_field(const char* key);
 Config* config_init();
 void config_close(Config* config);

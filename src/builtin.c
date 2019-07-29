@@ -88,8 +88,11 @@ static int builtin_get_config(lua_State* L)
 
   lua_newtable(L);
 
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
+  GHashTableIter iter;
+  char* key = NULL;
+  ConfigField* field = NULL;
+  g_hash_table_iter_init(&iter, get_config_fields());
+  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
     char* key = field->name;
     lua_pushstring(L, key);
     switch (field->type) {

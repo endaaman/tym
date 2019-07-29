@@ -49,8 +49,12 @@ static char* get_default_shell()
   return g_strdup(TYM_FALL_BACK_SHELL);
 }
 
-GList* config_fields = NULL;
-unsigned config_fields_len = 0;
+static void free_config_field(void* data) {
+  g_free(((ConfigField*)data)->default_value);
+  g_free(data);
+}
+
+static GHashTable* config_fields = NULL;
 
 __attribute__((constructor))
 static void initialize() {
@@ -114,35 +118,41 @@ static void initialize() {
 #undef color_special
 #undef color_normal
 
+  config_fields = g_hash_table_new_full(
+    g_str_hash,
+    g_str_equal,
+    NULL,
+    (GDestroyNotify)free_config_field
+  );
   unsigned i = 0;
-  config_fields_len = sizeof(c) / sizeof(ConfigField);
+  unsigned config_fields_len = sizeof(c) / sizeof(ConfigField);
   while (i < config_fields_len) {
-    config_fields = g_list_append(config_fields, g_memdup(&c[i], sizeof(c[i])));
+    g_hash_table_insert(config_fields, c[i].name, g_memdup(&c[i], sizeof(c[i])));
     i++;
   }
 }
 
-static void free_data(void* data, void* user_data) {
-  UNUSED(user_data);
-  g_free(((ConfigField*)data)->default_value);
-  g_free(data);
-}
-
 __attribute__((destructor))
 static void finalize() {
-  g_list_foreach(config_fields, free_data, NULL);
-  g_list_free(config_fields);
+  g_hash_table_destroy(config_fields);
+}
+
+GHashTable* get_config_fields() {
+  return config_fields;
+}
+
+unsigned get_config_fields_count() {
+  return g_hash_table_size(config_fields);
 }
 
 ConfigField* get_config_field(const char* key) {
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
-    if (0 == g_strcmp0(field->name, key)) {
-      ConfigType t= field->type;
-      if (t == CONFIG_TYPE_STRING || t == CONFIG_TYPE_INTEGER || t == CONFIG_TYPE_BOOLEAN) {
-        return field;
-      }
-    }
+  ConfigField* field = (ConfigField*)g_hash_table_lookup(config_fields, key);
+  if (!field) {
+    return NULL;
+  }
+  ConfigType t= field->type;
+  if (t == CONFIG_TYPE_STRING || t == CONFIG_TYPE_INTEGER || t == CONFIG_TYPE_BOOLEAN) {
+    return field;
   }
   return NULL;
 }
@@ -309,8 +319,11 @@ void config_reset(Config* config)
   df();
   g_hash_table_remove_all(config->data);
 
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
+  GHashTableIter iter;
+  char* key = NULL;
+  ConfigField* field = NULL;
+  g_hash_table_iter_init(&iter, config_fields);
+  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
     switch (field->type) {
       case CONFIG_TYPE_STRING:
         config_add_str(config, field->name, field->default_value);
@@ -333,8 +346,11 @@ void config_override_by_option(Config* config, Option* option)
     dd("option->values is NULL.");
     return;
   }
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
+  GHashTableIter iter;
+  char* key = NULL;
+  ConfigField* field = NULL;
+  g_hash_table_iter_init(&iter, config_fields);
+  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
     char* key = field->name;
     switch (field->type) {
       case CONFIG_TYPE_STRING: {

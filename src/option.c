@@ -13,7 +13,7 @@
 Option* option_init() {
   Option* option = g_malloc0(sizeof(Option));
   const unsigned offset_option = 3;
-  GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), config_fields_len + offset_option + 1);
+  GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), get_config_fields_count() + offset_option + 1);
 
   ee[0].long_name = "version";
   ee[0].short_name = 'v';
@@ -41,8 +41,11 @@ Option* option_init() {
 
   unsigned i = offset_option;
 
-  for (GList* li = config_fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
+  GHashTableIter iter;
+  char* key = NULL;
+  ConfigField* field = NULL;
+  g_hash_table_iter_init(&iter, get_config_fields());
+  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
     GOptionEntry* e = &ee[i];
     i += 1;
     e->long_name = field->name;
