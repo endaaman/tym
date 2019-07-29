@@ -284,6 +284,15 @@ int config_get_int(Config* config, const char* key)
   return 0;
 }
 
+bool config_is_none(Config* config, const char* key)
+{
+  char* v = (char*)config_get_raw(config, key);
+  if (!v) {
+    return false;
+  }
+  return 0 == g_strcmp0(v, TYM_SYMBOL_NONE);
+}
+
 static void config_add_int(Config* config, const char* key, int value)
 {
   config_add_raw(config, key, g_memdup((gpointer)&value, sizeof(int)));
@@ -388,10 +397,13 @@ bool config_acquire_color(Config* config, const char* key, GdkRGBA* color)
   if (!config_has_str(config, key)) {
     return false;
   }
+  if (config_is_none(config, key)) {
+    return false;
+  }
   const char* value = config_get_str(config, key);
   bool valid = gdk_rgba_parse(color, value);
   if (!valid) {
-    g_message( "Invalid color string for '%s': %s", key, value);
+    g_message("Invalid color string for '%s': %s", key, value);
   }
   return valid;
 }

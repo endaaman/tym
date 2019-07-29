@@ -106,6 +106,7 @@ bool config_has_str(Config* config, const char* key);
 char* config_get_str(Config* config, const char* key);
 bool config_set_str(Config* config, const char* key, const char* value);
 int config_get_int(Config* config, const char* key);
+bool config_is_none(Config* config, const char* key);
 bool config_set_int(Config* config, const char* key, int value);
 bool config_get_bool(Config* config, const char* key);
 bool config_set_bool(Config* config, const char* key, bool value);

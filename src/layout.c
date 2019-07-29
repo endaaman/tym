@@ -12,16 +12,33 @@
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
+typedef struct {
+  Config* config;
+  Layout* layout;
+} ContextForDraw;
+
+
+static void free_context_for_draw(void* data, GClosure* closure) {
+  UNUSED(closure);
+  g_free(data);
+}
 
 static gboolean on_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
-  Config* config = (Config*)user_data;
+  ContextForDraw* ctx = (ContextForDraw*)user_data;
+  if (config_is_none(ctx->config, "color_window_background")) {
+    return false;
+  }
   GdkRGBA color;
-  if (config_acquire_color(config, "color_window_background", &color)) {
-    cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+  if (config_acquire_color(ctx->config, "color_window_background", &color)) {
+    if (ctx->layout->alpha_supported) {
+      cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+    } else {
+      cairo_set_source_rgb(cr, color.red, color.green, color.blue);
+    }
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint(cr);
-  }
+   }
   return false;
 }
 
@@ -71,14 +88,21 @@ void layout_build(Layout* layout, GApplication* app, Config* config)
   GdkScreen* screen = gtk_widget_get_screen(GTK_WIDGET(window));
   GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
   layout->alpha_supported = visual;
-  if (layout->alpha_supported) {
-    gtk_widget_set_app_paintable(GTK_WIDGET(window), true);
-    g_signal_connect(G_OBJECT(window), "draw", G_CALLBACK(on_draw), config);
-  } else {
+  if (!layout->alpha_supported) {
     g_message("Your screen does not support alpha channel.");
     visual = gdk_screen_get_system_visual(screen);
   }
   gtk_widget_set_visual(GTK_WIDGET(window), visual);
+  ContextForDraw* ctx = g_malloc0(sizeof(ContextForDraw));
+  ctx->layout = layout;
+  ctx->config = config;
+  g_signal_connect_data(
+      G_OBJECT(window),
+      "draw",
+      G_CALLBACK(on_draw),
+      ctx,
+      (GClosureNotify)free_context_for_draw,
+      0);
 }
 
 static void layout_apply_color(
@@ -156,7 +180,7 @@ void layout_apply_config(Layout* layout, Config* config)
   vte_terminal_set_scrollback_lines(vte, config_get_int(config, "scrollback_length"));
   vte_terminal_set_audible_bell(vte, !config_get_bool(config, "silent"));
 #ifdef TYM_USE_TRANSPARENT
-  vte_terminal_set_clear_background(vte, !config_get_bool(config, "transparent"));
+  vte_terminal_set_clear_background(vte, !config_is_none(config, "color_background"));
 #else
   if (config_get_bool(config, "transparent")) {
     g_message("`transparent` options is support on VTE version>=0.52 (your VTE version is %d.%d.%d)",
@@ -169,24 +193,5 @@ void layout_apply_config(Layout* layout, Config* config)
     vte_terminal_set_font(vte, font_desc);
     pango_font_description_free(font_desc);
   }
-
-  if (!layout->alpha_supported) {
-    GdkRGBA color;
-    if (config_acquire_color(config, "color_window_background", &color)) {
-      char* color_str = gdk_rgba_to_string(&color);
-      char* css = g_strdup_printf("window { background-color: %s; }", color_str);
-      g_free(color_str);
-      GtkCssProvider* css_provider = gtk_css_provider_new();
-      GError* error = NULL;
-      gtk_css_provider_load_from_data(css_provider, css, -1, &error);
-      g_free(css);
-      if (error) {
-        g_warning("Error when parsing css: %s", error->message);
-        g_error_free(error);
-      } else {
-        GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(window));
-        gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
-      }
-    }
-  }
+  gtk_widget_set_app_paintable(GTK_WIDGET(window), config_has_str(config, "color_window_background"));
 }
