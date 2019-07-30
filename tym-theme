@@ -361,7 +361,7 @@ end
 
 function cmds.edit(cmd, name)
   local t
-  if name == '.' then
+  if not name or name == '.' then
     t = theme:get_active()
     if not t then
       quit_with_list('There is no active theme.')
