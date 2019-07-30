@@ -142,6 +142,28 @@ GHashTable* get_config_fields() {
   return config_fields;
 }
 
+int config_fields_sort_func(const void* a, const void* b)
+{
+  return ((ConfigField*)a)->index - ((ConfigField*)b)->index;
+}
+
+GList* get_config_fields_as_list(bool sorted)
+{
+  GHashTableIter iter;
+  g_hash_table_iter_init(&iter, config_fields);
+  GList* fields = NULL;
+  char* key = NULL;
+  ConfigField* field = NULL;
+  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
+    if (sorted) {
+      fields = g_list_insert_sorted(fields, field, config_fields_sort_func);
+    } else {
+      fields = g_list_append(fields, field);
+    }
+  }
+  return fields;
+}
+
 unsigned get_config_fields_count() {
   return g_hash_table_size(config_fields);
 }

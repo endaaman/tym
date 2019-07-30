@@ -98,6 +98,7 @@ char* option_get_signal(Option* option);
 
 // config
 GHashTable* get_config_fields();
+GList* get_config_fields_as_list(bool sorted);
 unsigned get_config_fields_count();
 ConfigField* get_config_field(const char* key);
 Config* config_init();

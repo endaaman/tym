@@ -41,12 +41,9 @@ Option* option_init() {
 
   unsigned i = offset_option;
 
-  GHashTableIter iter;
-  char* key = NULL;
-  ConfigField* field = NULL;
-  g_hash_table_iter_init(&iter, get_config_fields());
-  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
-    // TODO: sort by index
+  GList* fields = get_config_fields_as_list(true);
+  for (GList* li = fields; li != NULL; li = li->next) {
+    ConfigField* field = (ConfigField*)li->data;
     GOptionEntry* e = &ee[i];
     i += 1;
     e->long_name = field->name;
