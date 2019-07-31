@@ -91,7 +91,7 @@ bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType 
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
     if (key == e->key && mod == e->mod) {
-      dd("perform keymap: %s (mod: %x, key: %x)", e->accelerator, mod, key);
+      dd("performing keymap: %s (mod: %x, key: %x)", e->accelerator, mod, key);
       lua_rawgeti(L, LUA_REGISTRYINDEX, e->ref);
       if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1); // pop none-function
