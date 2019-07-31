@@ -303,23 +303,28 @@ $ ./configure --enable-debug
 <details><summary>Transparent window</summary>
 <div>
 
+You can decrease alpha to press `Ctrl + Shift + Down` and increase alpha to press `Ctrl + Shift + Up`.
+
 ```lua
 local tym = require('tym')
 
--- parse to decimal
-function hex2rgb(hex)
-  hex = hex:gsub("#", "")
-  return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+function update_alpha(delta)
+  r, g, b, a = tym.color_to_rgba(tym.get('color_background'))
+  print(tym.rgb_to_hex(r, g, b))
+  a = math.max(math.min(1.0, a + delta), 0.0)
+  bg = tym.rgba_to_color(r, g, b, a)
+  tym.set('color_background', bg)
+  tym.notify(string.format('%s alpha to %f', (delta > 0 and 'Inc' or 'Dec'), a))
+  tym.apply()
 end
 
-r, g, b = hex2rgb('#161821')
-
-tym.set_config({
-  padding_vertical = 5,
-  padding_horizontal = 5,
-  color_window_background = 'NONE', -- the padded area will be completely transparent
-  color_background = string.format('rgba(%d, %d, %d, 0.9)', r, g, b),
-  -- color_background = 'NONE', -- the terminal area will be completely transparent
+tym.set_keymaps({
+  ['<Ctrl><Shift>Up'] = function()
+    update_alpha(0.05)
+  end,
+  ['<Ctrl><Shift>Down'] = function()
+    update_alpha(-0.05)
+  end,
 })
 ```
 
