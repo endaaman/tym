@@ -458,6 +458,49 @@ static int builtin_reset_font_scale(lua_State* L)
   return 0;
 }
 
+static int builtin_color_to_rgba(lua_State* L)
+{
+  GdkRGBA color;
+  const char* str = luaL_checkstring(L, -1);
+  bool valid = gdk_rgba_parse(&color, str);
+  if (valid) {
+    lua_pushinteger(L, round(color.red * 255));
+    lua_pushinteger(L, round(color.green * 255));
+    lua_pushinteger(L, round(color.blue * 255));
+    lua_pushnumber(L, color.alpha);
+  } else {
+    luaX_warn(L, "Invalid color string: '%s'", str);
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushnil(L);
+  }
+  return 4;
+}
+
+static int builtin_rgba_to_color(lua_State* L)
+{
+  int red = luaL_checknumber(L, 1);
+  int green = luaL_checknumber(L, 2);
+  int blue = luaL_checknumber(L, 3);
+  double alpha = lua_isnone(L, 4) ? 1.0 : lua_tonumber(L, 4);
+  char* str = g_strdup_printf("rgba(%d, %d, %d, %f)", red, green, blue, alpha);
+  lua_pushstring(L, str);
+  g_free(str);
+  return 1;
+}
+
+static int builtin_rgb_to_hex(lua_State* L)
+{
+  int red = luaL_checknumber(L, 1);
+  int green = luaL_checknumber(L, 2);
+  int blue = luaL_checknumber(L, 3);
+  char* hex = g_strdup_printf("#%x%x%x", red, green, blue);
+  lua_pushstring(L, hex);
+  g_free(hex);
+  return 1;
+}
+
 static int builtin_get_monitor_model(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -522,6 +565,9 @@ int builtin_register_module(lua_State* L)
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },
     { "reset_font_scale"    , builtin_reset_font_scale     },
+    { "color_to_rgba"       , builtin_color_to_rgba        },
+    { "rgba_to_color"       , builtin_rgba_to_color        },
+    { "rgb_to_hex"          , builtin_rgb_to_hex           },
     { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_version"         , builtin_get_version          },
     { "get_config_path"     , builtin_get_config_path      },
