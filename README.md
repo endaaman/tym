@@ -147,7 +147,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register a keymap by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, propagation will be stopped.
+You can register keymap(s) by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, propagation will not be stopped.
 
 ```lua
 -- also can set keymap
@@ -175,7 +175,7 @@ tym.set_keymaps({
   end,
   ['<Shift>w'] = function()
     tym.notify('W has been pressed')
-    return false -- notification is shown but `W` is not inserted
+    -- notification is shown but `W` is not inserted
   end,
 })
 ```
