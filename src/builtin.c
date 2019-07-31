@@ -464,9 +464,9 @@ static int builtin_color_to_rgba(lua_State* L)
   const char* str = luaL_checkstring(L, -1);
   bool valid = gdk_rgba_parse(&color, str);
   if (valid) {
-    lua_pushinteger(L, round(color.red * 255));
-    lua_pushinteger(L, round(color.green * 255));
-    lua_pushinteger(L, round(color.blue * 255));
+    lua_pushinteger(L, (int)(color.red * 255 + 0.5));
+    lua_pushinteger(L, (int)(color.green * 255 + 0.5));
+    lua_pushinteger(L, (int)(color.blue * 255 + 0.5));
     lua_pushnumber(L, color.alpha);
   } else {
     luaX_warn(L, "Invalid color string: '%s'", str);
