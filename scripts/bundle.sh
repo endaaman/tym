@@ -9,4 +9,5 @@ autoreconf -fvi
 ./configure
 make clean
 make
+make check
 make dist
