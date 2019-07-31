@@ -182,35 +182,41 @@ tym.set_keymaps({
 
 ## Lua API
 
-| Name                                 | Return value | Description                                     |
-| ------------------------------------ | -------------| ----------------------------------------------- |
-| `tym.get(key)`                       | any          | Get config value.                               |
-| `tym.set(key, value)`                | void         | Set config value.                               |
-| `tym.get_config()`                   | table        | Get whole config.                               |
-| `tym.set_config(table)`              | void         | Set config by table.                            |
-| `tym.reset_config()`                 | void         | Reset all config to default (but not apply it)  |
-| `tym.set_keymap(accelerator, func)`  | void         | Set keymap.                                     |
-| `tym.set_keymaps(table)`             | void         | Set keymaps by table.                           |
-| `tym.unset_keymap(accelerator)`      | void         | Unset keymap.                                   |
-| `tym.reset_keymaps()`                | void         | Reset all keymaps.                              |
-| `tym.send_key()`                     | void         | Send key press event.                           |
-| `tym.reload()`                       | void         | Reload config file.                             |
-| `tym.reload_theme()`                 | void         | Reload theme file.                              |
-| `tym.apply()`                        | void         | Apply config to app.                            |
-| `tym.set_timeout(func, interval=0)`  | int(tag)     | Set timeout. return true in func to excute again. |
-| `tym.clear_timeout(tag)`             | void         | Clear the timeout.                              |
-| `tym.put(text)`                      | void         | Feed text.                                      |
-| `tym.bell()`                         | void         | Sound bell.                                     |
-| `tym.notify(message, title='tym')`   | void         | Show desktop notification.                      |
-| `tym.copy()`                         | void         | Copy current selection.                         |
-| `tym.paste()`                        | void         | Paste clipboard clipboard.                      |
-| `tym.increase_font_scale()`          | void         | Increase font scale.                            |
-| `tym.decrease_font_scale()`          | void         | Decrease font scale.                            |
-| `tym.reset_font_scale()`             | void         | Reset font scale.                               |
-| `tym.get_version()`                  | string       | Get version string.                             |
-| `tym.get_monitor_model()`            | string       | Get monitor model on which the window is shown. |
-| `tym.get_config_path()`              | string       | Get full path to config file.                   |
-| `tym.get_theme_path()`               | string       | Get full path to theme file.                    |
+| Name                                 | Return value | Description |
+| ------------------------------------ | ------------ | ----------- |
+| `tym.get(key)`                       | any      | Get config value. |
+| `tym.set(key, value)`                | void     | Set config value. |
+| `tym.get_config()`                   | table    | Get whole config. |
+| `tym.set_config(table)`              | void     | Set config by table. |
+| `tym.reset_config()`                 | void     | Reset all config to default (but not apply it)  |
+| `tym.set_keymap(accelerator, func)`  | void     | Set keymap. |
+| `tym.unset_keymap(accelerator)`      | void     | Unset keymap. |
+| `tym.set_keymaps(table)`             | void     | Set keymaps by table. |
+| `tym.reset_keymaps()`                | void     | Reset all keymaps. |
+| `tym.set_hook(hook_name, func)`      | void     | Set a hook. |
+| `tym.set_hooks(table)`               | void     | Set hooks. |
+| `tym.reload()`                       | void     | Reload config file.|
+| `tym.reload_theme()`                 | void     | Reload theme file. |
+| `tym.apply()`                        | void     | Apply config to app. |
+| `tym.send_key()`                     | void     | Send key press event. |
+| `tym.set_timeout(func, interval=0)`  | int(tag) | Set timeout. return true in func to excute again. |
+| `tym.clear_timeout(tag)`             | void     | Clear the timeout. |
+| `tym.put(text)`                      | void     | Feed text. |
+| `tym.bell()`                         | void     | Sound bell. |
+| `tym.open(uri)`                      | void     | Open URI via your system default app like `xdg-open(1)`. |
+| `tym.notify(message, title='tym')`   | void     | Show desktop notification. |
+| `tym.copy()`                         | void     | Copy current selection. |
+| `tym.paste()`                        | void     | Paste clipboard clipboard. |
+| `tym.increase_font_scale()`          | void     | Increase font scale. |
+| `tym.decrease_font_scale()`          | void     | Decrease font scale. |
+| `tym.reset_font_scale()`             | void     | Reset font scale. |
+| `tym.color_to_rgba(color)`           | r, g, b, a | Convert color string to RGB bytes and alpha float using [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). |
+| `tym.rgba_to_color(r, g, b, a)`      | string   | Convert RGB bytes and alpha float to color string like `rgba(255, 128, 0, 0.5)` available in color option such as `color_background`. |
+| `tym.rgb_to_hex(r, g, b)`            | string   | Convert RGB bytes to 24bit HEX like `#ABCDEF`. |
+| `tym.get_monitor_model()`            | string   | Get monitor model on which the window is shown. |
+| `tym.get_config_path()`              | string   | Get full path to config file. |
+| `tym.get_theme_path()`               | string   | Get full path to theme file. |
+| `tym.get_version()`                  | string   | Get version string. |
 
 ### Hooks
 
@@ -310,7 +316,6 @@ local tym = require('tym')
 
 function update_alpha(delta)
   r, g, b, a = tym.color_to_rgba(tym.get('color_background'))
-  print(tym.rgb_to_hex(r, g, b))
   a = math.max(math.min(1.0, a + delta), 0.0)
   bg = tym.rgba_to_color(r, g, b, a)
   tym.set('color_background', bg)
