@@ -569,9 +569,9 @@ int builtin_register_module(lua_State* L)
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
     { "get_monitor_model"   , builtin_get_monitor_model    },
-    { "get_version"         , builtin_get_version          },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
+    { "get_version"         , builtin_get_version          },
     { NULL, NULL },
   };
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
