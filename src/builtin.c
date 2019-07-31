@@ -234,36 +234,6 @@ static int builtin_reset_keymaps(lua_State* L)
   return 0;
 }
 
-static int builtin_send_key(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  UNUSED(context);
-  const char* accelerator = luaL_checkstring(L, 1);
-  unsigned key;
-  GdkModifierType mod;
-  gtk_accelerator_parse(accelerator, &key, &mod);
-  if (0 == key && 0 == mod) {
-    luaL_error(L, "Invalid accelerator: '%s'", accelerator);
-    return 0;
-  }
-  GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);
-  if (context->device == NULL) {
-    g_warning("Could not get input device.");
-    return 0;
-  }
-  gdk_event_set_device(event, context->device);
-  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
-  event->key.send_event = false;
-  event->key.time = GDK_CURRENT_TIME;
-  event->key.state = mod;
-  event->key.keyval = key;
-  gtk_main_do_event((GdkEvent*)event);
-  event->type = GDK_KEY_RELEASE;
-  gtk_main_do_event((GdkEvent*)event);
-  gdk_event_free((GdkEvent*)event);
-  return 0;
-}
-
 static int builtin_set_hook(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -338,6 +308,36 @@ static int builtin_apply(lua_State* L)
   return 0;
 }
 
+static int builtin_send_key(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  UNUSED(context);
+  const char* accelerator = luaL_checkstring(L, 1);
+  unsigned key;
+  GdkModifierType mod;
+  gtk_accelerator_parse(accelerator, &key, &mod);
+  if (0 == key && 0 == mod) {
+    luaL_error(L, "Invalid accelerator: '%s'", accelerator);
+    return 0;
+  }
+  GdkEvent* event = gdk_event_new(GDK_KEY_PRESS);
+  if (context->device == NULL) {
+    g_warning("Could not get input device.");
+    return 0;
+  }
+  gdk_event_set_device(event, context->device);
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  event->key.send_event = false;
+  event->key.time = GDK_CURRENT_TIME;
+  event->key.state = mod;
+  event->key.keyval = key;
+  gtk_main_do_event((GdkEvent*)event);
+  event->type = GDK_KEY_RELEASE;
+  gtk_main_do_event((GdkEvent*)event);
+  gdk_event_free((GdkEvent*)event);
+  return 0;
+}
+
 typedef struct {
   Context* context;
   int ref;
@@ -387,41 +387,6 @@ static int builtin_clear_timeout(lua_State* L)
   int tag = luaL_checkinteger(L, 1);
   g_source_remove(tag);
   return 0;
-}
-
-static int builtin_get_config_path(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  char* path;
-  context_acquire_config_path(context, &path);
-  lua_pushstring(L, path);
-  g_free(path);
-  return 1;
-}
-
-static int builtin_get_theme_path(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  char* path;
-  context_acquire_theme_path(context, &path);
-  lua_pushstring(L, path);
-  g_free(path);
-  return 1;
-}
-
-static int builtin_get_monitor_model(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  GdkDisplay* display = gdk_display_get_default();
-  GdkMonitor* monitor = gdk_display_get_monitor_at_window(display, context_get_gdk_window(context));
-  lua_pushstring(L, gdk_monitor_get_model(monitor));
-  return 1;
-}
-
-static int builtin_get_version(lua_State* L)
-{
-  lua_pushstring(L, PACKAGE_VERSION);
-  return 1;
 }
 
 static int builtin_put(lua_State* L)
@@ -493,6 +458,41 @@ static int builtin_reset_font_scale(lua_State* L)
   return 0;
 }
 
+static int builtin_get_monitor_model(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  GdkDisplay* display = gdk_display_get_default();
+  GdkMonitor* monitor = gdk_display_get_monitor_at_window(display, context_get_gdk_window(context));
+  lua_pushstring(L, gdk_monitor_get_model(monitor));
+  return 1;
+}
+
+static int builtin_get_version(lua_State* L)
+{
+  lua_pushstring(L, PACKAGE_VERSION);
+  return 1;
+}
+
+static int builtin_get_config_path(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  char* path;
+  context_acquire_config_path(context, &path);
+  lua_pushstring(L, path);
+  g_free(path);
+  return 1;
+}
+
+static int builtin_get_theme_path(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  char* path;
+  context_acquire_theme_path(context, &path);
+  lua_pushstring(L, path);
+  g_free(path);
+  return 1;
+}
+
 int builtin_register_module(lua_State* L)
 {
   const luaL_Reg table[] = {
@@ -502,26 +502,26 @@ int builtin_register_module(lua_State* L)
     { "set_config"          , builtin_set_config           },
     { "reset_config"        , builtin_reset_config         },
     { "set_keymap"          , builtin_set_keymap           },
-    { "set_keymaps"         , builtin_set_keymaps          },
     { "unset_keymap"        , builtin_unset_keymap         },
+    { "set_keymaps"         , builtin_set_keymaps          },
     { "reset_keymaps"       , builtin_reset_keymaps        },
-    { "send_key"            , builtin_send_key             },
     { "set_hook"            , builtin_set_hook             },
     { "set_hooks"           , builtin_set_hooks            },
     { "reload"              , builtin_reload               },
     { "reload_theme"        , builtin_reload_theme         },
     { "apply"               , builtin_apply                },
+    { "send_key"            , builtin_send_key             },
     { "set_timeout"         , builtin_set_timeout          },
     { "clear_timeout"       , builtin_clear_timeout        },
     { "put"                 , builtin_put                  },
     { "bell"                , builtin_bell                 },
     { "open"                , builtin_open                 },
     { "notify"              , builtin_notify               },
+    { "copy"                , builtin_copy                 },
+    { "paste"               , builtin_paste                },
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },
     { "reset_font_scale"    , builtin_reset_font_scale     },
-    { "copy"                , builtin_copy                 },
-    { "paste"               , builtin_paste                },
     { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_version"         , builtin_get_version          },
     { "get_config_path"     , builtin_get_config_path      },
