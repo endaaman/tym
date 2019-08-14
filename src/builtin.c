@@ -501,6 +501,19 @@ static int builtin_rgb_to_hex(lua_State* L)
   return 1;
 }
 
+static int builtin_check_mod(lua_State* L)
+{
+  const char* accelerator = luaL_checkstring(L, 1);
+  unsigned key;
+  GdkModifierType mod;
+  gtk_accelerator_parse(accelerator, &key, &mod);
+  GdkDisplay* display = gdk_display_get_default();
+  GdkKeymap* kmap = gdk_keymap_get_for_display(display);
+  unsigned current_mod = gdk_keymap_get_modifier_state(kmap);
+  lua_pushboolean(L, mod & current_mod);
+  return 1;
+}
+
 static int builtin_get_monitor_model(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -565,6 +578,7 @@ int builtin_register_module(lua_State* L)
     { "increase_font_scale" , builtin_increase_font_scale  },
     { "decrease_font_scale" , builtin_decrease_font_scale  },
     { "reset_font_scale"    , builtin_reset_font_scale     },
+    { "check_mod"           , builtin_check_mod            },
     { "color_to_rgba"       , builtin_color_to_rgba        },
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
