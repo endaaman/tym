@@ -67,6 +67,10 @@ typedef struct {
 } Layout;
 
 typedef struct {
+  bool loading;
+} State;
+
+typedef struct {
   Option* option;
   Config* config;
   Keymap* keymap;
@@ -75,7 +79,7 @@ typedef struct {
   GApplication* app;
   GdkDevice* device;
   lua_State* lua;
-  bool loading;
+  State state;
 } Context;
 
 
@@ -134,9 +138,10 @@ void hook_close(Hook* hook);
 bool hook_set_ref(Hook* hook, const char* key, int ref, int* old_ref);
 bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next_title);
 bool hook_perform_bell(Hook* hook, lua_State* L, bool* result);
+bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result);
+bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_y, double x, double y, bool* result);
 bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
-bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result);
 
 
 // layout

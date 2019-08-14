@@ -88,6 +88,7 @@ bool keymap_remove_entry(Keymap* keymap, const char* accelerator)
 bool keymap_perform(Keymap* keymap, lua_State* L, unsigned key, GdkModifierType mod, bool* result, char** error)
 {
   assert(result);
+  assert(error);
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
     if (key == e->key && mod == e->mod) {

@@ -24,6 +24,17 @@ static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_d
   return false;
 }
 
+static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user_data)
+{
+  UNUSED(widget);
+  Context* context = (Context*)user_data;
+  bool result = false;
+  if (hook_perform_scroll(context->hook, context->lua, e->delta_x, e->delta_y, e->x, e->y, &result)) {
+    return result;
+  }
+  return false;
+}
+
 static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
   UNUSED(vte);
@@ -186,6 +197,7 @@ void on_activate(GApplication* app, void* user_data)
   GtkWindow* window = context_get_window(context);
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
+  g_signal_connect(vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
   g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);

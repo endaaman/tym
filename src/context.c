@@ -176,7 +176,7 @@ void context_load_config(Context* context)
 {
   dd("load config start");
 
-  if (context->loading) {
+  if (context->state.loading) {
     g_message("Tried to load config recursively. Ignoring loading.");
     return;
   }
@@ -189,7 +189,7 @@ void context_load_config(Context* context)
     return;
   }
 
-  context->loading = true;
+  context->state.loading = true;
 
   if (!g_file_test(config_path, G_FILE_TEST_EXISTS)) {
     g_message("Config file (`%s`) does not exist. Skipped config loading.", config_path);
@@ -209,7 +209,7 @@ void context_load_config(Context* context)
   config_override_by_option(context->config, context->option);
 
 EXIT:
-  context->loading = false;
+  context->state.loading = false;
   g_free(config_path);
   dd("load config end");
 }
