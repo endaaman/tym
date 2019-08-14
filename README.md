@@ -210,6 +210,7 @@ tym.set_keymaps({
 | `tym.increase_font_scale()`          | void     | Increase font scale. |
 | `tym.decrease_font_scale()`          | void     | Decrease font scale. |
 | `tym.reset_font_scale()`             | void     | Reset font scale. |
+| `tym.check_mod(accelerator)`         | void     | Check if the mod key is pressed. |
 | `tym.color_to_rgba(color)`           | r, g, b, a | Convert color string to RGB bytes and alpha float using [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). |
 | `tym.rgba_to_color(r, g, b, a)`      | string   | Convert RGB bytes and alpha float to color string like `rgba(255, 128, 0, 0.5)` available in color option such as `color_background`. |
 | `tym.rgb_to_hex(r, g, b)`            | string   | Convert RGB bytes to 24bit HEX like `#ABCDEF`. |
@@ -224,9 +225,10 @@ tym.set_keymaps({
 | --- | --- | --- | --- |
 | `title` | title | changes title | If string is returned, it will be used as the new title. |
 | `bell` | nil | makes the window urgent when it is inactive. | If true is returned, the window will not be urgent. |
+| `clicked` | button | nothing | Triggered when mouse button is pressed. |
+| `scroll` | delta_x, delta_x, mouse_x, mouse_y,  | scroll buffer | Triggered when mouse wheel is scrolled. |
 | `activated` | nil | nothing | Triggered when the window is activated. |
 | `deactivated` | nil | nothing | Triggered when the window is deactivated. |
-| `clicked` | button | nothing | Triggered when mouse button is pressed. |
 
 ```lua
 tym.set_hooks({
@@ -309,7 +311,7 @@ $ ./configure --enable-debug
 <details><summary>Transparent window</summary>
 <div>
 
-You can decrease alpha to press `Ctrl + Shift + Down` and increase alpha to press `Ctrl + Shift + Up`.
+You can increase/decrease window transparency by pressing `Ctrl + Shift + Down` / `Ctrl + Shift + Up` or `Shift` + mouse wheel and increase/decrease font scale by `Ctrl` + mouse wheel.
 
 ```lua
 local tym = require('tym')
@@ -331,6 +333,19 @@ tym.set_keymaps({
     update_alpha(-0.05)
   end,
 })
+
+tym.set_hook('scroll', function(dx, dy, x, y)
+  if tym.check_mod('<Ctrl>') then
+    if dy > 0 then
+      tym.decrease_font_scale()
+    else
+      tym.increase_font_scale()
+    end
+  end
+  if tym.check_mod('<Shift>') then
+    update_alpha(dy < 0 and 0.05 or -0.05)
+  end
+end)
 ```
 
 </div>
