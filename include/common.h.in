@@ -22,8 +22,14 @@
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
-#include "../config.h"
-#include "regex.h"
+#include "../app-config.h"
+
+
+#define TYM_APP_ID "me.endaaman.tym"
+#define TYM_CONFIG_DIR_NAME "tym"
+#define TYM_CONFIG_FILE_NAME "config.lua"
+#define TYM_THEME_FILE_NAME "theme.lua"
+#define TYM_SYMBOL_NONE "NONE"
 
 
 #define UNUSED(x) (void)(x)
@@ -93,6 +99,6 @@ void debug_dump_stack(lua_State* L, char* file, unsigned line);
 #endif
 
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata);
-int luaX_warn (lua_State* L, const char* fmt, ...);
+int luaX_warn(lua_State* L, const char* fmt, ...);
 
 #endif

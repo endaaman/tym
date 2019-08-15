@@ -7,7 +7,7 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "hook.h"
 
 
 #define HOOK_KEY_TITLE "title"

@@ -7,7 +7,9 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "builtin.h"
+#include "context.h"
+#include "command.h"
 
 
 static int builtin_get(lua_State* L)

@@ -7,7 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "option.h"
+#include "config.h"
 
 
 Option* option_init() {

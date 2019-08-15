@@ -7,7 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "app.h"
+#include "context.h"
 
 
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)

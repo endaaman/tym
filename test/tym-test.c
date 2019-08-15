@@ -7,7 +7,7 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "common.h"
+#include "tym.h"
 
 
 int check_match(int anchored, const char* pattern, const char* subject, const char* expected, int invert) {

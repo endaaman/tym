@@ -7,7 +7,10 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "context.h"
+#include "app.h"
+#include "builtin.h"
+#include "command.h"
 
 
 typedef void (*TymCommandFunc)(Context* context);

@@ -12,7 +12,7 @@ AM_INIT_AUTOMAKE([foreign])
 DATE="`date '+%Y-%m-%d'`"
 AC_SUBST(DATE)
 AC_CONFIG_SRCDIR([src/tym.c])
-AC_CONFIG_HEADERS([config.h], [])
+AC_CONFIG_HEADERS([app-config.h], [])
 AC_CONFIG_FILES([
   Makefile
   src/Makefile

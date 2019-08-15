@@ -25,5 +25,6 @@ tym
 tym-test
 include/common.h
 /config.*
+/app-config.*
 tym-*.tar.gz
 test-driver

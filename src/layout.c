@@ -7,7 +7,8 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "layout.h"
+#include "regex.h"
 
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);

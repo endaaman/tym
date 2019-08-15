@@ -1,5 +1,5 @@
 /**
- * regex.c
+ * regex.h
  *
  * IRI regular expression in PCRE2
  * reference: RFC3987 http://www.faqs.org/rfcs/rfc3987.html
@@ -16,7 +16,6 @@
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-
 
 #ifndef REGEX_H
 #define REGEX_H

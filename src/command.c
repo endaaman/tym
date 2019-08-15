@@ -7,7 +7,7 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
-#include "tym.h"
+#include "command.h"
 
 
 void command_reload(Context* context)
