@@ -93,19 +93,13 @@ void context_acquire_theme_path(Context* context, char** ppath)
   g_free(cwd);
 }
 
-static void context_prepare_lua(Context* context)
+static lua_State* context_prepare_lua(Context* context)
 {
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
   lua_pop(L, 1);
-  ///* BACKWARD COMPAT BEGIN
-  lua_newtable(L);
-  lua_setglobal(L, "config");
-  lua_newtable(L);
-  lua_setglobal(L, "keymap");
-  ///* BACKWARD COMPAT END
-  context->lua = L;
+  return L;
 }
 
 Context* context_init()
@@ -122,7 +116,7 @@ Context* context_init()
     TYM_APP_ID,
     G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE)
   );
-  context_prepare_lua(context);
+  context->lua = context_prepare_lua(context);
   return context;
 }
 
