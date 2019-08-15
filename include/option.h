@@ -11,6 +11,7 @@
 #define OPTION_H
 
 #include "common.h"
+#include "meta.h"
 
 typedef struct {
   GOptionEntry* entries;
@@ -21,7 +22,7 @@ typedef struct {
 } Option;
 
 
-Option* option_init();
+Option* option_init(Meta* meta);
 void option_close(Option* option);
 void option_set_values(Option* option, GVariantDict* values);
 int option_process(Option* option);

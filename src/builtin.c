@@ -17,21 +17,21 @@ static int builtin_get(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
 
   const char* key = luaL_checkstring(L, 1);
-  ConfigField* field = get_config_field(key);
-  if (!field) {
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (!e) {
     luaX_warn(L, "Invalid config key: '%s'", key);
     lua_pushnil(L);
     return 1;
   }
 
-  switch (field->type) {
-    case CONFIG_TYPE_STRING:
+  switch (e->type) {
+    case META_ENTRY_TYPE_STRING:
       lua_pushstring(L, config_get_str(context->config, key));
       break;
-    case CONFIG_TYPE_INTEGER:
+    case META_ENTRY_TYPE_INTEGER:
       lua_pushinteger(L, config_get_int(context->config, key));
       break;
-    case CONFIG_TYPE_BOOLEAN:
+    case META_ENTRY_TYPE_BOOLEAN:
       lua_pushboolean(L, config_get_bool(context->config, key));
       break;
     default:
@@ -47,15 +47,15 @@ static int builtin_set(lua_State* L)
 
   const char* key = luaL_checkstring(L, 1);
 
-  ConfigField* field = get_config_field(key);
-  if (!field) {
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (!e) {
     luaX_warn(L, "Invalid config key: '%s'", key);
     return 0;
   }
 
   int type = lua_type(L, 2);
-  switch (field->type) {
-    case CONFIG_TYPE_STRING: {
+  switch (e->type) {
+    case META_ENTRY_TYPE_STRING: {
       const char* value = lua_tostring(L, 2);
       if (!value) {
         luaX_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
@@ -64,7 +64,7 @@ static int builtin_set(lua_State* L)
       config_set_str(context->config, key, value);
       break;
     }
-    case CONFIG_TYPE_INTEGER: {
+    case META_ENTRY_TYPE_INTEGER: {
       if (type != LUA_TNUMBER) {
         luaX_warn(L, "Invalid integer config for '%s': %s (number expected, got %s)", key, lua_tostring(L, 2), lua_typename(L, type));
         break;
@@ -73,7 +73,7 @@ static int builtin_set(lua_State* L)
       config_set_int(context->config, key, value);
       break;
     }
-    case CONFIG_TYPE_BOOLEAN: {
+    case META_ENTRY_TYPE_BOOLEAN: {
       int value = lua_toboolean(L, 2);
       config_set_bool(context->config, key, value);
       break;
@@ -90,26 +90,26 @@ static int builtin_get_config(lua_State* L)
 
   lua_newtable(L);
 
-  GHashTableIter iter;
+  MetaIter iter = {};
   char* key = NULL;
-  ConfigField* field = NULL;
-  g_hash_table_iter_init(&iter, get_config_fields());
-  while (g_hash_table_iter_next(&iter, (void*)&key, (void*)&field)) {
-    char* key = field->name;
+  MetaEntry* e = NULL;
+  meta_iter_init(&iter, context->meta);
+  while (meta_iter_next(&iter, &key, &e)) {
+    char* key = e->name;
     lua_pushstring(L, key);
-    switch (field->type) {
-      case CONFIG_TYPE_STRING: {
+    switch (e->type) {
+      case META_ENTRY_TYPE_STRING: {
         const char* value = config_get_str(context->config, key);
         lua_pushstring(L, value);
         break;
       }
-      case CONFIG_TYPE_INTEGER:
+      case META_ENTRY_TYPE_INTEGER:
         lua_pushinteger(L, config_get_int(context->config, key));
         break;
-      case CONFIG_TYPE_BOOLEAN:
+      case META_ENTRY_TYPE_BOOLEAN:
         lua_pushboolean(L, config_get_bool(context->config, key));
         break;
-      case CONFIG_TYPE_NONE:
+      case META_ENTRY_TYPE_NONE:
         lua_pop(L, 1);
         continue;
     }
@@ -128,11 +128,11 @@ static int builtin_set_config(lua_State* L)
   while (lua_next(L, -2)) {
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
-    ConfigField* field = get_config_field(key);
-    if (field) {
+    MetaEntry* e = meta_get_entry(context->meta, key);
+    if (e) {
       int type = lua_type(L, -2);
-      switch (field->type) {
-        case CONFIG_TYPE_STRING: {
+      switch (e->type) {
+        case META_ENTRY_TYPE_STRING: {
           const char* value = lua_tostring(L, -2);
           if (!value) {
             luaX_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
@@ -141,7 +141,7 @@ static int builtin_set_config(lua_State* L)
           config_set_str(context->config, key, value);
           break;
         }
-        case CONFIG_TYPE_INTEGER: {
+        case META_ENTRY_TYPE_INTEGER: {
           if (type != LUA_TNUMBER) {
             luaX_warn(L, "Invalid integer config for '%s': %s (number expected, got %s)", key, lua_tostring(L, -2), lua_typename(L, type));
             break;
@@ -150,7 +150,7 @@ static int builtin_set_config(lua_State* L)
           config_set_int(context->config, key, value);
           break;
         }
-        case CONFIG_TYPE_BOOLEAN: {
+        case META_ENTRY_TYPE_BOOLEAN: {
           int value = lua_toboolean(L, -2);
           config_set_bool(context->config, key, value);
           break;

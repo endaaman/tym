@@ -35,12 +35,12 @@ static KeyPair DEFAULT_KEY_PAIRS[] = {
   { GDK_KEY_c    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
   { GDK_KEY_v    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
   { GDK_KEY_r    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
-  { 0            , 0                                , NULL                        },
+  {},
 };
 
 static SignalDefinition SIGNALS[] = {
   { "ReloadTheme", command_reload_theme },
-  { NULL, NULL },
+  {},
 };
 
 void context_acquire_config_path(Context* context, char** ppath)
@@ -112,8 +112,9 @@ Context* context_init()
 {
   dd("init");
   Context* context = g_malloc0(sizeof(Context));
-  context->option = option_init();
-  context->config = config_init();
+  context->meta = meta_init();
+  context->option = option_init(context->meta);
+  context->config = config_init(context->meta);
   context->keymap = keymap_init();
   context->hook = hook_init();
   context->layout = layout_init();
@@ -128,6 +129,7 @@ Context* context_init()
 void context_close(Context* context)
 {
   dd("close");
+  meta_close(context->meta);
   option_close(context->option);
   config_close(context->config);
   keymap_close(context->keymap);

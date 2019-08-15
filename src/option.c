@@ -8,13 +8,14 @@
  */
 
 #include "option.h"
-#include "config.h"
+#include "meta.h"
 
 
-Option* option_init() {
+Option* option_init(Meta* meta)
+{
   Option* option = g_malloc0(sizeof(Option));
   const unsigned offset_option = 3;
-  GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), get_config_fields_count() + offset_option + 1);
+  GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), meta_size(meta) + offset_option + 1);
 
   ee[0].long_name = "version";
   ee[0].short_name = 'v';
@@ -42,27 +43,27 @@ Option* option_init() {
 
   unsigned i = offset_option;
 
-  GList* fields = get_config_fields_as_list(true);
-  for (GList* li = fields; li != NULL; li = li->next) {
-    ConfigField* field = (ConfigField*)li->data;
+  GList* mee = meta_as_list(meta, true);
+  for (GList* li = mee; li != NULL; li = li->next) {
+    MetaEntry* me = (MetaEntry*)li->data;
     GOptionEntry* e = &ee[i];
     i += 1;
-    e->long_name = field->name;
-    e->short_name = field->short_name;
-    e->flags = field->option_flag;
-    e->arg_description = field->arg_desc;
-    e->description = field->desc;
-    switch (field->type) {
-      case CONFIG_TYPE_STRING:
+    e->long_name = me->name;
+    e->short_name = me->short_name;
+    e->flags = me->option_flag;
+    e->arg_description = me->arg_desc;
+    e->description = me->desc;
+    switch (me->type) {
+      case META_ENTRY_TYPE_STRING:
         e->arg = G_OPTION_ARG_STRING;
         break;
-      case CONFIG_TYPE_INTEGER:
+      case META_ENTRY_TYPE_INTEGER:
         e->arg = G_OPTION_ARG_INT;
         break;
-      case CONFIG_TYPE_BOOLEAN:
+      case META_ENTRY_TYPE_BOOLEAN:
         e->arg = G_OPTION_ARG_NONE;
         break;
-      case CONFIG_TYPE_NONE:;
+      case META_ENTRY_TYPE_NONE:;
         break;
     }
   }

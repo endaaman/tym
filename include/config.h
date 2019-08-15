@@ -12,36 +12,16 @@
 
 #include "common.h"
 #include "option.h"
+#include "meta.h"
 
-
-typedef enum {
-  CONFIG_TYPE_STRING = 0,
-  CONFIG_TYPE_INTEGER = 1,
-  CONFIG_TYPE_BOOLEAN = 2,
-  CONFIG_TYPE_NONE = 3, // not actual, only shown in help
-} ConfigType;
 
 typedef struct {
-  char* name;
-  char short_name;
-  ConfigType type;
-  GOptionFlags option_flag;
-  void* default_value;
-  char* arg_desc;
-  char* desc;
-  unsigned index;
-} ConfigField;
-
-typedef struct {
+  Meta* meta;
   GHashTable* data;
 } Config;
 
 
-GHashTable* get_config_fields();
-GList* get_config_fields_as_list(bool sorted);
-unsigned get_config_fields_count();
-ConfigField* get_config_field(const char* key);
-Config* config_init();
+Config* config_init(Meta* meta);
 void config_close(Config* config);
 void config_reset(Config* config);
 bool config_has_str(Config* config, const char* key);

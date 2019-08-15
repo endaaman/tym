@@ -8,6 +8,7 @@ noinst_HEADERS = \
 	hook.h \
 	keymap.h \
 	layout.h \
+	meta.h \
 	option.h \
 	regex.h \
 	tym.h

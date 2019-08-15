@@ -23,6 +23,7 @@ typedef struct {
 } State;
 
 typedef struct {
+  Meta* meta;
   Option* option;
   Config* config;
   Keymap* keymap;

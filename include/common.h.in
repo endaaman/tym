@@ -31,6 +31,15 @@
 #define TYM_THEME_FILE_NAME "theme.lua"
 #define TYM_SYMBOL_NONE "NONE"
 
+#define TYM_CURSOR_SHAPE_BLOCK "block"
+#define TYM_CURSOR_SHAPE_IBEAM "ibeam"
+#define TYM_CURSOR_SHAPE_UNDERLINE "underline"
+#define TYM_CURSOR_BLINK_MODE_SYSTEM "system"
+#define TYM_CURSOR_BLINK_MODE_ON "on"
+#define TYM_CURSOR_BLINK_MODE_OFF "off"
+#define TYM_CJK_WIDTH_NARROW "narrow"
+#define TYM_CJK_WIDTH_WIDE "wide"
+
 
 #define UNUSED(x) (void)(x)
 #define BUILD_DATE "@DATE@"
