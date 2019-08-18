@@ -180,15 +180,15 @@ void context_load_config(Context* context)
     return;
   }
 
+  context->state.loading = true;
+
   char* config_path = NULL;
   context_acquire_config_path(context, &config_path);
   dd("config path: `%s`", config_path);
   if (!config_path) {
     g_message("Skipped config loading.");
-    return;
+    goto EXIT;
   }
-
-  context->state.loading = true;
 
   if (!g_file_test(config_path, G_FILE_TEST_EXISTS)) {
     g_message("Config file (`%s`) does not exist. Skipped config loading.", config_path);
@@ -205,11 +205,13 @@ void context_load_config(Context* context)
   }
 
   dd("load option to config");
-  config_override_by_option(context->config, context->option);
 
 EXIT:
   context->state.loading = false;
-  g_free(config_path);
+  config_override_by_option(context->config, context->option);
+  if (config_path) {
+    g_free(config_path);
+  }
   dd("load config end");
 }
 

@@ -211,6 +211,7 @@ void config_reset(Config* config)
 
 void config_override_by_option(Config* config, Option* option)
 {
+  df();
   if (!option->values) {
     dd("option->values is NULL.");
     return;
