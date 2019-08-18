@@ -14,7 +14,7 @@
 Option* option_init(Meta* meta)
 {
   Option* option = g_malloc0(sizeof(Option));
-  const unsigned offset_option = 3;
+  const unsigned offset_option = 4;
   GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), meta_size(meta) + offset_option + 1);
 
   ee[0].long_name = "version";
@@ -41,9 +41,15 @@ Option* option_init(Meta* meta)
   ee[2].description = "Signal to send via D-Bus.";
   ee[2].arg_description = "<signal>";
 
+  ee[3].long_name = "nolua";
+  ee[3].flags = G_OPTION_FLAG_NONE;
+  ee[3].arg = G_OPTION_ARG_NONE;
+  ee[3].arg_data = &option->nolua;
+  ee[3].description = "Disable to create Lua context.";
+
   unsigned i = offset_option;
 
-  GList* mee = meta_as_list(meta, true);
+  GList* mee = meta->list;
   for (GList* li = mee; li != NULL; li = li->next) {
     MetaEntry* me = (MetaEntry*)li->data;
     GOptionEntry* e = &ee[i];
@@ -72,7 +78,8 @@ Option* option_init(Meta* meta)
   return option;
 }
 
-void option_close(Option* option) {
+void option_close(Option* option)
+{
   if (option->values) {
     g_variant_dict_unref(option->values);
   }
@@ -80,14 +87,16 @@ void option_close(Option* option) {
   g_free(option);
 }
 
-void option_set_values(Option* option, GVariantDict* values) {
+void option_set_values(Option* option, GVariantDict* values)
+{
   if (option->values) {
     g_variant_dict_unref(option->values);
   }
   option->values = g_variant_dict_ref(values);
 }
 
-bool option_get_str_value(Option* option, const char* key, char** value) {
+bool option_get_str_value(Option* option, const char* key, const char** value)
+{
   char* v;
   bool has_value = g_variant_dict_lookup(option->values, key, "s", &v);
   if (has_value) {
@@ -96,7 +105,8 @@ bool option_get_str_value(Option* option, const char* key, char** value) {
   return has_value;
 }
 
-bool option_get_int_value(Option* option, const char* key, int* value) {
+bool option_get_int_value(Option* option, const char* key, int* value)
+{
   int v;
   bool has_value = g_variant_dict_lookup(option->values, key, "i", &v);
   if (has_value) {
@@ -105,7 +115,8 @@ bool option_get_int_value(Option* option, const char* key, int* value) {
   return has_value;
 }
 
-bool option_get_bool_value(Option* option, const char* key, bool* value) {
+bool option_get_bool_value(Option* option, const char* key, bool* value)
+{
   gboolean v;
   bool has_value = g_variant_dict_lookup(option->values, key, "b", &v);
   if (has_value) {
@@ -114,14 +125,22 @@ bool option_get_bool_value(Option* option, const char* key, bool* value) {
   return has_value;
 }
 
-bool option_get_version(Option* option) {
+bool option_get_version(Option* option)
+{
   return option->version;
 }
 
-char* option_get_config_path(Option* option) {
+char* option_get_config_path(Option* option)
+{
   return option->config_path;
 }
 
-char* option_get_signal(Option* option) {
+char* option_get_signal(Option* option)
+{
   return option->signal;
+}
+
+bool option_get_nolua(Option* option)
+{
+  return option->nolua;
 }

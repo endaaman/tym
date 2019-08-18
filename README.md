@@ -141,9 +141,6 @@ color_15 : white
 | Ctrl Shift c    | Copy selection to clipboard. |
 | Ctrl Shift v    | Paste from clipboard.        |
 | Ctrl Shift r    | Reload config file.          |
-| Ctrl +          | Increase font scale,         |
-| Ctrl -          | Decrease font scale.         |
-| Ctrl =          | Reset font scale.            |
 
 ### Customizing keymap
 
@@ -154,7 +151,6 @@ You can register keymap(s) by `tym.set_keymap(accelerator, func)` or `tym.set_ke
 tym.set_keymap('<Ctrl><Shift>o', function()
   local h = tym.get('height')
   tym.set('height', h + 1)
-  tym.apply() -- needed for applying config value
   tym.notify('Set window height :' .. h)
 end)
 
@@ -197,7 +193,6 @@ tym.set_keymaps({
 | `tym.set_hooks(table)`               | void     | Set hooks. |
 | `tym.reload()`                       | void     | Reload config file.|
 | `tym.reload_theme()`                 | void     | Reload theme file. |
-| `tym.apply()`                        | void     | Apply config to app. |
 | `tym.send_key()`                     | void     | Send key press event. |
 | `tym.set_timeout(func, interval=0)`  | int(tag) | Set timeout. return true in func to excute again. |
 | `tym.clear_timeout(tag)`             | void     | Clear the timeout. |
@@ -207,9 +202,6 @@ tym.set_keymaps({
 | `tym.notify(message, title='tym')`   | void     | Show desktop notification. |
 | `tym.copy()`                         | void     | Copy current selection. |
 | `tym.paste()`                        | void     | Paste clipboard clipboard. |
-| `tym.increase_font_scale()`          | void     | Increase font scale. |
-| `tym.decrease_font_scale()`          | void     | Decrease font scale. |
-| `tym.reset_font_scale()`             | void     | Reset font scale. |
 | `tym.check_mod(accelerator)`         | void     | Check if the mod key is pressed. |
 | `tym.color_to_rgba(color)`           | r, g, b, a | Convert color string to RGB bytes and alpha float using [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). |
 | `tym.rgba_to_color(r, g, b, a)`      | string   | Convert RGB bytes and alpha float to color string like `rgba(255, 128, 0, 0.5)` available in color option such as `color_background`. |
@@ -308,7 +300,7 @@ $ ./configure --enable-debug
 
 ## Tips
 
-<details><summary>Transparent window</summary>
+<details><summary>Scroll mouse wheel to set window transparency/font scale</summary>
 <div>
 
 You can increase/decrease window transparency by pressing `Ctrl + Shift + Down` / `Ctrl + Shift + Up` or `Shift` + mouse wheel and increase/decrease font scale by `Ctrl` + mouse wheel.
@@ -322,7 +314,6 @@ function update_alpha(delta)
   bg = tym.rgba_to_color(r, g, b, a)
   tym.set('color_background', bg)
   tym.notify(string.format('%s alpha to %f', (delta > 0 and 'Inc' or 'Dec'), a))
-  tym.apply()
 end
 
 tym.set_keymaps({
@@ -337,10 +328,12 @@ tym.set_keymaps({
 tym.set_hook('scroll', function(dx, dy, x, y)
   if tym.check_mod('<Ctrl>') then
     if dy > 0 then
-      tym.decrease_font_scale()
+      s = tym.get('scale') - 10
     else
-      tym.increase_font_scale()
+      s =tym.get('scale') + 10
     end
+    tym.set('scale', s)
+    tym.notify('set scale: ' .. s .. '%')
   end
   if tym.check_mod('<Shift>') then
     update_alpha(dy < 0 and 0.05 or -0.05)

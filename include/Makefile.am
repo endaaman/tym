@@ -10,5 +10,6 @@ noinst_HEADERS = \
 	layout.h \
 	meta.h \
 	option.h \
+	property.h \
 	regex.h \
 	tym.h

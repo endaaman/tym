@@ -24,12 +24,16 @@
 
 #include "../app-config.h"
 
+#define __PRE_IDENTITY(x) #x
+#define __IDENTITY(x) __PRE_IDENTITY(x)
+#define TYM_VTE_VERSION __IDENTITY(VTE_MAJOR_VERSION) "." __IDENTITY(VTE_MINOR_VERSION) "." __IDENTITY(VTE_MICRO_VERSION)
 
 #define TYM_APP_ID "me.endaaman.tym"
 #define TYM_CONFIG_DIR_NAME "tym"
 #define TYM_CONFIG_FILE_NAME "config.lua"
 #define TYM_THEME_FILE_NAME "theme.lua"
 #define TYM_SYMBOL_NONE "NONE"
+#define TYM_FALL_BACK_SHELL "/bin/sh"
 
 #define TYM_CURSOR_SHAPE_BLOCK "block"
 #define TYM_CURSOR_SHAPE_IBEAM "ibeam"
@@ -40,6 +44,36 @@
 #define TYM_CJK_WIDTH_NARROW "narrow"
 #define TYM_CJK_WIDTH_WIDE "wide"
 
+#define TYM_DEFAULT_TITLE "tym"
+#define TYM_DEFAULT_ICON "utilities-terminal"
+#define TYM_DEFAULT_TERM "xterm-256color"
+#define TYM_DEFAULT_CURSOR_SHAPE TYM_CURSOR_SHAPE_BLOCK
+#define TYM_DEFAULT_CURSOR_BLINK_MODE TYM_CURSOR_BLINK_MODE_SYSTEM
+#define TYM_DEFAULT_CJK TYM_CJK_WIDTH_NARROW
+static const int TYM_DEFAULT_WIDTH = 80;
+static const int TYM_DEFAULT_HEIGHT = 22;
+static const int TYM_DEFAULT_SCALE = 100;
+static const int TYM_DEFAULT_SCROLLBACK = 512;
+
+// theme: iceberg (https://cocopon.github.io/iceberg.vim/)
+#define TYM_DEFAULT_COLOR_0  "#161821"
+#define TYM_DEFAULT_COLOR_1  "#e27878"
+#define TYM_DEFAULT_COLOR_2  "#b4be82"
+#define TYM_DEFAULT_COLOR_3  "#e2a478"
+#define TYM_DEFAULT_COLOR_4  "#84a0c6"
+#define TYM_DEFAULT_COLOR_5  "#a093c7"
+#define TYM_DEFAULT_COLOR_6  "#89b8c2"
+#define TYM_DEFAULT_COLOR_7  "#c6c8d1"
+#define TYM_DEFAULT_COLOR_8  "#6b7089"
+#define TYM_DEFAULT_COLOR_9  "#e98989"
+#define TYM_DEFAULT_COLOR_10 "#c0ca8e"
+#define TYM_DEFAULT_COLOR_11 "#e9b189"
+#define TYM_DEFAULT_COLOR_12 "#91acd1"
+#define TYM_DEFAULT_COLOR_13 "#ada0d3"
+#define TYM_DEFAULT_COLOR_14 "#95c4ce"
+#define TYM_DEFAULT_COLOR_15 "#d2d4de"
+#define TYM_DEFAULT_COLOR_BACKGROUND TYM_DEFAULT_COLOR_0
+#define TYM_DEFAULT_COLOR_FOREGROUND TYM_DEFAULT_COLOR_15
 
 #define UNUSED(x) (void)(x)
 #define BUILD_DATE "@DATE@"
@@ -53,6 +87,7 @@
 /* Switch to old api */
 /* #define TYM_USE_OLD_API */
 
+/* START: TYM_USE_OLD_VTE */
 #ifndef TYM_USE_OLD_API
 #if GDK_MAJOR_VERSION == 3
 #if GDK_MINOR_VERSION >= 20
@@ -83,30 +118,38 @@
 #define TYM_USE_TRANSPARENT
 #endif
 #endif
-#endif /* TYM_USE_OLD_VTE */
+#endif
+/* END: TYM_USE_OLD_VTE */
 
+/* START: DEBUG */
 #ifdef DEBUG
 #define dd( fmt, ... ) \
-  g_print("[%-10s:%3u] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-#else
-#define dd( ... ) ((void)0)
-#endif
+  g_print("[%-10s:%3u I] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
-#ifdef DEBUG
+#define dw( fmt, ... ) \
+  g_print("[%-10s:%3u W] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+
 #define df( fmt, ... ) \
-  g_print("[%-10s:%3u] %s()\n", __FILE__, __LINE__, __func__)
-#else
-#define df( ... ) ((void)0)
-#endif
+  g_print("[%-10s:%3u F] %s()\n", __FILE__, __LINE__, __func__)
 
-#ifdef DEBUG
 void debug_dump_stack(lua_State* L, char* file, unsigned line);
 #define ds(lua_state) \
   debug_dump_stack((lua_state), __FILE__, __LINE__)
-#else
-#define ds(...) ((void)0)
-#endif
 
+#else /* ELSE: DEBUG */
+
+#define dd(...) ((void)0)
+#define dw(...) ((void)0)
+#define df(...) ((void)0)
+#define ds(...) ((void)0)
+
+#endif
+/* END: DEBUG */
+
+int roundup(double x);
+bool is_equal(const char* a, const char* b);
+bool is_none(const char* s);
+bool is_empty(const char* s);
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata);
 int luaX_warn(lua_State* L, const char* fmt, ...);
 

@@ -31,13 +31,11 @@ Keymap* keymap_init()
   Keymap* keymap = g_malloc0(sizeof(Keymap));
   keymap->entries = NULL;
 
-  keymap_reset(keymap);
   return keymap;
 }
 
 void keymap_reset(Keymap* keymap)
 {
-  df();
   g_list_foreach(keymap->entries, (GFunc)free_keymap_entry, NULL);
   g_list_free(keymap->entries);
   keymap->entries = NULL;

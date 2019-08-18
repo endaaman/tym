@@ -104,24 +104,21 @@ static bool hook_perform(Hook* hook, lua_State* L, const char* key, int narg, in
   return true;
 }
 
-bool hook_perform_title(Hook* hook, lua_State* L, const char* title, char** next_title)
+bool hook_perform_title(Hook* hook, lua_State* L, const char* title)
 {
-  lua_pushstring(L, title);
-  bool result = hook_perform(hook, L, HOOK_KEY_TITLE, 1, 1);
-  if (!result) {
+  if (!L) {
     return false;
   }
-  const char* t = lua_tostring(L, -1);
-  lua_pop(L, 1);
-  if (next_title) {
-    *next_title = t ? g_strdup(t) : NULL;
-  }
-  return true;
+  lua_pushstring(L, title);
+  return hook_perform(hook, L, HOOK_KEY_TITLE, 1, 0);
 }
 
 bool hook_perform_bell(Hook* hook, lua_State* L, bool* result)
 {
   assert(result);
+  if (!L) {
+    return false;
+  }
   bool succeeded = hook_perform(hook, L, HOOK_KEY_BELL, 0, 1);
   if (!succeeded) {
     return false;
@@ -134,6 +131,9 @@ bool hook_perform_bell(Hook* hook, lua_State* L, bool* result)
 bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result)
 {
   assert(result);
+  if (!L) {
+    return false;
+  }
   lua_pushinteger(L, button);
   lua_pushstring(L, uri);
   bool succeeded = hook_perform(hook, L, HOOK_KEY_CLICKED, 2, 1);
@@ -148,6 +148,9 @@ bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri,
 bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_y, double x, double y, bool* result)
 {
   assert(result);
+  if (!L) {
+    return false;
+  }
   lua_pushnumber(L, delta_x);
   lua_pushnumber(L, delta_y);
   lua_pushnumber(L, x);
@@ -163,11 +166,17 @@ bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_
 
 bool hook_perform_activated(Hook* hook, lua_State* L)
 {
+  if (!L) {
+    return false;
+  }
   return hook_perform(hook, L, HOOK_KEY_ACTIVATED, 0, 0);
 }
 
 bool hook_perform_deactivated(Hook* hook, lua_State* L)
 {
+  if (!L) {
+    return false;
+  }
   return hook_perform(hook, L, HOOK_KEY_DEACTIVATED, 0, 0);
 }
 

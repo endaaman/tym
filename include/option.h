@@ -16,6 +16,7 @@
 typedef struct {
   GOptionEntry* entries;
   bool version;
+  bool nolua;
   char* config_path;
   char* signal;
   GVariantDict* values;
@@ -26,11 +27,12 @@ Option* option_init(Meta* meta);
 void option_close(Option* option);
 void option_set_values(Option* option, GVariantDict* values);
 int option_process(Option* option);
-bool option_get_str_value(Option* option, const char* key, char** value);
+bool option_get_str_value(Option* option, const char* key, const char** value);
 bool option_get_int_value(Option* option, const char* key, int* value);
 bool option_get_bool_value(Option* option, const char* key, bool* value);
 bool option_get_version(Option* option);
 char* option_get_config_path(Option* option);
 char* option_get_signal(Option* option);
+bool option_get_nolua(Option* option);
 
 #endif

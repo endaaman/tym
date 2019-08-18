@@ -12,6 +12,7 @@ tym_SOURCES = \
 	layout.c \
 	meta.c \
 	option.c \
+	property.c \
 	tym.c
 tym_LDADD = $(TYM_LIBS)
 tym_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS)

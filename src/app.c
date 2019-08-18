@@ -11,6 +11,12 @@
 #include "context.h"
 
 
+
+static void on_resize(VteTerminal *vte, unsigned width, unsigned height, void* user_data)
+{
+  dd("resize %d %d", width, height);
+}
+
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
   UNUSED(widget);
@@ -48,15 +54,10 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
   UNUSED(vte);
   Context* context = (Context*)user_data;
-  GtkWindow* window = context_get_window(context);
-  const char* title = vte_terminal_get_window_title(context_get_vte(context));
-  char* next_title = NULL;
-  if (hook_perform_title(context->hook, context->lua, title, &next_title)) {
-    if (next_title) {
-      gtk_window_set_title(window, next_title);
-      g_free(next_title);
-      return;
-    }
+  GtkWindow* window = context->layout->window;
+  const char* title = vte_terminal_get_window_title(context->layout->vte);
+  if (hook_perform_title(context->hook, context->lua, title)) {
+    return;
   }
   if (title) {
     gtk_window_set_title(window, title);
@@ -71,7 +72,7 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
     return;
   }
-  GtkWindow* window = context_get_window(context);
+  GtkWindow* window = context->layout->window;
   if (!gtk_window_is_active(window)) {
     gtk_window_set_urgency_hint(window, true);
   }
@@ -81,7 +82,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 {
   Context* context = (Context*)user_data;
   char* uri = NULL;
-  int* uri_tag = context_get_uri_tag(context);
+  int* uri_tag = context->layout->uri_tag;
   if (uri_tag) {
     uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, uri_tag);
   }
@@ -102,6 +103,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   UNUSED(vte);
   UNUSED(pid);
   Context* context = (Context*)user_data;
+  context->state.initializing = false;
   if (error) {
     g_error("%s", error->message);
     g_application_quit(context->app);
@@ -127,6 +129,26 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
 
   Context* context = (Context*)user_data;
   hook_perform_deactivated(context->hook, context->lua);
+  return false;
+}
+
+static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
+{
+  Context* context = (Context*)user_data;
+  const char* value = context_get_str(context, "color_window_background");
+  if (is_none(value)) {
+    return false;
+  }
+  GdkRGBA color = {};
+  if (gdk_rgba_parse(&color, value)) {
+    if (context->layout->alpha_supported) {
+      cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+    } else {
+      cairo_set_source_rgb(cr, color.red, color.green, color.blue);
+    }
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint(cr);
+  }
   return false;
 }
 
@@ -189,13 +211,17 @@ void on_activate(GApplication* app, void* user_data)
   }
 
   Context* context = (Context*)user_data;
+  context_load_device(context);
+  context_load_lua_context(context);
+
+  layout_build(context->layout, app);
+  context_restore_default(context);
   context_load_config(context);
   context_load_theme(context);
-  context_load_device(context);
-  context_build_layout(context);
+  context_override_by_option(context);
 
-  VteTerminal* vte = context_get_vte(context);
-  GtkWindow* window = context_get_window(context);
+  VteTerminal* vte = context->layout->vte;
+  GtkWindow* window = context->layout->window;
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll), context);
@@ -203,8 +229,10 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
   g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
+  g_signal_connect(vte, "resize-window", G_CALLBACK(on_resize), context);
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
+  g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
   const char* path = g_application_get_dbus_object_path(app);
   dd("DBus is active: %s", path);
@@ -221,11 +249,9 @@ void on_activate(GApplication* app, void* user_data)
     context,
     NULL        // user data free func
   );
-  context_apply_config(context);
-  context_apply_theme(context);
 
   char** argv;
-  char* line = config_get_str(context->config, "shell");
+  const char* line = context_get_str(context, "shell");
   g_shell_parse_argv(line, NULL, &argv, &error);
   if (error) {
     g_error("%s", error->message);
@@ -234,7 +260,7 @@ void on_activate(GApplication* app, void* user_data)
     return;
   }
   char** env = g_get_environ();
-  env = g_environ_setenv(env, "TERM", config_get_str(context->config, "term"), true);
+  env = g_environ_setenv(env, "TERM", context_get_str(context, "term"), true);
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
   vte_terminal_spawn_async(

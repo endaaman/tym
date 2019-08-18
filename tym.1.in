@@ -184,9 +184,6 @@ Key	Action
 \fBCtrl\fR+\fBShift\fR+\fBc\fR	Copy selection to clipboard
 \fBCtrl\fR+\fBShift\fR+\fBv\fR	Paste from clipboard
 \fBCtrl\fR+\fBShift\fR+\fBr\fR	Reload config file
-\fBCtrl\fR+\fB+\fR	Increase font scale
-\fBCtrl\fR+\fB-\fR	Decrease font scale
-\fBCtrl\fR+\fB=\fR	Reset font scale
 .TE
 
 .SH CONFIGURATION
@@ -307,21 +304,6 @@ Copy current selection.
 Returns:	\fBvoid\fR
 .fi
 Paste clipboard.
-
-.IP \fBtym.increase_font_scale()\fR
-Returns:	\fBvoid\fR
-.fi
-Increase font scale.
-
-.IP \fBtym.decrease_font_scale()\fR
-Returns:	\fBvoid\fR
-.fi
-Decrease font scale.
-
-.IP \fBtym.reset_font_scale()\fR
-Returns:	\fBvoid\fR
-.fi
-Reset font scale.
 
 .IP \fBtym.get_version()\fR
 Returns:	\fBstring\fR

@@ -2,10 +2,11 @@
 if DEBUG
 ENV_OPT=-g3 -O0
 else
-ENV_OPT=-O3
+ENV_OPT=-O3 -mtune=native -march=native -mfpmath=both
 endif
 
 COMMON_CFLAGS = \
+	$(ENV_OPT) \
 	-std=c11 \
 	-Wall \
 	-Wextra \
@@ -23,4 +24,3 @@ COMMON_CFLAGS = \
 	-Wredundant-decls \
 	-Winline \
 	-I$(top_srcdir)/include
-	$(ENV_OPT)

@@ -11,7 +11,8 @@
 #include "regex.h"
 
 
-int check_match(int anchored, const char* pattern, const char* subject, const char* expected, int invert) {
+int check_match(int anchored, const char* pattern, const char* subject, const char* expected, int invert)
+{
   if (expected == NULL) expected = subject;
 
   int errorcode;
@@ -88,7 +89,8 @@ int check_match(int anchored, const char* pattern, const char* subject, const ch
   pcre2_code_free(code);
 }
 
-void test_regex() {
+void test_regex()
+{
   printf("Testing HOST\n");
   assert(check_match(1, SCHEME , "http"    , NULL , 0));
   assert(check_match(1, SCHEME , "HTTP"    , NULL , 0));
@@ -160,7 +162,8 @@ void test_regex() {
   printf("regex tests complete!\n");
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   UNUSED(argc);
   UNUSED(argv);
   test_regex();

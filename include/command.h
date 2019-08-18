@@ -18,8 +18,5 @@ void command_reload(Context* context);
 void command_reload_theme(Context* context);
 void command_copy_clipboard(Context* context);
 void command_paste_clipboard(Context* context);
-void command_increase_font_scale(Context* context);
-void command_decrease_font_scale(Context* context);
-void command_reset_font_scale(Context* context);
 
 #endif

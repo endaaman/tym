@@ -26,8 +26,6 @@ typedef struct {
 
 Layout* layout_init();
 void layout_close(Layout* layout);
-void layout_build(Layout* layout, GApplication* app, Config* config);
-void layout_apply_theme(Layout* layout, Config* config);
-void layout_apply_config(Layout* layout, Config* config);
+void layout_build(Layout* layout, GApplication* app);
 
 #endif

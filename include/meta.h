@@ -12,6 +12,7 @@
 
 #include "common.h"
 
+typedef void  (*MetaCallback) (void);
 
 typedef enum {
   META_ENTRY_TYPE_STRING = 0,
@@ -28,25 +29,19 @@ typedef struct {
   void* default_value;
   char* arg_desc;
   char* desc;
+  MetaCallback getter;
+  MetaCallback setter;
   unsigned index;
 } MetaEntry;
 
 typedef struct {
   GHashTable* data;
+  GList* list;
 } Meta;
-
-typedef struct {
-  GHashTableIter iter;
-} MetaIter;
-
 
 Meta* meta_init();
 void meta_close(Meta* meta);
-GList* meta_as_list(Meta* meta, bool sorted);
 unsigned meta_size(Meta* meta);
 MetaEntry* meta_get_entry(Meta* meta, const char* key);
-
-void meta_iter_init(MetaIter* iter, Meta* meta);
-bool meta_iter_next(MetaIter* iter, char** key, MetaEntry** entry);
 
 #endif

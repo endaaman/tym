@@ -10,6 +10,7 @@
 #include "context.h"
 #include "app.h"
 #include "builtin.h"
+#include "property.h"
 #include "command.h"
 
 
@@ -29,9 +30,6 @@ static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
 static KeyPair DEFAULT_KEY_PAIRS[] = {
-  { GDK_KEY_plus , GDK_CONTROL_MASK                 , command_increase_font_scale },
-  { GDK_KEY_minus, GDK_CONTROL_MASK                 , command_decrease_font_scale },
-  { GDK_KEY_equal, GDK_CONTROL_MASK                 , command_reset_font_scale    },
   { GDK_KEY_c    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
   { GDK_KEY_v    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
   { GDK_KEY_r    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
@@ -71,14 +69,11 @@ void context_acquire_config_path(Context* context, char** ppath)
 
 void context_acquire_theme_path(Context* context, char** ppath)
 {
-  if (!config_has_str(context->config, "theme")) {
-    *ppath = NULL;
-    return;
+  const char* path = NULL;
+  if (!option_get_str_value(context->option, "theme", &path)) {
+    path = context_get_str(context, "theme");
   }
-
-  char* path = config_get_str(context->config, "theme");
-
-  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+  if (is_none(path)) {
     *ppath = NULL;
     return;
   }
@@ -93,19 +88,25 @@ void context_acquire_theme_path(Context* context, char** ppath)
   g_free(cwd);
 }
 
-static lua_State* context_prepare_lua(Context* context)
+void context_load_lua_context(Context* context)
 {
+  if (option_get_nolua(context->option)) {
+    g_message("Lua context is not loaded");
+    return;
+  }
+
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
   lua_pop(L, 1);
-  return L;
+  context->lua = L;
 }
 
 Context* context_init()
 {
   dd("init");
   Context* context = g_malloc0(sizeof(Context));
+  context->state.initializing = true;
   context->meta = meta_init();
   context->option = option_init(context->meta);
   context->config = config_init(context->meta);
@@ -116,7 +117,6 @@ Context* context_init()
     TYM_APP_ID,
     G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE)
   );
-  context->lua = context_prepare_lua(context);
   return context;
 }
 
@@ -130,11 +130,14 @@ void context_close(Context* context)
   hook_close(context->hook);
   layout_close(context->layout);
   g_object_unref(context->app);
-  lua_close(context->lua);
+  if (context->lua) {
+    lua_close(context->lua);
+  }
   g_free(context);
 }
 
-int context_start(Context* context, int argc, char** argv) {
+int context_start(Context* context, int argc, char** argv)
+{
   GApplication* app = context->app;
   g_application_add_main_option_entries(app, context->option->entries);
 
@@ -171,9 +174,92 @@ static void context_on_lua_error(Context* context, const char* error)
   g_free(message);
 }
 
+void context_restore_default(Context* context)
+{
+  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+    MetaEntry* e = (MetaEntry*)li->data;
+    char* target = NULL;
+    if (strncmp("color_", e->name, 6) == 0) {
+      g_ascii_strtoull(&e->name[6], &target, 10);
+      if (&e->name[6] != target) {
+        // skip loading `color_%d` in this loop
+        continue;
+      }
+    }
+    char* key = e->name;
+    switch (e->type) {
+      case META_ENTRY_TYPE_STRING: {
+        context_set_str(context, key, e->default_value);
+        break;
+      }
+      case META_ENTRY_TYPE_INTEGER: {
+        context_set_int(context, key, *(int*)e->default_value);
+        break;
+      }
+      case META_ENTRY_TYPE_BOOLEAN: {
+        context_set_bool(context, key, *(bool*)e->default_value);
+        break;
+      }
+      case META_ENTRY_TYPE_NONE:
+        break;
+    }
+  }
+  // set colors here
+  GdkRGBA* palette = g_new0(GdkRGBA, 16);
+  unsigned i = 0;
+  while (i < 16) {
+    char s[10] = {};
+    g_snprintf(s, 10, "color_%d", i);
+    MetaEntry* e = meta_get_entry(context->meta, s);
+    assert(gdk_rgba_parse(&palette[i], e->default_value));
+    i += 1;
+  }
+  vte_terminal_set_colors(context->layout->vte, NULL, NULL, palette, 16);
+}
+
+void context_override_by_option(Context* context)
+{
+  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+    MetaEntry* e = (MetaEntry*)li->data;
+    char* key = e->name;
+    switch (e->type) {
+      case META_ENTRY_TYPE_STRING: {
+        const char* v = NULL;
+        bool has_value = option_get_str_value(context->option, key, &v);
+        if (has_value) {
+          context_set_str(context, key, v);
+        }
+        break;
+      }
+      case META_ENTRY_TYPE_INTEGER: {
+        int v = 0;
+        bool has_value = option_get_int_value(context->option, key, &v);
+        if (has_value) {
+          context_set_int(context, key, v);
+        }
+        break;
+      }
+      case META_ENTRY_TYPE_BOOLEAN: {
+        bool v = false;
+        bool has_value = option_get_bool_value(context->option, key, &v);
+        if (has_value) {
+          context_set_bool(context, key, v);
+        }
+        break;
+      }
+      case META_ENTRY_TYPE_NONE:
+        break;
+    }
+  }
+}
+
 void context_load_config(Context* context)
 {
-  dd("load config start");
+  df();
+  if (!context->lua) {
+    g_message("Skipped loading config because Lua context is not loaded.");
+    return;
+  }
 
   if (context->state.loading) {
     g_message("Tried to load config recursively. Ignoring loading.");
@@ -204,11 +290,8 @@ void context_load_config(Context* context)
     goto EXIT;
   }
 
-  dd("load option to config");
-
 EXIT:
   context->state.loading = false;
-  config_override_by_option(context->config, context->option);
   if (config_path) {
     g_free(config_path);
   }
@@ -217,14 +300,18 @@ EXIT:
 
 void context_load_theme(Context* context)
 {
-  dd("load theme start");
+  df();
+  if (!context->lua) {
+    g_message("Skipped loading theme because Lua context is not loaded.");
+    return;
+  }
 
   char* theme_path;
   context_acquire_theme_path(context, &theme_path);
   dd("theme path: `%s`", theme_path);
   if (!theme_path) {
     g_message("Skipped theme loading.");
-    return;
+    goto EXIT;
   }
 
   if (!g_file_test(theme_path, G_FILE_TEST_EXISTS)) {
@@ -256,24 +343,21 @@ void context_load_theme(Context* context)
   while (lua_next(L, -2)) {
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
+    dd("THEME: %s", key);
     const char* value = lua_tostring(L, -2);
-    if (value) {
-      if (strncmp("color_", key, 6) == 0) {
-        if (!config_has_str(context->config, key)) {
-          config_set_str(context->config, key, value);
-        } else {
-          dd("respect config value `%s` for key `%s`", value, key);
-        }
-      } else {
-        g_warning("%s: Invalid color key in theme: `%s`", theme_path, key);
-      }
-    }
     lua_pop(L, 2);
+    if (!value || strncmp("color_", key, 6) != 0) {
+      g_warning("%s: Invalid color key in theme: `%s`", theme_path, key);
+      continue;
+    }
+    context_set_str(context, key, value);
   }
   lua_pop(L, 1);
 
 EXIT:
-  g_free(theme_path);
+  if (theme_path) {
+    g_free(theme_path);
+  }
   dd("load theme end");
 }
 
@@ -293,23 +377,25 @@ static bool context_perform_default(Context* context, unsigned key, GdkModifierT
 
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 {
-  bool result = false;
-  char* error = NULL;
-  if (keymap_perform(context->keymap, context->lua, key, mod, &result, &error)) {
-    // if the keymap func is normally excuted,  default action will be canceled.
-    // if `return true` in the keymap func, default action will be performed.
-    if (!result) {
-      return true;
-    }
-  } else {
-    if (error) {
-      context_on_lua_error(context, error);
-      g_free(error);
-      // if the keymap func has error, default action will be canceled.
-      return true;
+  if (context->lua) {
+    bool result = false;
+    char* error = NULL;
+    if (keymap_perform(context->keymap, context->lua, key, mod, &result, &error)) {
+      // if the keymap func is normally excuted,  default action will be canceled.
+      // if `return true` in the keymap func, default action will be performed.
+      if (!result) {
+        return true;
+      }
+    } else {
+      if (error) {
+        context_on_lua_error(context, error);
+        g_free(error);
+        // if the keymap func has error, default action will be canceled.
+        return true;
+      }
     }
   }
-  if (config_get_bool(context->config, "ignore_default_keymap")) {
+  if (context_get_bool(context, "ignore_default_keymap")) {
     return false;
   }
   return context_perform_default(context, key, mod);
@@ -330,39 +416,9 @@ void context_handle_signal(Context* context, const char* signal_name, GVariant* 
   }
 }
 
-void context_apply_config(Context* context)
-{
-  layout_apply_config(context->layout, context->config);
-}
-
-void context_apply_theme(Context* context)
-{
-  layout_apply_theme(context->layout, context->config);
-}
-
-void context_build_layout(Context* context)
-{
-  layout_build(context->layout, context->app, context->config);
-}
-
-VteTerminal* context_get_vte(Context* context)
-{
-  return context->layout->vte;
-}
-
-GtkWindow* context_get_window(Context* context)
-{
-  return context->layout->window;
-}
-
 GdkWindow* context_get_gdk_window(Context* context)
 {
   return gtk_widget_get_window(GTK_WIDGET(context->layout->window));
-}
-
-int* context_get_uri_tag(Context* context)
-{
-  return context->layout->uri_tag;
 }
 
 void context_notify(Context* context, const char* body, const char* title)
@@ -394,4 +450,73 @@ void context_launch_uri(Context* context, const char* uri)
     g_free(message);
     g_error_free(error);
   }
+}
+
+const char* context_get_str(Context* context, const char* key)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->getter) {
+    return ((PropertyStrGetter)e->getter)(context, key);
+  }
+  return config_get_str(context->config, key);
+}
+
+int context_get_int(Context* context, const char* key)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->getter) {
+    return ((PropertyIntGetter)e->getter)(context, key);
+  }
+  return config_get_int(context->config, key);
+}
+
+bool context_get_bool(Context* context, const char* key)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->getter) {
+    return ((PropertyBoolGetter)e->getter)(context, key);
+  }
+  return config_get_bool(context->config, key);
+}
+
+void context_set_str(Context* context, const char* key, const char* value)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->setter) {
+    ((PropertyStrSetter)e->setter)(context, key, value);
+    return;
+  }
+  if (!e->getter) {
+    config_set_str(context->config, key, value);
+    return;
+  }
+  dd("`%s`: setter is not provided but getter is provided", key);
+}
+
+void context_set_int(Context* context, const char* key, int value)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->setter) {
+    ((PropertyIntSetter)e->setter)(context, key, value);
+    return;
+  }
+  if (!e->getter) {
+    config_set_int(context->config, key, value);
+    return;
+  }
+  dd("`%s`: setter is not provided but getter is provided", key);
+}
+
+void context_set_bool(Context* context, const char* key, bool value)
+{
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (e->setter) {
+    ((PropertyBoolSetter)e->setter)(context, key, value);
+    return;
+  }
+  if (!e->getter) {
+    config_set_bool(context->config, key, value);
+    return;
+  }
+  dd("`%s`: setter is not provided but getter is provided", key);
 }

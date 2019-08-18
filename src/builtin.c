@@ -26,13 +26,13 @@ static int builtin_get(lua_State* L)
 
   switch (e->type) {
     case META_ENTRY_TYPE_STRING:
-      lua_pushstring(L, config_get_str(context->config, key));
+      lua_pushstring(L, context_get_str(context, key));
       break;
     case META_ENTRY_TYPE_INTEGER:
-      lua_pushinteger(L, config_get_int(context->config, key));
+      lua_pushinteger(L, context_get_int(context, key));
       break;
     case META_ENTRY_TYPE_BOOLEAN:
-      lua_pushboolean(L, config_get_bool(context->config, key));
+      lua_pushboolean(L, context_get_bool(context, key));
       break;
     default:
       lua_pushnil(L);
@@ -61,7 +61,7 @@ static int builtin_set(lua_State* L)
         luaX_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
         break;
       }
-      config_set_str(context->config, key, value);
+      context_set_str(context, key, value);
       break;
     }
     case META_ENTRY_TYPE_INTEGER: {
@@ -70,12 +70,12 @@ static int builtin_set(lua_State* L)
         break;
       }
       int value = lua_tointeger(L, 2);
-      config_set_int(context->config, key, value);
+      context_set_int(context, key, value);
       break;
     }
     case META_ENTRY_TYPE_BOOLEAN: {
       int value = lua_toboolean(L, 2);
-      config_set_bool(context->config, key, value);
+      context_set_bool(context, key, value);
       break;
     }
     default:
@@ -90,24 +90,21 @@ static int builtin_get_config(lua_State* L)
 
   lua_newtable(L);
 
-  MetaIter iter = {};
-  char* key = NULL;
-  MetaEntry* e = NULL;
-  meta_iter_init(&iter, context->meta);
-  while (meta_iter_next(&iter, &key, &e)) {
+  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+    MetaEntry* e = (MetaEntry*)li->data;
     char* key = e->name;
     lua_pushstring(L, key);
     switch (e->type) {
       case META_ENTRY_TYPE_STRING: {
-        const char* value = config_get_str(context->config, key);
+        const char* value = context_get_str(context, key);
         lua_pushstring(L, value);
         break;
       }
       case META_ENTRY_TYPE_INTEGER:
-        lua_pushinteger(L, config_get_int(context->config, key));
+        lua_pushinteger(L, context_get_int(context, key));
         break;
       case META_ENTRY_TYPE_BOOLEAN:
-        lua_pushboolean(L, config_get_bool(context->config, key));
+        lua_pushboolean(L, context_get_bool(context, key));
         break;
       case META_ENTRY_TYPE_NONE:
         lua_pop(L, 1);
@@ -138,7 +135,7 @@ static int builtin_set_config(lua_State* L)
             luaX_warn(L, "Invalid string config for '%s' (string expected, got %s)", key, lua_typename(L, type));
             break;
           }
-          config_set_str(context->config, key, value);
+          context_set_str(context, key, value);
           break;
         }
         case META_ENTRY_TYPE_INTEGER: {
@@ -147,12 +144,12 @@ static int builtin_set_config(lua_State* L)
             break;
           }
           int value = lua_tointeger(L, -2);
-          config_set_int(context->config, key, value);
+          context_set_int(context, key, value);
           break;
         }
         case META_ENTRY_TYPE_BOOLEAN: {
           int value = lua_toboolean(L, -2);
-          config_set_bool(context->config, key, value);
+          context_set_bool(context, key, value);
           break;
         }
         default:
@@ -171,6 +168,7 @@ static int builtin_reset_config(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   config_reset(context->config);
+  context_restore_default(context);
   return 0;
 }
 
@@ -289,8 +287,6 @@ static int builtin_reload(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   context_load_config(context);
   context_load_theme(context);
-  context_apply_config(context);
-  context_apply_theme(context);
   return 0;
 }
 
@@ -298,15 +294,6 @@ static int builtin_reload_theme(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   context_load_theme(context);
-  context_apply_theme(context);
-  return 0;
-}
-
-static int builtin_apply(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  context_apply_config(context);
-  context_apply_theme(context);
   return 0;
 }
 
@@ -328,7 +315,7 @@ static int builtin_send_key(lua_State* L)
     return 0;
   }
   gdk_event_set_device(event, context->device);
-  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context_get_window(context))));
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context->layout->window)));
   event->key.send_event = false;
   event->key.time = GDK_CURRENT_TIME;
   event->key.state = mod;
@@ -396,7 +383,7 @@ static int builtin_put(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
 
   const char* text = luaL_checkstring(L, -1);
-  vte_terminal_feed_child(context_get_vte(context), text, -1);
+  vte_terminal_feed_child(context->layout->vte, text, -1);
   return 0;
 }
 
@@ -439,36 +426,15 @@ static int builtin_paste(lua_State* L)
   return 0;
 }
 
-static int builtin_increase_font_scale(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  command_increase_font_scale(context);
-  return 0;
-}
-
-static int builtin_decrease_font_scale(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  command_decrease_font_scale(context);
-  return 0;
-}
-
-static int builtin_reset_font_scale(lua_State* L)
-{
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  command_reset_font_scale(context);
-  return 0;
-}
-
 static int builtin_color_to_rgba(lua_State* L)
 {
   GdkRGBA color;
   const char* str = luaL_checkstring(L, -1);
   bool valid = gdk_rgba_parse(&color, str);
   if (valid) {
-    lua_pushinteger(L, (int)(color.red * 255 + 0.5));
-    lua_pushinteger(L, (int)(color.green * 255 + 0.5));
-    lua_pushinteger(L, (int)(color.blue * 255 + 0.5));
+    lua_pushinteger(L, roundup(color.red * 255));
+    lua_pushinteger(L, roundup(color.green * 255));
+    lua_pushinteger(L, roundup(color.blue * 255));
     lua_pushnumber(L, color.alpha);
   } else {
     luaX_warn(L, "Invalid color string: '%s'", str);
@@ -567,7 +533,6 @@ int builtin_register_module(lua_State* L)
     { "set_hooks"           , builtin_set_hooks            },
     { "reload"              , builtin_reload               },
     { "reload_theme"        , builtin_reload_theme         },
-    { "apply"               , builtin_apply                },
     { "send_key"            , builtin_send_key             },
     { "set_timeout"         , builtin_set_timeout          },
     { "clear_timeout"       , builtin_clear_timeout        },
@@ -577,9 +542,6 @@ int builtin_register_module(lua_State* L)
     { "notify"              , builtin_notify               },
     { "copy"                , builtin_copy                 },
     { "paste"               , builtin_paste                },
-    { "increase_font_scale" , builtin_increase_font_scale  },
-    { "decrease_font_scale" , builtin_decrease_font_scale  },
-    { "reset_font_scale"    , builtin_reset_font_scale     },
     { "check_mod"           , builtin_check_mod            },
     { "color_to_rgba"       , builtin_color_to_rgba        },
     { "rgba_to_color"       , builtin_rgba_to_color        },
