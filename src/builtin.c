@@ -404,7 +404,6 @@ static int builtin_open(lua_State* L)
 static int builtin_notify(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-
   const char* body = luaL_checkstring(L, 1);
   const char* title = lua_tostring(L, 2);
   context_notify(context, body, title);
@@ -532,12 +531,6 @@ static int builtin_get_selection(lua_State* L)
   return 1;
 }
 
-gboolean is_selected(VteTerminal* vte, long column, long row, void* data)
-{
-  dd("IS_SELECTED");
-  return true;
-}
-
 static int builtin_get_text(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -551,7 +544,7 @@ static int builtin_get_text(lua_State* L)
   if (end_col < 0) {
     end_col = vte_terminal_get_column_count(context->layout->vte);
   }
-  char* selection = vte_terminal_get_text_range(context->layout->vte, start_row, start_col, end_row, end_col, is_selected, NULL, NULL);
+  char* selection = vte_terminal_get_text_range(context->layout->vte, start_row, start_col, end_row, end_col, NULL, NULL, NULL);
   lua_pushstring(L, selection);
   g_free(selection);
   return 1;
