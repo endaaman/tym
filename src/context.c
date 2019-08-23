@@ -44,7 +44,7 @@ static SignalDefinition SIGNALS[] = {
 void context_acquire_config_path(Context* context, char** ppath)
 {
   char* path = option_get_config_path(context->option);
-  if (0 == g_strcmp0(path, TYM_SYMBOL_NONE)) {
+  if (is_none(path)) {
     ppath = NULL;
     return;
   }
