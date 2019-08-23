@@ -217,7 +217,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
       g_free(path);
       return;
     }
-    css = g_strdup_printf("window { background-image: url('%s'); background-size: cover; }", path);
+    css = g_strdup_printf("window { background-image: url('%s'); background-size: cover; background-position: center; }", path);
     g_free(path);
   }
   GtkCssProvider* css_provider = gtk_css_provider_new();
