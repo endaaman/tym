@@ -414,6 +414,21 @@ static int builtin_notify(lua_State* L)
 
 static int builtin_copy(lua_State* L)
 {
+  const char* text = luaL_checkstring(L, 1);
+  const char* target = lua_tostring(L, 2);
+  GdkAtom selection = GDK_SELECTION_CLIPBOARD;
+  if (is_equal(target, "primary")) {
+    selection = GDK_SELECTION_PRIMARY;
+  } else if (is_equal(target, "secondary")) {
+    selection = GDK_SELECTION_SECONDARY;
+  }
+  GtkClipboard* cb = gtk_clipboard_get(selection);
+  gtk_clipboard_set_text(cb, text, -1);
+  return 0;
+}
+
+static int builtin_copy_selection(lua_State* L)
+{
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   command_copy_clipboard(context);
   return 0;
@@ -482,6 +497,51 @@ static int builtin_check_mod(lua_State* L)
   return 1;
 }
 
+static int builtin_get_cursor_position(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  long col = 0;
+  long row = 0;
+  vte_terminal_get_cursor_position(context->layout->vte, &col, &row);
+  lua_pushinteger(L, col);
+  lua_pushinteger(L, row);
+  return 2;
+}
+
+static int builtin_get_selection(lua_State* L)
+{
+  GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  char* text = gtk_clipboard_wait_for_text(cb);
+  lua_pushstring(L, text);
+  g_free(text);
+  return 1;
+}
+
+gboolean is_selected(VteTerminal* vte, long column, long row, void* data)
+{
+  dd("IS_SELECTED");
+  return true;
+}
+
+static int builtin_get_text(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  int start_row = luaL_checkinteger(L, 1);
+  int start_col = luaL_checkinteger(L, 2);
+  int end_row = luaL_checkinteger(L, 3);
+  int end_col = luaL_checkinteger(L, 4);
+  if (end_row < 0) {
+    end_row = vte_terminal_get_row_count(context->layout->vte);
+  }
+  if (end_col < 0) {
+    end_col = vte_terminal_get_column_count(context->layout->vte);
+  }
+  char* selection = vte_terminal_get_text_range(context->layout->vte, start_row, start_col, end_row, end_col, is_selected, NULL, NULL);
+  lua_pushstring(L, selection);
+  g_free(selection);
+  return 1;
+}
+
 static int builtin_get_monitor_model(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -541,12 +601,16 @@ int builtin_register_module(lua_State* L)
     { "open"                , builtin_open                 },
     { "notify"              , builtin_notify               },
     { "copy"                , builtin_copy                 },
+    { "copy_selection"      , builtin_copy_selection       },
     { "paste"               , builtin_paste                },
     { "check_mod"           , builtin_check_mod            },
     { "color_to_rgba"       , builtin_color_to_rgba        },
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
     { "get_monitor_model"   , builtin_get_monitor_model    },
+    { "get_cursor_position" , builtin_get_cursor_position  },
+    { "get_selection"       , builtin_get_selection        },
+    { "get_text"            , builtin_get_text             },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
     { "get_version"         , builtin_get_version          },
