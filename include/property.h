@@ -53,6 +53,8 @@ void setter_cursor_blink_mode(Context* context, const char* key, const char* val
 const char* getter_cjk_width(Context* context, const char* key);
 void setter_cjk_width(Context* context, const char* key, const char* value);
 
+void setter_background_image(Context* context, const char* key, const char* value);
+
 
 // int
 int getter_width(Context* context, const char* key);
@@ -70,7 +72,6 @@ void setter_padding_vertical(Context* context, const char* key, int value);
 
 int getter_scrollback_length(Context* context, const char* key);
 void setter_scrollback_length(Context* context, const char* key, int value);
-
 
 // bool
 bool getter_silent(Context* context, const char* key);

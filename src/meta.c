@@ -118,6 +118,11 @@ Meta* meta_init()
       .arg_desc="'" TYM_CJK_WIDTH_NARROW "' or '" TYM_CJK_WIDTH_WIDE "'",
       .getter=CB(getter_cjk_width), .setter=CB(setter_cjk_width),
     },
+    {
+      .name="background_image", .default_value=sdup(""),
+      .arg_desc="path to background image",
+      .setter=CB(setter_background_image),
+    },
     // INT
     {
       .name="width", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_WIDTH, sizeof(int)),

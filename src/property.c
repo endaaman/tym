@@ -198,6 +198,41 @@ void setter_cjk_width(Context* context, const char* key, const char* value)
   vte_terminal_set_cjk_ambiguous_width(context->layout->vte, cjk);
 }
 
+void setter_background_image(Context* context, const char* key, const char* value)
+{
+  char* css;
+  if (is_empty(value)) {
+    css = g_strdup("window { background-image: none; }");
+  } else {
+    char* path;
+    if (g_path_is_absolute(value)) {
+      path = g_strdup(value);
+    } else {
+      char* cwd = g_get_current_dir();
+      path = g_build_path(G_DIR_SEPARATOR_S, cwd, value, NULL);
+      g_free(cwd);
+    }
+    if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
+      g_message("`%s`: `%s` does not exist.", key, path);
+      g_free(path);
+      return;
+    }
+    css = g_strdup_printf("window { background-image: url('%s'); background-size: cover; }", path);
+    g_free(path);
+  }
+  GtkCssProvider* css_provider = gtk_css_provider_new();
+  GError* error = NULL;
+  gtk_css_provider_load_from_data(css_provider, css, -1, &error);
+  g_free(css);
+  if (error) {
+    g_message("`%s`: Error in css: %s", key, error->message);
+    g_error_free(error);
+    return;
+  }
+  GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(context->layout->window));
+  gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+  config_set_str(context->config, key, value);
+}
 
 // INT
 
