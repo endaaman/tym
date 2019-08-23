@@ -338,7 +338,6 @@ void setter_color_normal(Context* context, const char* key, const char* value)
 {
   assert(value);
   if (is_equal(value, context_get_str(context, key))) {
-    dd("skip set `%s`(value `%s` is not changed)", key, value);
     return;
   }
   char* target = NULL;

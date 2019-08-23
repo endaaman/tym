@@ -24,17 +24,6 @@ static char* get_default_shell()
   return g_strdup(TYM_FALL_BACK_SHELL);
 }
 
-static char* get_default_theme_path()
-{
-  return g_build_path(
-    G_DIR_SEPARATOR_S,
-    g_get_user_config_dir(),
-    TYM_CONFIG_DIR_NAME,
-    TYM_THEME_FILE_NAME,
-    NULL
-  );
-}
-
 static void free_entry(void* data)
 {
   g_free(((MetaEntry*)data)->default_value);
@@ -73,11 +62,6 @@ Meta* meta_init()
 
   MetaEntry ee[] = {
     // STR
-    {
-      .name="theme", .short_name='t', .default_value=get_default_theme_path(), .arg_desc="<path>",
-      .desc="<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.",
-      /* .setter=CB(setter_theme) */ // warn if trying to set after init
-    },
     {
       .name="shell",  .short_name='e', .default_value=get_default_shell(), .arg_desc="<shell>",
       .desc="Shell to use in the terminal",

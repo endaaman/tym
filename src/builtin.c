@@ -562,20 +562,22 @@ static int builtin_get_monitor_model(lua_State* L)
 static int builtin_get_config_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  char* path;
-  context_acquire_config_path(context, &path);
+  char* path = context_acquire_config_path(context);
   lua_pushstring(L, path);
-  g_free(path);
+  if (path) {
+    g_free(path);
+  }
   return 1;
 }
 
 static int builtin_get_theme_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  char* path;
-  context_acquire_theme_path(context, &path);
+  char* path = context_acquire_theme_path(context);
   lua_pushstring(L, path);
-  g_free(path);
+  if (path) {
+    g_free(path);
+  }
   return 1;
 }
 

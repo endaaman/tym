@@ -18,6 +18,7 @@ typedef struct {
   bool version;
   bool nolua;
   char* config_path;
+  char* theme_path;
   char* signal;
   GVariantDict* values;
 } Option;
@@ -32,6 +33,7 @@ bool option_get_int_value(Option* option, const char* key, int* value);
 bool option_get_bool_value(Option* option, const char* key, bool* value);
 bool option_get_version(Option* option);
 char* option_get_config_path(Option* option);
+char* option_get_theme_path(Option* option);
 char* option_get_signal(Option* option);
 bool option_get_nolua(Option* option);
 

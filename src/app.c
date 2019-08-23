@@ -221,8 +221,8 @@ void on_activate(GApplication* app, void* user_data)
 
   layout_build(context->layout, app);
   context_restore_default(context);
-  context_load_config(context);
   context_load_theme(context);
+  context_load_config(context);
   context_override_by_option(context);
 
   VteTerminal* vte = context->layout->vte;

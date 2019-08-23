@@ -41,51 +41,55 @@ static SignalDefinition SIGNALS[] = {
   {},
 };
 
-void context_acquire_config_path(Context* context, char** ppath)
+char* context_acquire_config_path(Context* context)
 {
   char* path = option_get_config_path(context->option);
   if (is_none(path)) {
-    ppath = NULL;
-    return;
+    return NULL;
   }
-  if (path) {
-    if (g_path_is_absolute(path)) {
-      *ppath = g_strdup(path);
-    } else {
-      char* cwd = g_get_current_dir();
-      *ppath = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
-      g_free(cwd);
-    }
-    return;
-  }
-  *ppath = g_build_path(
-    G_DIR_SEPARATOR_S,
-    g_get_user_config_dir(),
-    TYM_CONFIG_DIR_NAME,
-    TYM_CONFIG_FILE_NAME,
-    NULL
-  );
-}
-
-void context_acquire_theme_path(Context* context, char** ppath)
-{
-  const char* path = NULL;
-  if (!option_get_str_value(context->option, "theme", &path)) {
-    path = context_get_str(context, "theme");
-  }
-  if (is_none(path)) {
-    *ppath = NULL;
-    return;
+  if (!path) {
+    return g_build_path(
+      G_DIR_SEPARATOR_S,
+      g_get_user_config_dir(),
+      TYM_CONFIG_DIR_NAME,
+      TYM_CONFIG_FILE_NAME,
+      NULL
+    );
   }
 
   if (g_path_is_absolute(path)) {
-    *ppath = g_strdup(path);
-    return;
+    return g_strdup(path);
+  }
+  char* cwd = g_get_current_dir();
+  path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  g_free(cwd);
+  return path;
+}
+
+char* context_acquire_theme_path(Context* context)
+{
+  char* path = option_get_theme_path(context->option);
+  if (is_none(path)) {
+    return NULL;
+  }
+
+  if (!path) {
+    return g_build_path(
+      G_DIR_SEPARATOR_S,
+      g_get_user_config_dir(),
+      TYM_CONFIG_DIR_NAME,
+      TYM_THEME_FILE_NAME,
+      NULL
+    );
+  }
+  if (g_path_is_absolute(path)) {
+    return g_strdup(path);
   }
 
   char* cwd = g_get_current_dir();
-  *ppath = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
   g_free(cwd);
+  return path;
 }
 
 void context_load_lua_context(Context* context)
@@ -268,8 +272,7 @@ void context_load_config(Context* context)
 
   context->state.loading = true;
 
-  char* config_path = NULL;
-  context_acquire_config_path(context, &config_path);
+  char* config_path = context_acquire_config_path(context);
   dd("config path: `%s`", config_path);
   if (!config_path) {
     g_message("Skipped config loading.");
@@ -306,8 +309,7 @@ void context_load_theme(Context* context)
     return;
   }
 
-  char* theme_path;
-  context_acquire_theme_path(context, &theme_path);
+  char* theme_path = context_acquire_theme_path(context);
   dd("theme path: `%s`", theme_path);
   if (!theme_path) {
     g_message("Skipped theme loading.");
@@ -343,7 +345,6 @@ void context_load_theme(Context* context)
   while (lua_next(L, -2)) {
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
-    dd("THEME: %s", key);
     const char* value = lua_tostring(L, -2);
     lua_pop(L, 2);
     if (!value || strncmp("color_", key, 6) != 0) {

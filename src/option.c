@@ -33,19 +33,27 @@ Option* option_init(Meta* meta)
   ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config.";
   ee[1].arg_description = "<path>";
 
-  ee[2].long_name = "signal";
-  ee[2].short_name = 's';
+  ee[2].long_name = "theme";
+  ee[2].short_name = 't';
   ee[2].flags = G_OPTION_FLAG_NONE;
   ee[2].arg = G_OPTION_ARG_STRING;
-  ee[2].arg_data = &option->signal;
-  ee[2].description = "Signal to send via D-Bus.";
-  ee[2].arg_description = "<signal>";
+  ee[2].arg_data = &option->theme_path;
+  ee[2].description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.";
+  ee[2].arg_description = "<path>";
 
-  ee[3].long_name = "nolua";
+  ee[3].long_name = "signal";
+  ee[3].short_name = 's';
   ee[3].flags = G_OPTION_FLAG_NONE;
-  ee[3].arg = G_OPTION_ARG_NONE;
-  ee[3].arg_data = &option->nolua;
-  ee[3].description = "Disable to create Lua context.";
+  ee[3].arg = G_OPTION_ARG_STRING;
+  ee[3].arg_data = &option->signal;
+  ee[3].description = "Signal to send via D-Bus.";
+  ee[3].arg_description = "<signal>";
+
+  ee[4].long_name = "nolua";
+  ee[4].flags = G_OPTION_FLAG_NONE;
+  ee[4].arg = G_OPTION_ARG_NONE;
+  ee[4].arg_data = &option->nolua;
+  ee[4].description = "Disable to create Lua context.";
 
   unsigned i = offset_option;
 
@@ -133,6 +141,11 @@ bool option_get_version(Option* option)
 char* option_get_config_path(Option* option)
 {
   return option->config_path;
+}
+
+char* option_get_theme_path(Option* option)
+{
+  return option->theme_path;
 }
 
 char* option_get_signal(Option* option)
