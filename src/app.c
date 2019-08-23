@@ -12,11 +12,6 @@
 
 
 
-static void on_resize(VteTerminal *vte, unsigned width, unsigned height, void* user_data)
-{
-  dd("resize %d %d", width, height);
-}
-
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
   UNUSED(widget);
@@ -96,6 +91,16 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
   }
   return false;
 }
+
+
+static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
+{
+  Context* context = (Context*)user_data;
+  GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  char* text = gtk_clipboard_wait_for_text(cb);
+  hook_perform_selected(context->hook, context->lua, text);
+}
+
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
 static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
@@ -229,7 +234,7 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
   g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
-  g_signal_connect(vte, "resize-window", G_CALLBACK(on_resize), context);
+  g_signal_connect(vte, "selection-changed", G_CALLBACK(on_vte_selection_changed), context);
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);

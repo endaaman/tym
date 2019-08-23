@@ -16,6 +16,8 @@
 #define HOOK_KEY_SCROLL "scroll"
 #define HOOK_KEY_ACTIVATED "activated"
 #define HOOK_KEY_DEACTIVATED "deactivated"
+#define HOOK_KEY_SELECTED "selected"
+
 
 const char* HOOK_KEYS[] = {
   HOOK_KEY_TITLE,
@@ -24,6 +26,7 @@ const char* HOOK_KEYS[] = {
   HOOK_KEY_SCROLL,
   HOOK_KEY_ACTIVATED,
   HOOK_KEY_DEACTIVATED,
+  HOOK_KEY_SELECTED,
   NULL
 };
 
@@ -180,3 +183,11 @@ bool hook_perform_deactivated(Hook* hook, lua_State* L)
   return hook_perform(hook, L, HOOK_KEY_DEACTIVATED, 0, 0);
 }
 
+bool hook_perform_selected(Hook* hook, lua_State* L, const char* text)
+{
+  if (!L) {
+    return false;
+  }
+  lua_pushstring(L, text);
+  return hook_perform(hook, L, HOOK_KEY_SELECTED, 1, 0);
+}

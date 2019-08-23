@@ -381,7 +381,6 @@ static int builtin_clear_timeout(lua_State* L)
 static int builtin_put(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-
   const char* text = luaL_checkstring(L, -1);
   vte_terminal_feed_child(context->layout->vte, text, -1);
   return 0;
@@ -508,6 +507,22 @@ static int builtin_get_cursor_position(lua_State* L)
   return 2;
 }
 
+static int builtin_get_clipboard(lua_State* L)
+{
+  const char* target = lua_tostring(L, 1);
+  GdkAtom selection = GDK_SELECTION_CLIPBOARD;
+  if (is_equal(target, "primary")) {
+    selection = GDK_SELECTION_PRIMARY;
+  } else if (is_equal(target, "secondary")) {
+    selection = GDK_SELECTION_SECONDARY;
+  }
+  GtkClipboard* cb = gtk_clipboard_get(selection);
+  char* text = gtk_clipboard_wait_for_text(cb);
+  lua_pushstring(L, text);
+  g_free(text);
+  return 1;
+}
+
 static int builtin_get_selection(lua_State* L)
 {
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
@@ -551,12 +566,6 @@ static int builtin_get_monitor_model(lua_State* L)
   return 1;
 }
 
-static int builtin_get_version(lua_State* L)
-{
-  lua_pushstring(L, PACKAGE_VERSION);
-  return 1;
-}
-
 static int builtin_get_config_path(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -575,6 +584,21 @@ static int builtin_get_theme_path(lua_State* L)
   lua_pushstring(L, path);
   g_free(path);
   return 1;
+}
+
+static int builtin_get_version(lua_State* L)
+{
+  lua_pushstring(L, PACKAGE_VERSION);
+  return 1;
+}
+
+static int builtin_apply(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  const char* message = "DEPRECATED: `tym.apply()` is never needed. You can `tym.set()` and the value is applied right away to the app.";
+  context_notify(context, message, NULL);
+  g_message("%s", message);
+  return 0;
 }
 
 int builtin_register_module(lua_State* L)
@@ -609,11 +633,14 @@ int builtin_register_module(lua_State* L)
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
     { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_cursor_position" , builtin_get_cursor_position  },
+    { "get_clipboard"       , builtin_get_clipboard        },
     { "get_selection"       , builtin_get_selection        },
     { "get_text"            , builtin_get_text             },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
     { "get_version"         , builtin_get_version          },
+    // DEPRECATED
+    { "apply"               , builtin_apply                },
     { NULL, NULL },
   };
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));

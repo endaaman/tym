@@ -27,6 +27,7 @@ bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri,
 bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_y, double x, double y, bool* result);
 bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
+bool hook_perform_selected(Hook* hook, lua_State* L, const char* text);
 
 
 #endif
