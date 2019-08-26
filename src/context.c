@@ -98,7 +98,6 @@ void context_load_lua_context(Context* context)
     g_message("Lua context is not loaded");
     return;
   }
-
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
@@ -110,7 +109,6 @@ Context* context_init()
 {
   dd("init");
   Context* context = g_malloc0(sizeof(Context));
-  context->state.initializing = true;
   context->meta = meta_init();
   context->option = option_init(context->meta);
   context->config = config_init(context->meta);
@@ -160,7 +158,7 @@ void context_load_device(Context* context)
   GdkDeviceManager* manager = gdk_display_get_device_manager(display);
   GList* devices = gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_MASTER);
   for (GList* li = devices; li != NULL; li = li->next) {
-  GdkDevice* d = (GdkDevice*)li->data;
+    GdkDevice* d = (GdkDevice*)li->data;
     if (gdk_device_get_source(d) == GDK_SOURCE_KEYBOARD) {
       context->device = d;
       break;
@@ -231,6 +229,7 @@ void context_override_by_option(Context* context)
         const char* v = NULL;
         bool has_value = option_get_str_value(context->option, key, &v);
         if (has_value) {
+          dd("OPTION %s %s", key, v);
           context_set_str(context, key, v);
         }
         break;
@@ -265,12 +264,12 @@ void context_load_config(Context* context)
     return;
   }
 
-  if (context->state.loading) {
+  if (context->state.config_loading) {
     g_message("Tried to load config recursively. Ignoring loading.");
     return;
   }
 
-  context->state.loading = true;
+  context->state.config_loading = true;
 
   char* config_path = context_acquire_config_path(context);
   dd("config path: `%s`", config_path);
@@ -294,7 +293,7 @@ void context_load_config(Context* context)
   }
 
 EXIT:
-  context->state.loading = false;
+  context->state.config_loading = false;
   if (config_path) {
     g_free(config_path);
   }
@@ -409,7 +408,7 @@ void context_handle_signal(Context* context, const char* signal_name, GVariant* 
   unsigned i = 0;
   while (SIGNALS[i].func) {
     SignalDefinition* def = &SIGNALS[i];
-    if (0 == g_strcmp0(def->name, signal_name)) {
+    if (is_equal(def->name, signal_name)) {
       def->func(context);
       return;
     }

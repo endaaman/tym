@@ -14,7 +14,7 @@
 Option* option_init(Meta* meta)
 {
   Option* option = g_malloc0(sizeof(Option));
-  const unsigned offset_option = 4;
+  const unsigned offset_option = 5;
   GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), meta_size(meta) + offset_option + 1);
 
   ee[0].long_name = "version";

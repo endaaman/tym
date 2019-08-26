@@ -19,8 +19,8 @@
 
 
 typedef struct {
-  bool loading;
-  bool initializing;
+  bool config_loading;
+  bool initialized;
 } State;
 
 typedef struct {

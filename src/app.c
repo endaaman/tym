@@ -108,7 +108,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   UNUSED(vte);
   UNUSED(pid);
   Context* context = (Context*)user_data;
-  context->state.initializing = false;
+  context->state.initialized = false;
   if (error) {
     g_error("%s", error->message);
     g_application_quit(context->app);

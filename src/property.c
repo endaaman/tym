@@ -49,7 +49,7 @@ static void set_size(Context* context, int width, int height)
 
 void setter_shell(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && !context->state.initializing) {
+  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
     g_message("To override `%s`, you need to set value before terminal finish initialization.`", key);
     return;
   }
@@ -58,7 +58,7 @@ void setter_shell(Context* context, const char* key, const char* value)
 
 void setter_term(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && !context->state.initializing) {
+  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
     g_message("To override `%s`, you need to set value before the terminal finish initialization.`", key);
     return;
   }
@@ -123,10 +123,10 @@ const char* getter_cursor_shape(Context* context, const char* key)
 void setter_cursor_shape(Context* context, const char* key, const char* value)
 {
   VteCursorShape cursor_shape = VTE_CURSOR_SHAPE_BLOCK;
-  if (g_strcmp0(value, TYM_CURSOR_SHAPE_BLOCK) == 0) {
-  } else if (g_strcmp0(value, TYM_CURSOR_SHAPE_UNDERLINE) == 0) {
+  if (is_equal(value, TYM_CURSOR_SHAPE_BLOCK)) {
+  } else if (is_equal(value, TYM_CURSOR_SHAPE_UNDERLINE)) {
     cursor_shape = VTE_CURSOR_SHAPE_UNDERLINE;
-  } else if (g_strcmp0(value, TYM_CURSOR_SHAPE_IBEAM) == 0)  {
+  } else if (is_equal(value, TYM_CURSOR_SHAPE_IBEAM))  {
     cursor_shape = VTE_CURSOR_SHAPE_IBEAM;
   } else {
     g_message("Invalid `cursor_shape` value. (`%s` is provided). '" \
@@ -156,10 +156,10 @@ const char* getter_cursor_blink_mode(Context* context, const char* key)
 void setter_cursor_blink_mode(Context* context, const char* key, const char* value)
 {
   VteCursorBlinkMode mode = VTE_CURSOR_BLINK_SYSTEM;
-  if (g_strcmp0(value, TYM_CURSOR_BLINK_MODE_SYSTEM) == 0) {
-  } else if (g_strcmp0(value, TYM_CURSOR_BLINK_MODE_ON) == 0) {
+  if (is_equal(value, TYM_CURSOR_BLINK_MODE_SYSTEM)) {
+  } else if (is_equal(value, TYM_CURSOR_BLINK_MODE_ON)) {
     mode = VTE_CURSOR_BLINK_ON;
-  } else if (g_strcmp0(value, TYM_CURSOR_BLINK_MODE_OFF) == 0)  {
+  } else if (is_equal(value, TYM_CURSOR_BLINK_MODE_OFF))  {
     mode = VTE_CURSOR_BLINK_OFF;
   } else {
     g_message("Invalid `cursor_blink_mode` value. (`%s` is provided). '" \
@@ -187,8 +187,8 @@ const char* getter_cjk_width(Context* context, const char* key)
 void setter_cjk_width(Context* context, const char* key, const char* value)
 {
   VteCjkWidth cjk = VTE_CJK_WIDTH_NARROW;
-  if (g_strcmp0(value, TYM_CJK_WIDTH_NARROW) == 0) {
-  } else if (g_strcmp0(value, TYM_CURSOR_BLINK_MODE_ON) == 0) {
+  if (is_equal(value, TYM_CJK_WIDTH_NARROW)) {
+  } else if (is_equal(value, TYM_CURSOR_BLINK_MODE_ON)) {
     cjk = VTE_CJK_WIDTH_WIDE;
   } else {
     g_message("Invalid `cjk_width` value. (`%s` is provided). '" \

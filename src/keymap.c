@@ -74,7 +74,7 @@ bool keymap_remove_entry(Keymap* keymap, const char* accelerator)
 {
   for (GList* li = keymap->entries; li != NULL; li = li->next) {
     KeymapEntry* e = (KeymapEntry*)li->data;
-    if (0 == g_strcmp0(e->accelerator, accelerator)) {
+    if (is_equal(e->accelerator, accelerator)) {
       keymap->entries = g_list_remove(keymap->entries, e);
       g_free(e);
       return true;
