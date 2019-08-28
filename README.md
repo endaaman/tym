@@ -211,6 +211,7 @@ tym.set_keymaps({
 | `tym.get_monitor_model()`            | string   | Get monitor model on which the window is shown. |
 | `tym.get_cursor_position()`          | int, int | Get where column and row the cursor is. |
 | `tym.get_clipboard(target='clipboard')` | string | Get content in the clipboard. |
+| `tym.get_selection()`                | string   | Get selected text. |
 | `tym.get_text(start_row, start_col, end_row, end_col)` | string | Get text on the terminal screen. If you set `-1` to `end_row` and `end_col`, the target area will be the size of termianl. |
 | `tym.get_config_path()`              | string   | Get full path to config file. |
 | `tym.get_theme_path()`               | string   | Get full path to theme file. |
@@ -222,7 +223,7 @@ tym.set_keymaps({
 | --- | --- | --- | --- |
 | `title`       | title  | changes title | If string is returned, it will be used as the new title. |
 | `bell`        | nil    | makes the window urgent when it is inactive. | If true is returned, the window will not be urgent. |
-| `clicked`     | button | nothing | Triggered when mouse button is pressed. |
+| `clicked`     | button, uri | If URI exists under cursor, opens it | Triggered when mouse button is pressed. |
 | `scroll`      | delta_x, delta_x, mouse_x, mouse_y,  | scroll buffer | Triggered when mouse wheel is scrolled. |
 | `activated`   | nil    | nothing | Triggered when the window is activated. |
 | `deactivated` | nil    | nothing | Triggered when the window is deactivated. |
@@ -240,11 +241,11 @@ tym.set_hooks({
 })
 
 tym.set_hook('clicked', function(button, uri)
-  print('you pressed button:', button) -- 0:left, 1:middle, 2:right...
+  print('you pressed button:', button) -- 1:left, 2:middle, 3:right...
   if uri then
     print('you clicked URI: ', uri)
-    if button == 1 then
-      -- disabel URI open when middle button is clicked
+    if button == 2 then
+      -- disable URI open when middle button is clicked
       return true
     end
   end
@@ -328,7 +329,7 @@ tym.set_keymaps({
 })
 
 tym.set_hook('scroll', function(dx, dy, x, y)
-  if tym.check_mod('<Ctrl>') then
+  if tym.check_mod_state('<Ctrl>') then
     if dy > 0 then
       s = tym.get('scale') - 10
     else
@@ -336,9 +337,11 @@ tym.set_hook('scroll', function(dx, dy, x, y)
     end
     tym.set('scale', s)
     tym.notify('set scale: ' .. s .. '%')
+    return true
   end
-  if tym.check_mod('<Shift>') then
+  if tym.check_mod_state('<Shift>') then
     update_alpha(dy < 0 and 0.05 or -0.05)
+    return true
   end
 end)
 ```
