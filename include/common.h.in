@@ -44,6 +44,10 @@
 #define TYM_CJK_WIDTH_NARROW "narrow"
 #define TYM_CJK_WIDTH_WIDE "wide"
 
+#define TYM_CLIPBOARD_CLIPBOARD "clipborad"
+#define TYM_CLIPBOARD_PRIMARY "primary"
+#define TYM_CLIPBOARD_SECONDARY "secondary"
+
 #define TYM_DEFAULT_TITLE "tym"
 #define TYM_DEFAULT_ICON "utilities-terminal"
 #define TYM_DEFAULT_TERM "xterm-256color"

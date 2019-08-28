@@ -415,10 +415,13 @@ static int builtin_copy(lua_State* L)
   const char* text = luaL_checkstring(L, 1);
   const char* target = lua_tostring(L, 2);
   GdkAtom selection = GDK_SELECTION_CLIPBOARD;
-  if (is_equal(target, "primary")) {
+  if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
+  } else if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
     selection = GDK_SELECTION_PRIMARY;
-  } else if (is_equal(target, "secondary")) {
+  } else if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
     selection = GDK_SELECTION_SECONDARY;
+  } else {
+    luaX_warn(L, "Invalid target(`%s`): 'clipboard', 'primary' or 'secondary' is available.", target);
   }
   GtkClipboard* cb = gtk_clipboard_get(selection);
   gtk_clipboard_set_text(cb, text, -1);
@@ -428,7 +431,24 @@ static int builtin_copy(lua_State* L)
 static int builtin_copy_selection(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  command_copy_clipboard(context);
+  const char* target = lua_tostring(L, 1);
+  if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
+    command_copy_clipboard(context);
+    return 0;
+  } else if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
+    // nothing to do
+    return 0;
+  } else if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
+    // go down
+  } else {
+    luaX_warn(L, "Invalid target(`%s`): 'clipboard', 'primary' or 'secondary' is available.", target);
+    return 0;
+  }
+
+  GtkClipboard* pri = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  char* text = gtk_clipboard_wait_for_text(pri);
+  GtkClipboard* sec = gtk_clipboard_get(GDK_SELECTION_SECONDARY);
+  gtk_clipboard_set_text(sec, text, -1);
   return 0;
 }
 
@@ -482,7 +502,7 @@ static int builtin_rgb_to_hex(lua_State* L)
   return 1;
 }
 
-static int builtin_check_mod(lua_State* L)
+static int builtin_check_mod_state(lua_State* L)
 {
   const char* accelerator = luaL_checkstring(L, 1);
   unsigned key;
@@ -510,10 +530,14 @@ static int builtin_get_clipboard(lua_State* L)
 {
   const char* target = lua_tostring(L, 1);
   GdkAtom selection = GDK_SELECTION_CLIPBOARD;
-  if (is_equal(target, "primary")) {
+  if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
+  } else if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
     selection = GDK_SELECTION_PRIMARY;
-  } else if (is_equal(target, "secondary")) {
+  } else if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
     selection = GDK_SELECTION_SECONDARY;
+  } else {
+    luaX_warn(L, "Invalid target(`%s`): 'clipboard', 'primary' or 'secondary' is available.", target);
+    return 0;
   }
   GtkClipboard* cb = gtk_clipboard_get(selection);
   char* text = gtk_clipboard_wait_for_text(cb);
@@ -592,7 +616,7 @@ static int builtin_apply(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   const char* message = "DEPRECATED: `tym.apply()` is never needed. You can `tym.set()` and the value is applied right away to the app.";
   context_notify(context, message, NULL);
-  g_message("%s", message);
+  luaX_warn(L, "%s", message);
   return 0;
 }
 
@@ -622,7 +646,7 @@ int builtin_register_module(lua_State* L)
     { "copy"                , builtin_copy                 },
     { "copy_selection"      , builtin_copy_selection       },
     { "paste"               , builtin_paste                },
-    { "check_mod"           , builtin_check_mod            },
+    { "check_mod_state"     , builtin_check_mod_state      },
     { "color_to_rgba"       , builtin_color_to_rgba        },
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
