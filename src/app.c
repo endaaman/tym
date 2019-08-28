@@ -50,8 +50,9 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
   UNUSED(vte);
   Context* context = (Context*)user_data;
   GtkWindow* window = context->layout->window;
+  bool result = false;
   const char* title = vte_terminal_get_window_title(context->layout->vte);
-  if (hook_perform_title(context->hook, context->lua, title)) {
+  if (hook_perform_title(context->hook, context->lua, title, &result) && result) {
     return;
   }
   if (title) {
@@ -92,10 +93,12 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
   return false;
 }
 
-
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
   Context* context = (Context*)user_data;
+  if (!vte_terminal_get_has_selection(context->layout->vte)) {
+    return;
+  }
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   char* text = gtk_clipboard_wait_for_text(cb);
   hook_perform_selected(context->hook, context->lua, text);

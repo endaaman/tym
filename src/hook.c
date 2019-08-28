@@ -17,6 +17,7 @@
 #define HOOK_KEY_ACTIVATED "activated"
 #define HOOK_KEY_DEACTIVATED "deactivated"
 #define HOOK_KEY_SELECTED "selected"
+#define HOOK_KEY_UNSELECTED "unselected"
 
 
 const char* HOOK_KEYS[] = {
@@ -27,6 +28,7 @@ const char* HOOK_KEYS[] = {
   HOOK_KEY_ACTIVATED,
   HOOK_KEY_DEACTIVATED,
   HOOK_KEY_SELECTED,
+  HOOK_KEY_UNSELECTED,
   NULL
 };
 
@@ -107,13 +109,19 @@ static bool hook_perform(Hook* hook, lua_State* L, const char* key, int narg, in
   return true;
 }
 
-bool hook_perform_title(Hook* hook, lua_State* L, const char* title)
+bool hook_perform_title(Hook* hook, lua_State* L, const char* title, bool* result)
 {
   if (!L) {
     return false;
   }
   lua_pushstring(L, title);
-  return hook_perform(hook, L, HOOK_KEY_TITLE, 1, 0);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_TITLE, 1, 1);
+  if (!succeeded) {
+    return false;
+  }
+  *result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
+  return succeeded;
 }
 
 bool hook_perform_bell(Hook* hook, lua_State* L, bool* result)
@@ -190,4 +198,12 @@ bool hook_perform_selected(Hook* hook, lua_State* L, const char* text)
   }
   lua_pushstring(L, text);
   return hook_perform(hook, L, HOOK_KEY_SELECTED, 1, 0);
+}
+
+bool hook_perform_unselected(Hook* hook, lua_State* L)
+{
+  if (!L) {
+    return false;
+  }
+  return hook_perform(hook, L, HOOK_KEY_UNSELECTED, 0, 0);
 }
