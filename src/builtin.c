@@ -435,10 +435,12 @@ static int builtin_copy_selection(lua_State* L)
   if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
     command_copy_clipboard(context);
     return 0;
-  } else if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
+  }
+  if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
     // nothing to do
     return 0;
-  } else if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
+  }
+  if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
     // go down
   } else {
     luaX_warn(L, "Invalid target(`%s`): 'clipboard', 'primary' or 'secondary' is available.", target);
@@ -449,13 +451,32 @@ static int builtin_copy_selection(lua_State* L)
   char* text = gtk_clipboard_wait_for_text(pri);
   GtkClipboard* sec = gtk_clipboard_get(GDK_SELECTION_SECONDARY);
   gtk_clipboard_set_text(sec, text, -1);
+  g_free(text);
   return 0;
 }
 
 static int builtin_paste(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  command_paste_clipboard(context);
+
+  const char* target = lua_tostring(L, 1);
+  if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
+    command_paste_clipboard(context);
+    return 0;
+  }
+  GdkAtom selection = GDK_SELECTION_CLIPBOARD;
+  if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
+    selection = GDK_SELECTION_PRIMARY;
+  } else if (is_equal(target, TYM_CLIPBOARD_SECONDARY)) {
+    selection = GDK_SELECTION_SECONDARY;
+  } else {
+    luaX_warn(L, "Invalid target(`%s`): 'clipboard', 'primary' or 'secondary' is available.", target);
+    return 0;
+  }
+  GtkClipboard* cb = gtk_clipboard_get(selection);
+  char* text = gtk_clipboard_wait_for_text(cb);
+  vte_terminal_feed_child(context->layout->vte, text, -1);
+  g_free(text);
   return 0;
 }
 
