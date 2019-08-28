@@ -73,19 +73,16 @@ All available config values are shown below.
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` can be used. |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` can be used. |
 | `background_image` | string | `''` | Path to background image file. |
-
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `scale` | integer | `100` | Font scale in **percent(%)** |
 | `padding_horizontal`  | integer | `0` | Horizontal padding. |
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
-
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
-
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
 
@@ -148,7 +145,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register keymap(s) by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, propagation will not be stopped.
+You can register keymap(s) by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the key input event propagation will **not be stopped**.
 
 ```lua
 -- also can set keymap
@@ -188,7 +185,7 @@ tym.set_keymaps({
 | `tym.set(key, value)`                | void     | Set config value. |
 | `tym.get_config()`                   | table    | Get whole config. |
 | `tym.set_config(table)`              | void     | Set config by table. |
-| `tym.reset_config()`                 | void     | Reset all config to default (but not apply it)  |
+| `tym.reset_config()`                 | void     | Reset all config. |
 | `tym.set_keymap(accelerator, func)`  | void     | Set keymap. |
 | `tym.unset_keymap(accelerator)`      | void     | Unset keymap. |
 | `tym.set_keymaps(table)`             | void     | Set keymaps by table. |
@@ -206,7 +203,7 @@ tym.set_keymaps({
 | `tym.notify(message, title='tym')`   | void     | Show desktop notification. |
 | `tym.copy(text, target='clipboard')` | void     | Copy text to clipboard. As `target`, `'clipboard'`, `'primary'` or `secondary` can be used. |
 | `tym.copy_selection(target='clipboard')` | void | Copy current selection. |
-| `tym.paste()`                        | void     | Paste clipboard clipboard. |
+| `tym.paste(target='clipboard')`      | void     | Paste clipboard. |
 | `tym.check_mod_state(accelerator)`   | bool     | Check if the mod key(such as `'<Ctrl>'` or `<Shift>`) is being pressed. |
 | `tym.color_to_rgba(color)`           | r, g, b, a | Convert color string to RGB bytes and alpha float using [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). |
 | `tym.rgba_to_color(r, g, b, a)`      | string   | Convert RGB bytes and alpha float to color string like `rgba(255, 128, 0, 0.5)` can be used in color option such as `color_background`. |
@@ -232,7 +229,7 @@ tym.set_keymaps({
 | `selected`    | string | nothing | Triggered when the text in the terminal screen is selected. |
 | `unselected`  | nil    | nothing | Triggered when the selection is unselected. |
 
-If turethy value is returned in a callback function, the default is will not be canceled.
+If turethy value is returned in a callback function, the default action is will **be canceled**.
 
 ```lua
 tym.set_hooks({
