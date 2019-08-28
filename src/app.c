@@ -97,6 +97,7 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
   Context* context = (Context*)user_data;
   if (!vte_terminal_get_has_selection(context->layout->vte)) {
+    hook_perform_unselected(context->hook, context->lua);
     return;
   }
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
