@@ -20,8 +20,8 @@ typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
 static void set_size(Context* context, int width, int height)
 {
-  GtkWindow* window = context->layout->window;
-  VteTerminal* vte = context->layout->vte;
+  GtkWindow* window = context->layout.window;
+  VteTerminal* vte = context->layout.vte;
   bool visible = gtk_widget_is_visible(GTK_WIDGET(window));
   if (visible) {
     GtkBorder border;
@@ -35,7 +35,7 @@ static void set_size(Context* context, int width, int height)
     const int hpad = context_get_int(context, "padding_horizontal");
     const int vpad = context_get_int(context, "padding_vertical");
     gtk_window_resize(
-      context->layout->window,
+      context->layout.window,
       width * char_width + border.left + border.right + hpad * 2,
       height * char_height + border.top + border.bottom + vpad * 2
     );
@@ -67,46 +67,46 @@ void setter_term(Context* context, const char* key, const char* value)
 
 const char* getter_title(Context* context, const char* key)
 {
-  return gtk_window_get_title(context->layout->window);
+  return gtk_window_get_title(context->layout.window);
 }
 
 void setter_title(Context* context, const char* key, const char* value)
 {
-  gtk_window_set_title(context->layout->window, value);
+  gtk_window_set_title(context->layout.window, value);
 }
 
 void setter_font(Context* context, const char* key, const char* value)
 {
   PangoFontDescription* font_desc = pango_font_description_from_string(value);
-  vte_terminal_set_font(context->layout->vte, font_desc);
+  vte_terminal_set_font(context->layout.vte, font_desc);
   pango_font_description_free(font_desc);
   config_set_str(context->config, key, value);
 }
 
 const char* getter_icon(Context* context, const char* key)
 {
-  return gtk_window_get_icon_name(context->layout->window);
+  return gtk_window_get_icon_name(context->layout.window);
 }
 
 void setter_icon(Context* context, const char* key, const char* value)
 {
-  gtk_window_set_icon_name(context->layout->window, value);
+  gtk_window_set_icon_name(context->layout.window, value);
 }
 
 const char* getter_role(Context* context, const char* key)
 {
-  const char* role = gtk_window_get_role(context->layout->window);
+  const char* role = gtk_window_get_role(context->layout.window);
   return role ? role : "";
 }
 
 void setter_role(Context* context, const char* key, const char* value)
 {
-  gtk_window_set_role(context->layout->window, is_none(value) ? NULL : value);
+  gtk_window_set_role(context->layout.window, is_none(value) ? NULL : value);
 }
 
 const char* getter_cursor_shape(Context* context, const char* key)
 {
-  VteCursorShape cursor_shape = vte_terminal_get_cursor_shape(context->layout->vte);
+  VteCursorShape cursor_shape = vte_terminal_get_cursor_shape(context->layout.vte);
   switch (cursor_shape) {
     case VTE_CURSOR_SHAPE_IBEAM:
       return TYM_CURSOR_SHAPE_IBEAM;
@@ -134,12 +134,12 @@ void setter_cursor_shape(Context* context, const char* key, const char* value)
         TYM_CURSOR_SHAPE_UNDERLINE "' is available.", value);
     return;
   }
-  vte_terminal_set_cursor_shape(context->layout->vte, cursor_shape);
+  vte_terminal_set_cursor_shape(context->layout.vte, cursor_shape);
 }
 
 const char* getter_cursor_blink_mode(Context* context, const char* key)
 {
-  VteCursorBlinkMode mode = vte_terminal_get_cursor_blink_mode(context->layout->vte);
+  VteCursorBlinkMode mode = vte_terminal_get_cursor_blink_mode(context->layout.vte);
   switch (mode) {
     case VTE_CURSOR_BLINK_SYSTEM:
       return TYM_CURSOR_BLINK_MODE_SYSTEM;
@@ -167,12 +167,12 @@ void setter_cursor_blink_mode(Context* context, const char* key, const char* val
         TYM_CURSOR_BLINK_MODE_OFF "' is available.", value);
     return;
   }
-  vte_terminal_set_cursor_blink_mode(context->layout->vte, mode);
+  vte_terminal_set_cursor_blink_mode(context->layout.vte, mode);
 }
 
 const char* getter_cjk_width(Context* context, const char* key)
 {
-  VteCjkWidth cjk = vte_terminal_get_cjk_ambiguous_width(context->layout->vte);
+  VteCjkWidth cjk = vte_terminal_get_cjk_ambiguous_width(context->layout.vte);
   switch (cjk) {
     case VTE_CJK_WIDTH_NARROW:
       return TYM_CJK_WIDTH_NARROW;
@@ -195,7 +195,7 @@ void setter_cjk_width(Context* context, const char* key, const char* value)
         TYM_CJK_WIDTH_NARROW "' or '" TYM_CJK_WIDTH_WIDE "' is available.", value);
     return;
   }
-  vte_terminal_set_cjk_ambiguous_width(context->layout->vte, cjk);
+  vte_terminal_set_cjk_ambiguous_width(context->layout.vte, cjk);
 }
 
 void setter_background_image(Context* context, const char* key, const char* value)
@@ -229,7 +229,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
     g_error_free(error);
     return;
   }
-  GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(context->layout->window));
+  GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(context->layout.window));
   gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
   config_set_str(context->config, key, value);
 }
@@ -238,7 +238,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
 
 int getter_width(Context* context, const char* key)
 {
-  return vte_terminal_get_column_count(context->layout->vte);
+  return vte_terminal_get_column_count(context->layout.vte);
 }
 
 void setter_width(Context* context, const char* key, int value)
@@ -248,7 +248,7 @@ void setter_width(Context* context, const char* key, int value)
 
 int getter_height(Context* context, const char* key)
 {
-  return vte_terminal_get_row_count(context->layout->vte);
+  return vte_terminal_get_row_count(context->layout.vte);
 }
 
 void setter_height(Context* context, const char* key, int value)
@@ -258,34 +258,34 @@ void setter_height(Context* context, const char* key, int value)
 
 int getter_scale(Context* context, const char* key)
 {
-  return roundup(vte_terminal_get_font_scale(context->layout->vte) * 100);
+  return roundup(vte_terminal_get_font_scale(context->layout.vte) * 100);
 }
 
 void setter_scale(Context* context, const char* key, int value)
 {
-  vte_terminal_set_font_scale(context->layout->vte, (double)value / 100);
+  vte_terminal_set_font_scale(context->layout.vte, (double)value / 100);
 }
 
 void setter_padding_horizontal(Context* context, const char* key, int value)
 {
-  gtk_box_set_child_packing(context->layout->hbox, GTK_WIDGET(context->layout->vte), true, true, value, GTK_PACK_START);
+  gtk_box_set_child_packing(context->layout.hbox, GTK_WIDGET(context->layout.vte), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
 }
 
 void setter_padding_vertical(Context* context, const char* key, int value)
 {
-  gtk_box_set_child_packing(context->layout->vbox, GTK_WIDGET(context->layout->hbox), true, true, value, GTK_PACK_START);
+  gtk_box_set_child_packing(context->layout.vbox, GTK_WIDGET(context->layout.hbox), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
 }
 
 int getter_scrollback_length(Context* context, const char* key)
 {
-  return vte_terminal_get_scrollback_lines(context->layout->vte);
+  return vte_terminal_get_scrollback_lines(context->layout.vte);
 }
 
 void setter_scrollback_length(Context* context, const char* key, int value)
 {
-  vte_terminal_set_scrollback_lines(context->layout->vte, value);
+  vte_terminal_set_scrollback_lines(context->layout.vte, value);
 }
 
 
@@ -293,32 +293,32 @@ void setter_scrollback_length(Context* context, const char* key, int value)
 
 bool getter_silent(Context* context, const char* key)
 {
-  return !vte_terminal_get_audible_bell(context->layout->vte);
+  return !vte_terminal_get_audible_bell(context->layout.vte);
 }
 
 void setter_silent(Context* context, const char* key, bool value)
 {
-  vte_terminal_set_audible_bell(context->layout->vte, !value);
+  vte_terminal_set_audible_bell(context->layout.vte, !value);
 }
 
 bool getter_ignore_bold(Context* context, const char* key)
 {
-  return !vte_terminal_get_allow_bold(context->layout->vte);
+  return !vte_terminal_get_allow_bold(context->layout.vte);
 }
 
 void setter_ignore_bold(Context* context, const char* key, bool value)
 {
-  vte_terminal_set_allow_bold(context->layout->vte, !value);
+  vte_terminal_set_allow_bold(context->layout.vte, !value);
 }
 
 bool getter_autohide(Context* context, const char* key)
 {
-  return vte_terminal_get_mouse_autohide(context->layout->vte);
+  return vte_terminal_get_mouse_autohide(context->layout.vte);
 }
 
 void setter_autohide(Context* context, const char* key, bool value)
 {
-  vte_terminal_set_mouse_autohide(context->layout->vte, value);
+  vte_terminal_set_mouse_autohide(context->layout.vte, value);
 }
 
 // COLOR
@@ -330,7 +330,7 @@ static void setter_color_special(Context* context, const char* key, const char* 
     g_message("Invalid color string for '%s': %s", key, value);
     return;
   }
-  color_func(context->layout->vte, &color);
+  color_func(context->layout.vte, &color);
   config_set_str(context->config, key, value);
 }
 
@@ -361,7 +361,7 @@ void setter_color_normal(Context* context, const char* key, const char* value)
     }
     i += 1;
   }
-  vte_terminal_set_colors(context->layout->vte, NULL, NULL, palette, 16);
+  vte_terminal_set_colors(context->layout.vte, NULL, NULL, palette, 16);
   config_set_str(context->config, key, value);
   g_free(palette);
 }
@@ -369,7 +369,7 @@ void setter_color_normal(Context* context, const char* key, const char* value)
 void setter_color_window_background(Context* context, const char* key, const char* value)
 {
   if (is_empty(value)) {
-    gtk_widget_set_app_paintable(GTK_WIDGET(context->layout->window), false);
+    gtk_widget_set_app_paintable(GTK_WIDGET(context->layout.window), false);
     config_set_str(context->config, key, value);
     return;
   }
@@ -382,9 +382,9 @@ void setter_color_window_background(Context* context, const char* key, const cha
       return;
     }
   } else {
-    gtk_widget_queue_draw(GTK_WIDGET(context->layout->window));
+    gtk_widget_queue_draw(GTK_WIDGET(context->layout.window));
   }
-  gtk_widget_set_app_paintable(GTK_WIDGET(context->layout->window), true);
+  gtk_widget_set_app_paintable(GTK_WIDGET(context->layout.window), true);
   config_set_str(context->config, key, value);
 }
 
@@ -392,14 +392,14 @@ void setter_color_background(Context* context, const char* key, const char* valu
 {
   if (is_none(value)) {
 #ifdef TYM_USE_TRANSPARENT
-    vte_terminal_set_clear_background(context->layout->vte, false);
+    vte_terminal_set_clear_background(context->layout.vte, false);
     config_set_str(context->config, key, value);
 #else
     g_message("`NONE` for `color_background` is supported on VTE version>=0.52 (your VTE version is %s)", TYM_VTE_VERSION);
 #endif
     return;
   }
-  vte_terminal_set_clear_background(context->layout->vte, true);
+  vte_terminal_set_clear_background(context->layout.vte, true);
 
   setter_color_special(context, key, value, vte_terminal_set_color_background);
 }

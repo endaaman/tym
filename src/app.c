@@ -49,9 +49,9 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
   UNUSED(vte);
   Context* context = (Context*)user_data;
-  GtkWindow* window = context->layout->window;
+  GtkWindow* window = context->layout.window;
   bool result = false;
-  const char* title = vte_terminal_get_window_title(context->layout->vte);
+  const char* title = vte_terminal_get_window_title(context->layout.vte);
   if (hook_perform_title(context->hook, context->lua, title, &result) && result) {
     return;
   }
@@ -68,7 +68,7 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
     return;
   }
-  GtkWindow* window = context->layout->window;
+  GtkWindow* window = context->layout.window;
   if (!gtk_window_is_active(window)) {
     gtk_window_set_urgency_hint(window, true);
   }
@@ -78,7 +78,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 {
   Context* context = (Context*)user_data;
   char* uri = NULL;
-  int* uri_tag = context->layout->uri_tag;
+  int* uri_tag = context->layout.uri_tag;
   if (uri_tag) {
     uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, uri_tag);
   }
@@ -96,7 +96,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
   Context* context = (Context*)user_data;
-  if (!vte_terminal_get_has_selection(context->layout->vte)) {
+  if (!vte_terminal_get_has_selection(context->layout.vte)) {
     hook_perform_unselected(context->hook, context->lua);
     return;
   }
@@ -150,7 +150,7 @@ static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
   }
   GdkRGBA color = {};
   if (gdk_rgba_parse(&color, value)) {
-    if (context->layout->alpha_supported) {
+    if (context->layout.alpha_supported) {
       cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
     } else {
       cairo_set_source_rgb(cr, color.red, color.green, color.blue);
@@ -183,8 +183,7 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
   UNUSED(cli);
   Context* context = (Context*)user_data;
 
-  GVariantDict* options = g_application_command_line_get_options_dict(cli);
-  option_set_values(context->option, options);
+  option_retrieve_values(context->option, cli);
   bool version = option_get_version(context->option);
   if (version) {
     g_print("version %s\n", PACKAGE_VERSION);
@@ -223,14 +222,14 @@ void on_activate(GApplication* app, void* user_data)
   context_load_device(context);
   context_load_lua_context(context);
 
-  layout_build(context->layout, app);
+  context_build_layout(context);
   context_restore_default(context);
   context_load_theme(context);
   context_load_config(context);
   context_override_by_option(context);
 
-  VteTerminal* vte = context->layout->vte;
-  GtkWindow* window = context->layout->window;
+  VteTerminal* vte = context->layout.vte;
+  GtkWindow* window = context->layout.window;
 
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll), context);

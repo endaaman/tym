@@ -16,7 +16,7 @@
 
 void command_reload(Context* context);
 void command_reload_theme(Context* context);
-void command_copy_clipboard(Context* context);
-void command_paste_clipboard(Context* context);
+void command_copy_selection(Context* context);
+void command_paste(Context* context);
 
 #endif

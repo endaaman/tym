@@ -14,7 +14,6 @@
 #include "config.h"
 #include "hook.h"
 #include "keymap.h"
-#include "layout.h"
 #include "option.h"
 
 
@@ -24,15 +23,24 @@ typedef struct {
 } State;
 
 typedef struct {
+  GtkWindow* window;
+  VteTerminal* vte;
+  GtkBox* hbox;
+  GtkBox* vbox;
+  int* uri_tag;
+  bool alpha_supported;
+} Layout;
+
+typedef struct {
   Meta* meta;
   Option* option;
   Config* config;
   Keymap* keymap;
   Hook* hook;
-  Layout* layout;
   GApplication* app;
   GdkDevice* device;
   lua_State* lua;
+  Layout layout;
   State state;
 } Context;
 
@@ -51,10 +59,9 @@ void context_load_theme(Context* context);
 bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod);
 void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters);
 void context_build_layout(Context* context);
-GdkWindow* context_get_gdk_window(Context* context);
 void context_notify(Context* context, const char* body, const char* title);
 void context_launch_uri(Context* context, const char* uri);
-
+GdkWindow* context_get_gdk_window(Context* context);
 const char* context_get_str(Context* context, const char* key);
 int context_get_int(Context* context, const char* key);
 bool context_get_bool(Context* context, const char* key);

@@ -315,7 +315,7 @@ static int builtin_send_key(lua_State* L)
     return 0;
   }
   gdk_event_set_device(event, context->device);
-  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context->layout->window)));
+  event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(context->layout.window)));
   event->key.send_event = false;
   event->key.time = GDK_CURRENT_TIME;
   event->key.state = mod;
@@ -382,7 +382,7 @@ static int builtin_put(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   const char* text = luaL_checkstring(L, -1);
-  vte_terminal_feed_child(context->layout->vte, text, -1);
+  vte_terminal_feed_child(context->layout.vte, text, -1);
   return 0;
 }
 
@@ -433,7 +433,7 @@ static int builtin_copy_selection(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   const char* target = lua_tostring(L, 1);
   if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
-    command_copy_clipboard(context);
+    command_copy_selection(context);
     return 0;
   }
   if (is_equal(target, TYM_CLIPBOARD_PRIMARY)) {
@@ -461,7 +461,7 @@ static int builtin_paste(lua_State* L)
 
   const char* target = lua_tostring(L, 1);
   if (!target || is_equal(target, TYM_CLIPBOARD_CLIPBOARD)) {
-    command_paste_clipboard(context);
+    command_paste(context);
     return 0;
   }
   GdkAtom selection = GDK_SELECTION_CLIPBOARD;
@@ -475,7 +475,7 @@ static int builtin_paste(lua_State* L)
   }
   GtkClipboard* cb = gtk_clipboard_get(selection);
   char* text = gtk_clipboard_wait_for_text(cb);
-  vte_terminal_feed_child(context->layout->vte, text, -1);
+  vte_terminal_feed_child(context->layout.vte, text, -1);
   g_free(text);
   return 0;
 }
@@ -541,7 +541,7 @@ static int builtin_get_cursor_position(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   long col = 0;
   long row = 0;
-  vte_terminal_get_cursor_position(context->layout->vte, &col, &row);
+  vte_terminal_get_cursor_position(context->layout.vte, &col, &row);
   lua_pushinteger(L, col);
   lua_pushinteger(L, row);
   return 2;
@@ -584,12 +584,12 @@ static int builtin_get_text(lua_State* L)
   int end_row = luaL_checkinteger(L, 3);
   int end_col = luaL_checkinteger(L, 4);
   if (end_row < 0) {
-    end_row = vte_terminal_get_row_count(context->layout->vte);
+    end_row = vte_terminal_get_row_count(context->layout.vte);
   }
   if (end_col < 0) {
-    end_col = vte_terminal_get_column_count(context->layout->vte);
+    end_col = vte_terminal_get_column_count(context->layout.vte);
   }
-  char* selection = vte_terminal_get_text_range(context->layout->vte, start_row, start_col, end_row, end_col, NULL, NULL, NULL);
+  char* selection = vte_terminal_get_text_range(context->layout.vte, start_row, start_col, end_row, end_col, NULL, NULL, NULL);
   lua_pushstring(L, selection);
   g_free(selection);
   return 1;

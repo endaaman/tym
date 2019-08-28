@@ -21,16 +21,16 @@ void command_reload_theme(Context* context)
   context_load_theme(context);
 }
 
-void command_copy_clipboard(Context* context)
+void command_copy_selection(Context* context)
 {
 #ifdef TYM_USE_VTE_COPY_CLIPBOARD_FORMAT
-  vte_terminal_copy_clipboard_format(context->layout->vte, VTE_FORMAT_TEXT);
+  vte_terminal_copy_clipboard_format(context->layout.vte, VTE_FORMAT_TEXT);
 #else
-  vte_terminal_copy_clipboard(context->layout->vte);
+  vte_terminal_copy_clipboard(context->layout.vte);
 #endif
 }
 
-void command_paste_clipboard(Context* context)
+void command_paste(Context* context)
 {
-  vte_terminal_paste_clipboard(context->layout->vte);
+  vte_terminal_paste_clipboard(context->layout.vte);
 }

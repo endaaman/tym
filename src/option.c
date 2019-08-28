@@ -30,7 +30,7 @@ Option* option_init(Meta* meta)
   ee[1].flags = G_OPTION_FLAG_NONE;
   ee[1].arg = G_OPTION_ARG_STRING;
   ee[1].arg_data = &option->config_path;
-  ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config.";
+  ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config";
   ee[1].arg_description = "<path>";
 
   ee[2].long_name = "theme";
@@ -38,7 +38,7 @@ Option* option_init(Meta* meta)
   ee[2].flags = G_OPTION_FLAG_NONE;
   ee[2].arg = G_OPTION_ARG_STRING;
   ee[2].arg_data = &option->theme_path;
-  ee[2].description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme.";
+  ee[2].description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme";
   ee[2].arg_description = "<path>";
 
   ee[3].long_name = "signal";
@@ -46,14 +46,14 @@ Option* option_init(Meta* meta)
   ee[3].flags = G_OPTION_FLAG_NONE;
   ee[3].arg = G_OPTION_ARG_STRING;
   ee[3].arg_data = &option->signal;
-  ee[3].description = "Signal to send via D-Bus.";
+  ee[3].description = "Signal to send via D-Bus";
   ee[3].arg_description = "<signal>";
 
   ee[4].long_name = "nolua";
   ee[4].flags = G_OPTION_FLAG_NONE;
   ee[4].arg = G_OPTION_ARG_NONE;
   ee[4].arg_data = &option->nolua;
-  ee[4].description = "Disable to create Lua context.";
+  ee[4].description = "Launch without Lua context";
 
   unsigned i = offset_option;
 
@@ -95,8 +95,14 @@ void option_close(Option* option)
   g_free(option);
 }
 
-void option_set_values(Option* option, GVariantDict* values)
+void option_register_entries(Option* option, GApplication* app)
 {
+  g_application_add_main_option_entries(app, option->entries);
+}
+
+void option_retrieve_values(Option* option, GApplicationCommandLine* cli)
+{
+  GVariantDict* values = g_application_command_line_get_options_dict(cli);
   if (option->values) {
     g_variant_dict_unref(option->values);
   }

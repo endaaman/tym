@@ -9,7 +9,6 @@ tym_SOURCES = \
 	context.c \
 	hook.c \
 	keymap.c \
-	layout.c \
 	meta.c \
 	option.c \
 	property.c \

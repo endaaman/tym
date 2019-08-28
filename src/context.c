@@ -12,9 +12,11 @@
 #include "builtin.h"
 #include "property.h"
 #include "command.h"
+#include "regex.h"
 
 
 typedef void (*TymCommandFunc)(Context* context);
+
 typedef struct {
   unsigned key;
   GdkModifierType mod;
@@ -30,9 +32,9 @@ static const char* TYM_MODULE_NAME = "tym";
 static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
 
 static KeyPair DEFAULT_KEY_PAIRS[] = {
-  { GDK_KEY_c    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_clipboard      },
-  { GDK_KEY_v    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste_clipboard     },
-  { GDK_KEY_r    , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload              },
+  { GDK_KEY_c , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_selection },
+  { GDK_KEY_v , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_paste          },
+  { GDK_KEY_r , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_reload         },
   {},
 };
 
@@ -114,7 +116,6 @@ Context* context_init()
   context->config = config_init(context->meta);
   context->keymap = keymap_init();
   context->hook = hook_init();
-  context->layout = layout_init();
   context->app = G_APPLICATION(gtk_application_new(
     TYM_APP_ID,
     G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE)
@@ -130,7 +131,6 @@ void context_close(Context* context)
   config_close(context->config);
   keymap_close(context->keymap);
   hook_close(context->hook);
-  layout_close(context->layout);
   g_object_unref(context->app);
   if (context->lua) {
     lua_close(context->lua);
@@ -141,7 +141,7 @@ void context_close(Context* context)
 int context_start(Context* context, int argc, char** argv)
 {
   GApplication* app = context->app;
-  g_application_add_main_option_entries(app, context->option->entries);
+  option_register_entries(context->option, app);
 
   g_signal_connect(app, "activate", G_CALLBACK(on_activate), context);
   g_signal_connect(app, "command-line", G_CALLBACK(on_command_line), context);
@@ -216,7 +216,7 @@ void context_restore_default(Context* context)
     assert(gdk_rgba_parse(&palette[i], e->default_value));
     i += 1;
   }
-  vte_terminal_set_colors(context->layout->vte, NULL, NULL, palette, 16);
+  vte_terminal_set_colors(context->layout.vte, NULL, NULL, palette, 16);
 }
 
 void context_override_by_option(Context* context)
@@ -229,7 +229,6 @@ void context_override_by_option(Context* context)
         const char* v = NULL;
         bool has_value = option_get_str_value(context->option, key, &v);
         if (has_value) {
-          dd("OPTION %s %s", key, v);
           context_set_str(context, key, v);
         }
         break;
@@ -416,9 +415,39 @@ void context_handle_signal(Context* context, const char* signal_name, GVariant* 
   }
 }
 
-GdkWindow* context_get_gdk_window(Context* context)
+void context_build_layout(Context* context)
 {
-  return gtk_widget_get_window(GTK_WIDGET(context->layout->window));
+  GtkWindow* window = context->layout.window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(context->app)));
+  VteTerminal* vte = context->layout.vte = VTE_TERMINAL(vte_terminal_new());
+  GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+  GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
+
+  gtk_container_add(GTK_CONTAINER(hbox), GTK_WIDGET(vte));
+  gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vbox));
+  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+
+  GError* error = NULL;
+  VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
+  if (error) {
+    g_warning("Error when parsing css: %s", error->message);
+    g_error_free(error);
+  } else {
+    int tag = vte_terminal_match_add_regex(vte, regex, 0);
+    context->layout.uri_tag = g_malloc0(sizeof(int));
+    *context->layout.uri_tag = tag;
+    vte_terminal_match_set_cursor_name(vte, tag, "hand");
+    vte_regex_unref(regex);
+  }
+
+  GdkScreen* screen = gtk_widget_get_screen(GTK_WIDGET(window));
+  GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
+  context->layout.alpha_supported = visual;
+  if (!context->layout.alpha_supported) {
+    g_message("Your screen does not support alpha channel.");
+    visual = gdk_screen_get_system_visual(screen);
+  }
+  gtk_widget_set_visual(GTK_WIDGET(window), visual);
 }
 
 void context_notify(Context* context, const char* body, const char* title)
@@ -450,6 +479,11 @@ void context_launch_uri(Context* context, const char* uri)
     g_free(message);
     g_error_free(error);
   }
+}
+
+GdkWindow* context_get_gdk_window(Context* context)
+{
+  return gtk_widget_get_window(GTK_WIDGET(context->layout.window));
 }
 
 const char* context_get_str(Context* context, const char* key)

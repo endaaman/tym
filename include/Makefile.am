@@ -7,7 +7,6 @@ noinst_HEADERS = \
 	context.h \
 	hook.h \
 	keymap.h \
-	layout.h \
 	meta.h \
 	option.h \
 	property.h \
