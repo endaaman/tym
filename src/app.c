@@ -31,8 +31,8 @@ static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user
   UNUSED(widget);
   Context* context = (Context*)user_data;
   bool result = false;
-  if (hook_perform_scroll(context->hook, context->lua, e->delta_x, e->delta_y, e->x, e->y, &result)) {
-    return result;
+  if (hook_perform_scroll(context->hook, context->lua, e->delta_x, e->delta_y, e->x, e->y, &result) && result) {
+    return true;
   }
   return false;
 }
