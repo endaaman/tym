@@ -84,7 +84,8 @@ Meta* meta_init()
       .setter=CB(setter_icon)
     },
     {
-      .name="role", .default_value=sdup(""), .arg_desc="Unique identifier for the window",
+      .name="role", .default_value=sdup(""), .arg_desc="",
+      .desc="Unique identifier for the window",
       .getter=CB(getter_role), .setter=CB(setter_role),
     },
     {
@@ -98,13 +99,13 @@ Meta* meta_init()
       .getter=CB(getter_cursor_blink_mode), .setter=CB(setter_cursor_blink_mode),
     },
     {
-      .name="cjk_width", .default_value=sdup(TYM_DEFAULT_CJK),
-      .arg_desc="'" TYM_CJK_WIDTH_NARROW "' or '" TYM_CJK_WIDTH_WIDE "'",
+      .name="cjk_width", .arg_desc="", .default_value=sdup(TYM_DEFAULT_CJK),
+      .desc="'" TYM_CJK_WIDTH_NARROW "' or '" TYM_CJK_WIDTH_WIDE "'",
       .getter=CB(getter_cjk_width), .setter=CB(setter_cjk_width),
     },
     {
-      .name="background_image", .default_value=sdup(""),
-      .arg_desc="path to background image",
+      .name="background_image", .arg_desc="", .default_value=sdup(""),
+      .desc="path to background image",
       .setter=CB(setter_background_image),
     },
     // INT
