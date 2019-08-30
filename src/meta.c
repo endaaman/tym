@@ -204,6 +204,7 @@ Meta* meta_init()
 void meta_close(Meta* meta)
 {
   g_hash_table_destroy(meta->data);
+  g_list_free(meta->list);
   g_free(meta);
 }
 

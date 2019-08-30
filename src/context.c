@@ -349,6 +349,7 @@ void context_load_theme(Context* context)
       g_warning("%s: Invalid color key in theme: `%s`", theme_path, key);
       continue;
     }
+    // TODO: set `color_0` .. `color_15` at once
     context_set_str(context, key, value);
   }
   lua_pop(L, 1);

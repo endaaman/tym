@@ -485,18 +485,14 @@ static int builtin_color_to_rgba(lua_State* L)
   GdkRGBA color;
   const char* str = luaL_checkstring(L, -1);
   bool valid = gdk_rgba_parse(&color, str);
-  if (valid) {
-    lua_pushinteger(L, roundup(color.red * 255));
-    lua_pushinteger(L, roundup(color.green * 255));
-    lua_pushinteger(L, roundup(color.blue * 255));
-    lua_pushnumber(L, color.alpha);
-  } else {
+  if (!valid) {
     luaX_warn(L, "Invalid color string: '%s'", str);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
+    return 0;
   }
+  lua_pushinteger(L, roundup(color.red * 255));
+  lua_pushinteger(L, roundup(color.green * 255));
+  lua_pushinteger(L, roundup(color.blue * 255));
+  lua_pushnumber(L, color.alpha);
   return 4;
 }
 
