@@ -28,8 +28,8 @@ typedef struct {
   TymCommandFunc func;
 } SignalDefinition;
 
-static const char* TYM_MODULE_NAME = "tym";
-static const char* TYM_DEFAULT_NOTIFICATION_TITLE = "tym";
+#define TYM_MODULE_NAME "tym"
+#define TYM_DEFAULT_NOTIFICATION_TITLE "tym"
 
 static KeyPair DEFAULT_KEY_PAIRS[] = {
   { GDK_KEY_c , GDK_CONTROL_MASK | GDK_SHIFT_MASK, command_copy_selection },
@@ -168,11 +168,14 @@ void context_load_device(Context* context)
 #endif
 }
 
-static void context_on_lua_error(Context* context, const char* error)
+static void context_on_error(Context* context, const char* fmt, ...)
 {
-  char* message = g_strdup_printf("%s", error);
-  g_message("%s", message);
-  context_notify(context, error, "tym: lua error");
+  va_list argp;
+  va_start(argp, fmt);
+  char* message = g_strdup_vprintf(fmt, argp);
+  g_message("tym error: %s", message);
+  context_notify(context, message, "tym error");
+  va_end(argp);
   g_free(message);
 }
 
@@ -287,7 +290,7 @@ void context_load_config(Context* context)
   if (result != LUA_OK) {
     const char* error = lua_tostring(L, -1);
     lua_pop(L, 1);
-    context_on_lua_error(context, error);
+    context_on_error(context, error);
     goto EXIT;
   }
 
@@ -321,21 +324,18 @@ void context_load_theme(Context* context)
   }
 
   lua_State* L = context->lua;
-  int result = luaL_loadfile(L, theme_path);
+  int result = luaL_dofile(L, theme_path);
   if (result != LUA_OK) {
-    g_warning("Could not load `%s`.", theme_path);
-    goto EXIT;
-  }
-
-  if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
     const char* error = lua_tostring(L, -1);
-    g_message("Got error excuting theme script. Stopped theme loading.");
-    context_on_lua_error(context, error);
+    context_on_error(context, error);
     goto EXIT;
   }
 
   if (!lua_istable(L, -1)) {
-    g_message("Theme script must return a table (got %s). Skiped theme assignment.", lua_typename(L, lua_type(L, -1)));
+    context_on_error(
+        context,
+        "Theme script(%s) must return a table (got %s). Skiped theme assignment.",
+        theme_path, lua_typename(L, lua_type(L, -1)));
     goto EXIT;
   }
 
@@ -348,7 +348,7 @@ void context_load_theme(Context* context)
 
     MetaEntry* e = meta_get_entry(context->meta, key);
     if (!e || !e->is_theme) {
-      g_message("%s: Invalid field in theme: `%s`", theme_path, key);
+      context_on_error(context, "%s: Invalid field in theme: `%s`", theme_path, key);
       continue;
     }
     context_set_str(context, key, value);
@@ -389,7 +389,7 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
       }
     } else {
       if (error) {
-        context_on_lua_error(context, error);
+        context_on_error(context, error);
         g_free(error);
         // if the keymap func has error, default action will be canceled.
         return true;
@@ -475,10 +475,7 @@ void context_launch_uri(Context* context, const char* uri)
   gdk_app_launch_context_set_screen(ctx, gdk_screen_get_default());
   /* gdk_app_launch_context_set_timestamp(ctx, event->time); */
   if (!g_app_info_launch_default_for_uri(uri, G_APP_LAUNCH_CONTEXT(ctx), &error)) {
-    char* message = g_strdup_printf("Failed to launch uri: %s", error->message);
-    context_notify(context, message, NULL);
-    g_message("%s", message);
-    g_free(message);
+    context_on_error(context, "Failed to launch uri: %s", error->message);
     g_error_free(error);
   }
 }
