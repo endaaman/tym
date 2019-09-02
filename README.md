@@ -39,7 +39,7 @@ I did not check which packeges are needed to build on other distros or OS. I'm w
 
 ## Configuration
 
-`$XDG_CONFIG_HOME/tym/config.lua` is executed when it exists. You can change the path by `--use` `-u` option.
+When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed. You can change the path by `--use`/`-u` option.
 
 ```lua
 -- At first, you need to require tym module
@@ -84,22 +84,38 @@ All available config values are shown below.
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
-| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | `''` | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
 
 
 ## Theme customization
 
-`$XDG_CONFIG_HOME/tym/theme.lua` is loaded when it exists. Theme loading is execute before config loading. You can change the theme path by `--theme` or `-t` option.
+When `$XDG_CONFIG_HOME/tym/theme.lua` exists, it is loaded before config is loadig. You can change the path by `--theme`/`-t` option. The following is an example and it shows builtin default values, which are ported from [iceberg](https://cocopon.github.io/iceberg.vim/).
 
 ```lua
-local fg = '#d2d4de'
 local bg = '#161821'
+local fg = '#c6c8d1'
 return {
   color_background = bg,
   color_foreground = fg,
-  color_0  = '#161821',
+  color_bold = fg,
+  color_cursor = fg,
+  color_cursor_foreground = bg,
+  color_highlight = fg,
+  color_highlight_foreground = bg,
+  color_0  = bg,
   color_1  = '#e27878',
-  -- SNIP
+  color_2  = '#b4be82',
+  color_3  = '#e2a478',
+  color_4  = '#84a0c6',
+  color_5  = '#a093c7',
+  color_6  = '#89b8c2',
+  color_7  = fg,
+  color_8  = '#6b7089',
+  color_9  = '#e98989',
+  color_10 = '#c0ca8e',
+  color_11 = '#e9b189',
+  color_12 = '#91acd1',
+  color_13 = '#ada0d3',
   color_14 = '#95c4ce',
   color_15 = '#d2d4de',
 }
