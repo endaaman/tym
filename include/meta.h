@@ -31,6 +31,7 @@ typedef struct {
   char* desc;
   MetaCallback getter;
   MetaCallback setter;
+  bool is_theme;
   unsigned index;
 } MetaEntry;
 

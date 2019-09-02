@@ -345,11 +345,12 @@ void context_load_theme(Context* context)
     const char* key = lua_tostring(L, -1);
     const char* value = lua_tostring(L, -2);
     lua_pop(L, 2);
-    if (!value || strncmp("color_", key, 6) != 0) {
-      g_warning("%s: Invalid color key in theme: `%s`", theme_path, key);
+
+    MetaEntry* e = meta_get_entry(context->meta, key);
+    if (!e || !e->is_theme) {
+      g_message("%s: Invalid field in theme: `%s`", theme_path, key);
       continue;
     }
-    // TODO: set `color_0` .. `color_15` at once
     context_set_str(context, key, value);
   }
   lua_pop(L, 1);

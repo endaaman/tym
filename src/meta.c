@@ -39,17 +39,15 @@ Meta* meta_init()
 {
   Meta* meta = g_malloc0(sizeof(Meta));
 #define	CB(f) ((MetaCallback) (f))
-#define get_default_color(i) TYM_DEFAULT_COLOR_##i
 #define color_special(key, default_color) \
   { \
     .name=("color_"#key ), .default_value=sdup(default_color), .arg_desc="", .desc=("value of color_"#key), \
-    .setter=CB(setter_color_##key) \
+     .is_theme=true, .setter=CB(setter_color_##key) \
   }
 #define color_normal(i) \
   { \
-    .name=("color_"#i ), .default_value=sdup(get_default_color(i)), .arg_desc="", .desc=("value of color_"#i), \
-    .option_flag=G_OPTION_FLAG_HIDDEN, \
-    .setter=CB(setter_color_normal) \
+    .name=("color_"#i ), .default_value=sdup(TYM_DEFAULT_COLOR_##i), .arg_desc="", .desc=("value of color_"#i), \
+    .option_flag=G_OPTION_FLAG_HIDDEN, .is_theme=true, .setter=CB(setter_color_normal) \
   }
   const MetaEntryType T_INT = META_ENTRY_TYPE_INTEGER;
   const MetaEntryType T_BOOL = META_ENTRY_TYPE_BOOLEAN;
