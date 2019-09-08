@@ -14,53 +14,58 @@
 Option* option_init(Meta* meta)
 {
   Option* option = g_malloc0(sizeof(Option));
-  const unsigned offset_option = 5;
-  GOptionEntry* ee = (GOptionEntry*)g_malloc0_n(sizeof(GOptionEntry), meta_size(meta) + offset_option + 1);
 
-  ee[0].long_name = "version";
-  ee[0].short_name = 'v';
-  ee[0].flags = G_OPTION_FLAG_NONE;
-  ee[0].arg = G_OPTION_ARG_NONE;
-  ee[0].arg_data = &option->version;
-  ee[0].description = "Show version";
-  ee[0].arg_description = NULL;
+  GOptionEntry app_options[] = {
+    {
+      .long_name = "version",
+      .short_name = 'v',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = &option->version,
+      .description = "Show version",
+      .arg_description = NULL,
+    }, {
+      .long_name = "use",
+      .short_name = 'u',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = &option->config_path,
+      .description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "theme",
+      .short_name = 't',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = &option->theme_path,
+      .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "signal",
+      .short_name = 's',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = &option->signal,
+      .description = "Signal to send via D-Bus",
+      .arg_description = "<signal>",
+    }, {
+      .long_name = "nolua",
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = &option->nolua,
+      .description = "Launch without Lua context",
+    }
+  };
 
-  ee[1].long_name = "use";
-  ee[1].short_name = 'u';
-  ee[1].flags = G_OPTION_FLAG_NONE;
-  ee[1].arg = G_OPTION_ARG_STRING;
-  ee[1].arg_data = &option->config_path;
-  ee[1].description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config";
-  ee[1].arg_description = "<path>";
+  GOptionEntry* options_entries = (GOptionEntry*)g_malloc0_n(
+      sizeof(app_options) / sizeof(GOptionEntry) + meta_size(meta) + 1,
+      sizeof(GOptionEntry));
+  memmove(options_entries, app_options, sizeof(app_options));
+  unsigned i = sizeof(app_options) / sizeof(GOptionEntry);
 
-  ee[2].long_name = "theme";
-  ee[2].short_name = 't';
-  ee[2].flags = G_OPTION_FLAG_NONE;
-  ee[2].arg = G_OPTION_ARG_STRING;
-  ee[2].arg_data = &option->theme_path;
-  ee[2].description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme";
-  ee[2].arg_description = "<path>";
-
-  ee[3].long_name = "signal";
-  ee[3].short_name = 's';
-  ee[3].flags = G_OPTION_FLAG_NONE;
-  ee[3].arg = G_OPTION_ARG_STRING;
-  ee[3].arg_data = &option->signal;
-  ee[3].description = "Signal to send via D-Bus";
-  ee[3].arg_description = "<signal>";
-
-  ee[4].long_name = "nolua";
-  ee[4].flags = G_OPTION_FLAG_NONE;
-  ee[4].arg = G_OPTION_ARG_NONE;
-  ee[4].arg_data = &option->nolua;
-  ee[4].description = "Launch without Lua context";
-
-  unsigned i = offset_option;
-
-  GList* mee = meta->list;
-  for (GList* li = mee; li != NULL; li = li->next) {
+  for (GList* li = meta->list; li != NULL; li = li->next) {
     MetaEntry* me = (MetaEntry*)li->data;
-    GOptionEntry* e = &ee[i];
+    GOptionEntry* e = &options_entries[i];
     i += 1;
     e->long_name = me->name;
     e->short_name = me->short_name;
@@ -81,8 +86,7 @@ Option* option_init(Meta* meta)
         break;
     }
   }
-
-  option->entries = ee;
+  option->entries = options_entries;
   return option;
 }
 
