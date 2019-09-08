@@ -115,6 +115,9 @@ void option_retrieve_values(Option* option, GApplicationCommandLine* cli)
 
 bool option_get_str_value(Option* option, const char* key, const char** value)
 {
+  if (!option->values) {
+    return false;
+  }
   char* v;
   bool has_value = g_variant_dict_lookup(option->values, key, "s", &v);
   if (has_value) {
@@ -125,6 +128,9 @@ bool option_get_str_value(Option* option, const char* key, const char** value)
 
 bool option_get_int_value(Option* option, const char* key, int* value)
 {
+  if (!option->values) {
+    return false;
+  }
   int v;
   bool has_value = g_variant_dict_lookup(option->values, key, "i", &v);
   if (has_value) {
@@ -135,6 +141,9 @@ bool option_get_int_value(Option* option, const char* key, int* value)
 
 bool option_get_bool_value(Option* option, const char* key, bool* value)
 {
+  if (!option->values) {
+    return false;
+  }
   gboolean v;
   bool has_value = g_variant_dict_lookup(option->values, key, "b", &v);
   if (has_value) {
