@@ -339,19 +339,17 @@ void context_load_theme(Context* context)
     goto EXIT;
   }
 
-  lua_pushnil(L);
-  while (lua_next(L, -2)) {
-    lua_pushvalue(L, -2);
-    const char* key = lua_tostring(L, -1);
-    const char* value = lua_tostring(L, -2);
-    lua_pop(L, 2);
-
-    MetaEntry* e = meta_get_entry(context->meta, key);
-    if (!e || !e->is_theme) {
-      context_on_error(context, "%s: Invalid field in theme: `%s`", theme_path, key);
+  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+    MetaEntry* e = (MetaEntry*)li->data;
+    if (!e->is_theme) {
       continue;
     }
-    context_set_str(context, key, value);
+    lua_getfield(L, -1, e->name);
+    if (!lua_isnil(L, -1)) {
+      const char* value = lua_tostring(L, -1);
+      context_set_str(context, e->name, value);
+    }
+    lua_pop(L, 1);
   }
   lua_pop(L, 1);
 
