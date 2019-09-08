@@ -170,7 +170,7 @@ Meta* meta_init()
     color_special(highlight, TYM_DEFAULT_COLOR_FOREGROUND),
     color_special(highlight_foreground, TYM_DEFAULT_COLOR_BACKGROUND),
     {
-      .name="color_1..15", .type=T_NONE, .arg_desc="", .desc="value of color from color_1 to color_15",
+      .name="color_0..15", .type=T_NONE, .arg_desc="", .desc="value of color_0 .. color_15",
     },
   };
 #undef CB
