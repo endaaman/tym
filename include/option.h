@@ -27,7 +27,7 @@ typedef struct {
 Option* option_init(Meta* meta);
 void option_close(Option* option);
 void option_register_entries(Option* option, GApplication* app);
-void option_retrieve_values(Option* option, GApplicationCommandLine* cli);
+void option_load_from_cli(Option* option, GApplicationCommandLine* cli);
 bool option_get_str_value(Option* option, const char* key, const char** value);
 bool option_get_int_value(Option* option, const char* key, int* value);
 bool option_get_bool_value(Option* option, const char* key, bool* value);

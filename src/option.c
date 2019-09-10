@@ -104,7 +104,7 @@ void option_register_entries(Option* option, GApplication* app)
   g_application_add_main_option_entries(app, option->entries);
 }
 
-void option_retrieve_values(Option* option, GApplicationCommandLine* cli)
+void option_load_from_cli(Option* option, GApplicationCommandLine* cli)
 {
   GVariantDict* values = g_application_command_line_get_options_dict(cli);
   if (option->values) {

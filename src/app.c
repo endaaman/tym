@@ -183,7 +183,7 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
   UNUSED(cli);
   Context* context = (Context*)user_data;
 
-  option_retrieve_values(context->option, cli);
+  option_load_from_cli(context->option, cli);
   bool version = option_get_version(context->option);
   if (version) {
     g_print("version %s\n", PACKAGE_VERSION);
