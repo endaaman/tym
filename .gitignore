@@ -28,3 +28,5 @@ include/common.h
 /app-config.*
 tym-*.tar.gz
 test-driver
+.ccls-cache/
+compile_commands.json
