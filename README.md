@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym) [![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
 
-`tym` is a tiny VTE-based terminal emulator, which configurable by Lua.
+`tym` is a tiny VTE-based terminal emulator, which is configurable by Lua.
 
 ## Installation
 
@@ -14,7 +14,7 @@ $ yay -S tym
 
 ### Other distros
 
-Downlaod the latest realease from [Releases](https://github.com/endaaman/tym/releases), extract it and run as bellow
+Download the latest release from [Releases](https://github.com/endaaman/tym/releases), extract it and run as below
 
 ```
 $ ./configure
@@ -32,7 +32,7 @@ $ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev libpcre2-dev
 
 #### Other distros / macOS / Windows
 
-I did not check which packeges are needed to build on other distros or OS. I'm waiting for your contribution ;)
+I did not check which packages are needed to build on other distros or OS. I'm waiting for your contribution ;)
 
 </p>
 </details>
@@ -42,7 +42,7 @@ I did not check which packeges are needed to build on other distros or OS. I'm w
 When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed. You can change the path by `--use`/`-u` option.
 
 ```lua
--- At first, you need to require tym module
+-- Firstly, you need to require tym module
 local tym = require('tym')
 
 -- set config individually
@@ -66,7 +66,7 @@ All available config values are shown below.
 | `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to excute. |
 | `term` | string | `'xterm-256color'` | Value to assign to `$TERM` |
 | `title` | string | `'tym'` | Window title. |
-| `font` | string | `''` | You can specify it like `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value is parsed by [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
+| `font` | string | `''` | You can specify font with `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value is parsed by [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
 | `icon` | string | `'utilities-terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `role` | string | `''` | Unique identifier for the window. If empty string is set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
 | `cursor_shape` | string | `'block'` | `'block'`, `'ibeam'` or `'underline'` can be used. |
@@ -161,7 +161,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register keymap(s) by `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the key input event propagation will **not be stopped**.
+You can register keymap(s) with `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the key input event propagation will **not be stopped**.
 
 ```lua
 -- also can set keymap
@@ -211,7 +211,7 @@ tym.set_keymaps({
 | `tym.reload()`                       | void     | Reload config file.|
 | `tym.reload_theme()`                 | void     | Reload theme file. |
 | `tym.send_key()`                     | void     | Send key press event. |
-| `tym.set_timeout(func, interval=0)`  | int(tag) | Set timeout. return true in func to excute again. |
+| `tym.set_timeout(func, interval=0)`  | int(tag) | Set timeout. return true in func to execute again. |
 | `tym.clear_timeout(tag)`             | void     | Clear the timeout. |
 | `tym.put(text)`                      | void     | Feed text. |
 | `tym.bell()`                         | void     | Sound bell. |
@@ -310,7 +310,7 @@ $ tym --shell=/bin/zsh --color_background=red --width=40 --ignore_default_keymap
 
 ## Development
 
-Clone this repo and run as bellow
+Clone this repo and run as below
 
 ```
 $ autoreconf -fvi
