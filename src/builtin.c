@@ -84,6 +84,35 @@ static int builtin_set(lua_State* L)
   return 0;
 }
 
+static int get_default_value(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+
+  const char* key = luaL_checkstring(L, 1);
+  MetaEntry* e = meta_get_entry(context->meta, key);
+  if (!e) {
+    luaX_warn(L, "Invalid config key: '%s'", key);
+    lua_pushnil(L);
+    return 1;
+  }
+
+  switch (e->type) {
+    case META_ENTRY_TYPE_STRING:
+      lua_pushstring(L, (char*)e->default_value);
+      break;
+    case META_ENTRY_TYPE_INTEGER:
+      lua_pushinteger(L, *(int*)e->default_value);
+      break;
+    case META_ENTRY_TYPE_BOOLEAN:
+      lua_pushboolean(L, *(bool*)e->default_value);
+      break;
+    default:
+      lua_pushnil(L);
+      break;
+  }
+  return 1;
+}
+
 static int builtin_get_config(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -642,6 +671,7 @@ int builtin_register_module(lua_State* L)
   const luaL_Reg table[] = {
     { "get"                 , builtin_get                  },
     { "set"                 , builtin_set                  },
+    { "get_default_value"   , get_default_value            },
     { "get_config"          , builtin_get_config           },
     { "set_config"          , builtin_set_config           },
     { "reset_config"        , builtin_reset_config         },

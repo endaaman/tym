@@ -199,6 +199,7 @@ tym.set_keymaps({
 | ------------------------------------ | ------------ | ----------- |
 | `tym.get(key)`                       | any      | Get config value. |
 | `tym.set(key, value)`                | void     | Set config value. |
+| `tym.get_default_value(key)`         | any      | Get default config value. |
 | `tym.get_config()`                   | table    | Get whole config. |
 | `tym.set_config(table)`              | void     | Set config by table. |
 | `tym.reset_config()`                 | void     | Reset all config. |
