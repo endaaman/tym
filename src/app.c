@@ -11,6 +11,41 @@
 #include "context.h"
 
 
+static void on_vte_drag_data_received(
+  VteTerminal* vte,
+  GdkDragContext* drag_context,
+  gint x,
+  gint y,
+  GtkSelectionData* data,
+  guint info,
+  guint time,
+  void* user_data)
+{
+  if (!data || gtk_selection_data_get_format(data) != 8) {
+    return;
+  }
+
+  gchar** uris = g_uri_list_extract_uris(gtk_selection_data_get_data(data));
+  if (!uris) {
+    return;
+  }
+
+  GRegex* regex = g_regex_new("'", 0, 0, NULL);
+  for (gchar** p = uris; *p; ++p) {
+    gchar* file_path = g_filename_from_uri(*p, NULL, NULL);
+    if (file_path) {
+      gchar* path_escaped = g_regex_replace(regex, file_path, -1, 0, "'\\\\''", 0, NULL);
+      gchar* path_wrapped = g_strdup_printf("'%s' ", path_escaped);
+
+      vte_terminal_feed_child(vte, path_wrapped, strlen(path_wrapped));
+
+      g_free(file_path);
+      g_free(path_escaped);
+      g_free(path_wrapped);
+    }
+  }
+  g_regex_unref(regex);
+}
 
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
@@ -231,6 +266,12 @@ void on_activate(GApplication* app, void* user_data)
   VteTerminal* vte = context->layout.vte;
   GtkWindow* window = context->layout.window;
 
+  GtkTargetEntry drop_types[] = {
+    {"text/uri-list", 0, 0}
+  };
+  gtk_drag_dest_set(GTK_WIDGET(vte), GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP, drop_types, G_N_ELEMENTS(drop_types), GDK_ACTION_COPY);
+
+  g_signal_connect(vte, "drag-data-received", G_CALLBACK(on_vte_drag_data_received), context);
   g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
   g_signal_connect(vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll), context);
   g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
