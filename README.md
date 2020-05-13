@@ -241,7 +241,8 @@ tym.set_keymaps({
 | `title`       | title  | changes title | If string is returned, it will be used as the new title. |
 | `bell`        | nil    | makes the window urgent when it is inactive. | If true is returned, the window will not be urgent. |
 | `clicked`     | button, uri | If URI exists under cursor, opens it | Triggered when mouse button is pressed. |
-| `scroll`      | delta_x, delta_x, mouse_x, mouse_y,  | scroll buffer | Triggered when mouse wheel is scrolled. |
+| `scroll`      | delta_x, delta_x, mouse_x, mouse_y  | scroll buffer | Triggered when mouse wheel is scrolled. |
+| `drag`        | filepath  | feed filepath to the console | Triggered when files are dragged to the screen. |
 | `activated`   | nil    | nothing | Triggered when the window is activated. |
 | `deactivated` | nil    | nothing | Triggered when the window is deactivated. |
 | `selected`    | string | nothing | Triggered when the text in the terminal screen is selected. |

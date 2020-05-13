@@ -10,7 +10,6 @@ COMMON_CFLAGS = \
 	-std=c11 \
 	-Wall \
 	-Wextra \
-	-Wno-unused-parameter \
 	-Wno-sign-compare \
 	-Wno-pointer-sign \
 	-Wno-missing-field-initializers \

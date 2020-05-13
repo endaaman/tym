@@ -14,6 +14,7 @@
 #define HOOK_KEY_BELL "bell"
 #define HOOK_KEY_CLICKED "clicked"
 #define HOOK_KEY_SCROLL "scroll"
+#define HOOK_KEY_DRAG "drag"
 #define HOOK_KEY_ACTIVATED "activated"
 #define HOOK_KEY_DEACTIVATED "deactivated"
 #define HOOK_KEY_SELECTED "selected"
@@ -25,6 +26,7 @@ const char* HOOK_KEYS[] = {
   HOOK_KEY_BELL,
   HOOK_KEY_CLICKED,
   HOOK_KEY_SCROLL,
+  HOOK_KEY_DRAG,
   HOOK_KEY_ACTIVATED,
   HOOK_KEY_DEACTIVATED,
   HOOK_KEY_SELECTED,
@@ -167,6 +169,19 @@ bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_
   lua_pushnumber(L, x);
   lua_pushnumber(L, x);
   bool succeeded = hook_perform(hook, L, HOOK_KEY_SCROLL, 4, 1);
+  if (!succeeded) {
+    return false;
+  }
+  *result = lua_toboolean(L, -1);
+  lua_pop(L, 1);
+  return succeeded;
+}
+
+bool hook_perform_drag(Hook* hook, lua_State* L, char* path, bool* result)
+{
+  assert(result);
+  lua_pushstring(L, path);
+  bool succeeded = hook_perform(hook, L, HOOK_KEY_DRAG, 1, 1);
   if (!succeeded) {
     return false;
   }

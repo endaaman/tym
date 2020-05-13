@@ -14,13 +14,20 @@
 static void on_vte_drag_data_received(
   VteTerminal* vte,
   GdkDragContext* drag_context,
-  gint x,
-  gint y,
+  int x,
+  int y,
   GtkSelectionData* data,
-  guint info,
-  guint time,
+  unsigned int info,
+  unsigned int time,
   void* user_data)
 {
+  UNUSED(vte);
+  UNUSED(drag_context);
+  UNUSED(x);
+  UNUSED(y);
+  UNUSED(info);
+  UNUSED(time);
+  Context* context = (Context*)user_data;
   if (!data || gtk_selection_data_get_format(data) != 8) {
     return;
   }
@@ -34,14 +41,15 @@ static void on_vte_drag_data_received(
   for (gchar** p = uris; *p; ++p) {
     gchar* file_path = g_filename_from_uri(*p, NULL, NULL);
     if (file_path) {
-      gchar* path_escaped = g_regex_replace(regex, file_path, -1, 0, "'\\\\''", 0, NULL);
-      gchar* path_wrapped = g_strdup_printf("'%s' ", path_escaped);
-
-      vte_terminal_feed_child(vte, path_wrapped, strlen(path_wrapped));
-
+      bool result;
+      if (!(hook_perform_drag(context->hook, context->lua, file_path, &result) && result)) {
+        gchar* path_escaped = g_regex_replace(regex, file_path, -1, 0, "'\\\\''", 0, NULL);
+        gchar* path_wrapped = g_strdup_printf("'%s' ", path_escaped);
+        vte_terminal_feed_child(vte, path_wrapped, strlen(path_wrapped));
+        g_free(path_escaped);
+        g_free(path_wrapped);
+      }
       g_free(file_path);
-      g_free(path_escaped);
-      g_free(path_wrapped);
     }
   }
   g_regex_unref(regex);
@@ -130,6 +138,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
+  UNUSED(widget);
   Context* context = (Context*)user_data;
   if (!vte_terminal_get_has_selection(context->layout.vte)) {
     hook_perform_unselected(context->hook, context->lua);

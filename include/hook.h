@@ -25,10 +25,10 @@ bool hook_perform_title(Hook* hook, lua_State* L, const char* title, bool* resul
 bool hook_perform_bell(Hook* hook, lua_State* L, bool* result);
 bool hook_perform_clicked(Hook* hook, lua_State* L, int button, const char* uri, bool* result);
 bool hook_perform_scroll(Hook* hook, lua_State* L, double delta_x, double delta_y, double x, double y, bool* result);
+bool hook_perform_drag(Hook* hook, lua_State* L, char* path, bool* result);
 bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
 bool hook_perform_selected(Hook* hook, lua_State* L, const char* text);
 bool hook_perform_unselected(Hook* hook, lua_State* L);
-
 
 #endif
