@@ -21,12 +21,6 @@ static void on_vte_drag_data_received(
   unsigned int time,
   void* user_data)
 {
-  UNUSED(vte);
-  UNUSED(drag_context);
-  UNUSED(x);
-  UNUSED(y);
-  UNUSED(info);
-  UNUSED(time);
   Context* context = (Context*)user_data;
   if (!data || gtk_selection_data_get_format(data) != 8) {
     return;
@@ -57,7 +51,6 @@ static void on_vte_drag_data_received(
 
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
-  UNUSED(widget);
   Context* context = (Context*)user_data;
 
   unsigned mod = event->state & gtk_accelerator_get_default_mod_mask();
@@ -71,7 +64,6 @@ static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_d
 
 static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user_data)
 {
-  UNUSED(widget);
   Context* context = (Context*)user_data;
   bool result = false;
   if (hook_perform_scroll(context->hook, context->lua, e->delta_x, e->delta_y, e->x, e->y, &result) && result) {
@@ -82,15 +74,12 @@ static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user
 
 static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
-  UNUSED(vte);
-  UNUSED(status);
   Context* context = (Context*)user_data;
   g_application_quit(G_APPLICATION(context->app));
 }
 
 static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
-  UNUSED(vte);
   Context* context = (Context*)user_data;
   GtkWindow* window = context->layout.window;
   bool result = false;
@@ -105,7 +94,6 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 
 static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
-  UNUSED(vte);
   Context* context = (Context*)user_data;
   bool result = false;
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
@@ -138,7 +126,6 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
-  UNUSED(widget);
   Context* context = (Context*)user_data;
   if (!vte_terminal_get_has_selection(context->layout.vte)) {
     hook_perform_unselected(context->hook, context->lua);
@@ -153,8 +140,6 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
 static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
 {
-  UNUSED(vte);
-  UNUSED(pid);
   Context* context = (Context*)user_data;
   context->state.initialized = false;
   if (error) {
@@ -167,8 +152,6 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  UNUSED(event);
-
   Context* context = (Context*)user_data;
   gtk_window_set_urgency_hint(window, false);
   hook_perform_activated(context->hook, context->lua);
@@ -177,9 +160,6 @@ static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_da
 
 static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  UNUSED(window);
-  UNUSED(event);
-
   Context* context = (Context*)user_data;
   hook_perform_deactivated(context->hook, context->lua);
   return false;
@@ -214,17 +194,12 @@ void on_dbus_signal(
   GVariant* parameters,
   void* user_data)
 {
-  UNUSED(conn);
-  UNUSED(sender_name);
-  UNUSED(object_path);
-  UNUSED(interface_name);
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
 int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
 {
   df();
-  UNUSED(cli);
   Context* context = (Context*)user_data;
 
   option_load_from_cli(context->option, cli);

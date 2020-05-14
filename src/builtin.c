@@ -329,7 +329,6 @@ static int builtin_reload_theme(lua_State* L)
 static int builtin_send_key(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  UNUSED(context);
   const char* accelerator = luaL_checkstring(L, 1);
   unsigned key;
   GdkModifierType mod;

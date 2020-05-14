@@ -402,7 +402,6 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 
 void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters)
 {
-  UNUSED(parameters);
   dd("receive signal: %s", signal_name);
   unsigned i = 0;
   while (SIGNALS[i].func) {

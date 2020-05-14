@@ -164,8 +164,6 @@ void test_regex()
 
 int main(int argc, char* argv[])
 {
-  UNUSED(argc);
-  UNUSED(argv);
   test_regex();
   return 0;
 }

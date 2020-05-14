@@ -21,7 +21,6 @@ typedef struct {
 static void free_keymap_entry(KeymapEntry* e, void* user_data)
 {
   // TODO: luaL_unref the ref
-  UNUSED(user_data);
   g_free(e->accelerator);
   g_free(e);
 }
