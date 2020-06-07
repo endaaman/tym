@@ -1,129 +1,110 @@
 /**
  * regex.h
  *
- * IRI regular expression in PCRE2
- * reference: RFC3987 http://www.faqs.org/rfcs/rfc3987.html
+ * URI regular expression in PCRE2
+ * reference: RFC 3986 Appendix A (https://tools.ietf.org/html/rfc3986#appendix-A)
  *
- * NOTE
- * Those rules are defined in the order of appearance in the RFC document.
- * `IRI_REFERENCE`, `IRELATIVE_REF`, `IRELATIVE_PART`, `IPATH_NOSCHEME`, and
- * `ISEGMENT_NZ_NC` are omitted because they are only used for relative IRIs,
- * which we do not consider in this implementation.
- * Also, `ipath` is omitted because it is not used in any other rules.
+ * NOTE: the following definitions are omitted:
+ *     - URI-reference      only used in relative URIs.
+ *     - relative-ref       (as above)
+ *     - relative-part      (as above)
+ *     - path-noscheme      (as above)
+ *     - segment-nz-nc      (as above)
+ *     - absolute-URI       special case of URI. not distinguishable in regex.
+ *     - path               not referenced from any other rules.
+ *     - path-empty         to avoid highlighting meaningless URI like `foo:`.
  *
- * Copyright (c) 2019 endaaman, iTakeshi
+ * Copyright (c) 2020 endaaman, iTakeshi
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
 
+
 #ifndef REGEX_H
 #define REGEX_H
 
 
-#define IRI             ABSOLUTE_IRI "(?:\\#" IFRAGMENT ")?"
+/*
+ * inherited from RFC 2234 Section 6.1 (https://tools.ietf.org/html/rfc2234#section-6.1)
+ * NOTE: the difinitions for ALPHA and HEXDIG assume those are used in a case-insensitive manner.
+ */
 
-#define IHIER_PART      "(?:\\/\\/" IAUTHORITY IPATH_ABEMPTY "|" IPATH_ABSOLUTE "|" IPATH_ROOTLESS "|" IPATH_EMPTY ")"
+#define ALPHA           "(?:" "[a-z]" ")"
 
-#define ABSOLUTE_IRI    SCHEME ":" IHIER_PART "(?:\\?" IQUERY ")?"
+#define DIGIT           "(?:" "[0-9]" ")"
 
-#define IAUTHORITY      "(?:" IUSERINFO "@)?" IHOST "(?::" PORT ")?"
+#define HEXDIG          "(?:" DIGIT "|" "[a-f]" ")"
 
-#define IUSERINFO       "(?:" PCT_ENCODED "|[" IUNRESERVED SUB_DELIMS ":])*"
 
-#define IHOST           "(?:" IP_LITERAL "|" IPV4ADDRESS "|" IREG_NAME")"
+/*
+ * main rules
+ */
 
-#define IREG_NAME       "(?:" PCT_ENCODED "|[" IUNRESERVED SUB_DELIMS "])*"
+#define URI             SCHEME ":" HIER_PART "(?:" "\\?" QUERY ")?" "(?:" "\\#" FRAGMENT ")?"
 
-#define IPATH_ABEMPTY   "(?:\\/" ISEGMENT ")*"
+#define HIER_PART       "(?:" "\\/\\/" AUTHORITY PATH_ABEMPTY "|" PATH_ABSOLUTE "|" PATH_ROOTLESS ")"
 
-#define IPATH_ABSOLUTE  "\\/(?:" ISEGMENT_NZ IPATH_ABEMPTY ")?"
+#define SCHEME          "(?:" ALPHA "(?:" ALPHA "|" DIGIT "|" "[\\+\\-\\.]" ")*" ")"
 
-#define IPATH_ROOTLESS  ISEGMENT_NZ IPATH_ABEMPTY
+#define AUTHORITY       "(?:" USERINFO "@" ")?" HOST "(?:" ":" PORT ")?"
 
-#define IPATH_EMPTY     "(?!" IPCHAR ")"
+#define USERINFO        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" ")*"
 
-#define ISEGMENT        "(?:" IPCHAR ")*"
+#define HOST            "(?:" IP_LITERAL "|" IPV4ADDRESS "|" REG_NAME")"
 
-#define ISEGMENT_NZ     "(?:" IPCHAR ")+"
+#define PORT            "(?:" DIGIT ")*"
 
-#define IPCHAR          "(?:" PCT_ENCODED "|[" IUNRESERVED SUB_DELIMS ":@])"
+#define IP_LITERAL      "(?:" "\\[" "(?:" IPV6ADDRESS "|" IPVFUTURE ")" "\\]" ")"
 
-#define IQUERY          "(?:" IPCHAR "|[" IPRIVATE "\\/\\?])*"
+#define IPVFUTURE       "(?:" "v" "(?:" HEXDIG ")+" "\\." "(?:" UNRESERVED "|" SUB_DELIMS "|" ":" ")+" ")"
 
-#define IFRAGMENT       "(?:" IPCHAR "|[\\/\\?])*"
-
-#define IUNRESERVED     UNRESERVED UCSCHAR
-
-#define UCSCHAR            "\\x{A0}-\\x{D7FF}"  \
-                         "\\x{F900}-\\x{FDCF}"  \
-                         "\\x{FDF0}-\\x{FFEF}"  \
-                        "\\x{10000}-\\x{1FFFD}" \
-                        "\\x{20000}-\\x{2FFFD}" \
-                        "\\x{30000}-\\x{3FFFD}" \
-                        "\\x{40000}-\\x{4FFFD}" \
-                        "\\x{50000}-\\x{5FFFD}" \
-                        "\\x{60000}-\\x{6FFFD}" \
-                        "\\x{70000}-\\x{7FFFD}" \
-                        "\\x{80000}-\\x{8FFFD}" \
-                        "\\x{90000}-\\x{9FFFD}" \
-                        "\\x{A0000}-\\x{AFFFD}" \
-                        "\\x{B0000}-\\x{BFFFD}" \
-                        "\\x{C0000}-\\x{CFFFD}" \
-                        "\\x{D0000}-\\x{DFFFD}" \
-                        "\\x{E1000}-\\x{EFFFD}" \
-
-#define IPRIVATE          "\\x{E000}-\\x{F8FF}"  \
-                         "\\x{F0000}-\\x{FFFFD}" \
-                        "\\x{100000}-\\x{10FFFD}"
-
-#define SCHEME          "[" ALPHA "][" ALPHA DIGIT "\\+\\-\\.]*"
-
-#define PORT            "[" DIGIT "]*"
-
-#define IP_LITERAL      "\\[(?:" IPV6ADDRESS "|" IPVFUTURE ")\\]"
-
-#define IPVFUTURE       "v[" HEXDIG "]+\\.[" UNRESERVED SUB_DELIMS ":]+"
-
-#define IPV6ADDRESS     "(?:"                                      "(?:" H16 ":){6}" LS32 \
-                          "|"                                    "::(?:" H16 ":){5}" LS32 \
-                          "|" "(?:"                     H16 ")?" "::(?:" H16 ":){4}" LS32 \
-                          "|" "(?:" "(?:" H16 ":){0,1}" H16 ")?" "::(?:" H16 ":){3}" LS32 \
-                          "|" "(?:" "(?:" H16 ":){0,2}" H16 ")?" "::(?:" H16 ":){2}" LS32 \
-                          "|" "(?:" "(?:" H16 ":){0,3}" H16 ")?" "::"    H16 ":"     LS32 \
-                          "|" "(?:" "(?:" H16 ":){0,4}" H16 ")?" "::"                LS32 \
-                          "|" "(?:" "(?:" H16 ":){0,5}" H16 ")?" "::"                H16  \
-                          "|" "(?:" "(?:" H16 ":){0,6}" H16 ")?" "::"                     \
+#define IPV6ADDRESS     "(?:"                                            "(?:" H16 ":" "){6}" LS32 \
+                          "|"                                       "::" "(?:" H16 ":" "){5}" LS32 \
+                          "|" "(?:"                        H16 ")?" "::" "(?:" H16 ":" "){4}" LS32 \
+                          "|" "(?:" "(?:" H16 ":" "){0,1}" H16 ")?" "::" "(?:" H16 ":" "){3}" LS32 \
+                          "|" "(?:" "(?:" H16 ":" "){0,2}" H16 ")?" "::" "(?:" H16 ":" "){2}" LS32 \
+                          "|" "(?:" "(?:" H16 ":" "){0,3}" H16 ")?" "::" "(?:" H16 ":" "){1}" LS32 \
+                          "|" "(?:" "(?:" H16 ":" "){0,4}" H16 ")?" "::"                      LS32 \
+                          "|" "(?:" "(?:" H16 ":" "){0,5}" H16 ")?" "::"                      H16  \
+                          "|" "(?:" "(?:" H16 ":" "){0,6}" H16 ")?" "::"                           \
                           ")"
 
-#define H16             "[" HEXDIG "]{1,4}"
+#define H16             "(?:" HEXDIG "){1,4}"
 
 #define LS32            "(?:" H16 ":" H16 "|" IPV4ADDRESS ")"
 
-#define IPV4ADDRESS     DEC_OCTET "(?:\\." DEC_OCTET "){3}"
+#define IPV4ADDRESS     "(?:" DEC_OCTET "\\." DEC_OCTET "\\." DEC_OCTET "\\." DEC_OCTET ")"
 
-#define DEC_OCTET       "(?:" "[" DIGIT "]"       \
-                          "|" "[1-9][" DIGIT "]"  \
-                          "|" "1[" DIGIT "]{2}"   \
-                          "|" "2[0-4][" DIGIT "]" \
-                          "|" "25[0-5]"           \
-                          ")"
+#define DEC_OCTET       "(?:" DIGIT "|" "[1-9]" DIGIT "|" "1" DIGIT DIGIT "|" "2" "[0-4]" DIGIT "|" "25" "[0-5]" ")"
 
-#define PCT_ENCODED     "%[" HEXDIG "]{2}"
+#define REG_NAME        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS ")*"
 
-#define UNRESERVED      ALPHA DIGIT "\\-\\._~"
+#define PATH_ABEMPTY    "(?:" "\\/" SEGMENT ")*"
 
-#define RESERVED        GEN_DELIMS SUB_DELIMS
+#define PATH_ABSOLUTE   "(?:" "\\/" "(?:" SEGMENT_NZ PATH_ABEMPTY ")?" ")"
 
-#define GEN_DELIMS      ":\\/\\?\\#\\[\\]@"
+#define PATH_ROOTLESS   "(?:" SEGMENT_NZ PATH_ABEMPTY ")"
 
-#define SUB_DELIMS      "!\\$&'\\(\\)\\*\\+,;="
+#define SEGMENT         "(?:" PCHAR ")*"
 
-#define ALPHA           "a-z"
+#define SEGMENT_NZ      "(?:" PCHAR ")+"
 
-#define DIGIT           "0-9"
+#define PCHAR           "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" "|" "@" ")"
 
-#define HEXDIG          "0-9a-f"
+#define QUERY           "(?:" PCHAR "|" "\\/" "|" "\\?" ")*"
+
+#define FRAGMENT        "(?:" PCHAR "|" "\\/" "|" "\\?" ")*"
+
+#define PCT_ENCODED     "(?:" "%" HEXDIG HEXDIG ")"
+
+#define UNRESERVED      "(?:" ALPHA "|" DIGIT "|" "[\\-\\._~]" ")"
+
+#define RESERVED        "(?:" GEN_DELIMS "|" SUB_DELIMS ")"
+
+#define GEN_DELIMS      "(?:" "[:\\/\\?\\#\\[\\]@]" ")"
+
+#define SUB_DELIMS      "(?:" "[!\\$&'\\(\\)\\*\\+,;=]" ")"
 
 
 #endif

@@ -427,7 +427,7 @@ void context_build_layout(Context* context)
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
   GError* error = NULL;
-  VteRegex* regex = vte_regex_new_for_match(IRI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
+  VteRegex* regex = vte_regex_new_for_match(URI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
   if (error) {
     g_warning("Error when parsing css: %s", error->message);
     g_error_free(error);
