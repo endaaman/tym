@@ -17,6 +17,7 @@ $ yay -S tym
 Download the latest release from [Releases](https://github.com/endaaman/tym/releases), extract it and run as below
 
 ```
+$ autoreconv -fvi
 $ ./configure
 $ sudo make install
 ```
