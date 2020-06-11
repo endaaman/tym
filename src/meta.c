@@ -106,6 +106,11 @@ Meta* meta_init()
       .desc="path to background image",
       .setter=CB(setter_background_image),
     },
+    {
+      .name="uri_schemes", .arg_desc="", .default_value=sdup(TYM_DEFAULT_URI_SCHEMES),
+      .desc="URI schemes to be highlighted and clickable",
+      .setter=CB(setter_uri_schemes),
+    },
     // INT
     {
       .name="width", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_WIDTH, sizeof(int)),

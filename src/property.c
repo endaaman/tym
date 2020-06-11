@@ -8,6 +8,7 @@
  */
 
 #include "property.h"
+#include "regex.h"
 
 
 typedef enum {
@@ -232,6 +233,65 @@ void setter_background_image(Context* context, const char* key, const char* valu
   GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(context->layout.window));
   gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
   config_set_str(context->config, key, value);
+}
+
+void setter_uri_schemes(Context* context, const char* key, const char* value)
+{
+  int errorcode;
+  PCRE2_SIZE erroroffset;
+  pcre2_code* code = pcre2_compile(
+    SCHEME_LIST,
+    PCRE2_ZERO_TERMINATED,
+    PCRE2_ANCHORED | PCRE2_CASELESS | PCRE2_ENDANCHORED,
+    &errorcode,
+    &erroroffset,
+    NULL
+  );
+  if (!code) {
+    g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
+    return;
+  }
+
+  // repetitivelly get all schemes in the list, one by one.
+  while (value[0]) {
+    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
+    int res = pcre2_match(
+        code,
+        value,
+        PCRE2_ZERO_TERMINATED,
+        0,
+        PCRE2_ANCHORED | PCRE2_ENDANCHORED | PCRE2_NOTEMPTY,
+        match_data,
+        NULL
+    );
+
+    if (res <= 0) {
+        switch (res) {
+        case 0:
+            printf("Ovector was not big enough. This should not happen.");
+            break;
+        case PCRE2_ERROR_NOMATCH:
+            printf("No match\n");
+            break;
+        default:
+            printf("PCRE2 match error %d\n", res);
+            break;
+        }
+        pcre2_match_data_free(match_data);
+        pcre2_code_free(code);
+        return;
+    }
+
+    PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
+    char matched[256] = { 0 };
+    strncpy(matched, &value[ovector[2]], ovector[3] - ovector[2]); // get first scheme
+    printf("Matched: %s\n", matched);
+
+    pcre2_match_data_free(match_data);
+    value = &value[ovector[3] + 1]; // move pointer forward by one word
+  }
+
+  pcre2_code_free(code);
 }
 
 // INT
