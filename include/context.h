@@ -27,7 +27,7 @@ typedef struct {
   VteTerminal* vte;
   GtkBox* hbox;
   GtkBox* vbox;
-  int* uri_tag;
+  int uri_tag;
   bool alpha_supported;
 } Layout;
 

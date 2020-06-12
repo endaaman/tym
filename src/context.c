@@ -419,6 +419,7 @@ void context_build_layout(Context* context)
   VteTerminal* vte = context->layout.vte = VTE_TERMINAL(vte_terminal_new());
   GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
+  context->layout.uri_tag = -1;
 
   gtk_container_add(GTK_CONTAINER(hbox), GTK_WIDGET(vte));
   gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));

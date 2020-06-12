@@ -315,9 +315,11 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     g_warning("Error when parsing css: %s", error->message);
     g_error_free(error);
   } else {
+    if (context->layout.uri_tag >= 0) {
+      vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
+    }
     int tag = vte_terminal_match_add_regex(context->layout.vte, regex, 0);
-    context->layout.uri_tag = g_malloc0(sizeof(int));
-    *context->layout.uri_tag = tag;
+    context->layout.uri_tag = tag;
     vte_terminal_match_set_cursor_name(context->layout.vte, tag, "hand");
     vte_regex_unref(regex);
   }
