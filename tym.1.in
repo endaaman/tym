@@ -89,6 +89,13 @@ Default:	\fI'narrow'\fR
 .fi
 \fI'narrow'\fR or \fI'wide'\fR are available.
 
+.IP \fBuri_schemes\fR
+Type:	\fBstring\fR
+.fi
+Default:	\fI'http https file mailto'\fR
+.fi
+Space-separated list of URI schemes to be highlighted and clickable. Specify empty string to disable highlighting.
+
 .IP \fBwidth\fR
 Type:	\fBinteger\fR
 .fi
