@@ -7,6 +7,7 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
+#include "common.h"
 #include "property.h"
 #include "regex.h"
 
@@ -253,6 +254,8 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   }
 
   // repetitivelly get all schemes in the list, one by one.
+  GSList* schemes = NULL;
+  int scheme_length_sum = 0;
   while (value[0]) {
     pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
     int res = pcre2_match(
@@ -283,15 +286,41 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     }
 
     PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
-    char matched[256] = { 0 };
-    strncpy(matched, &value[ovector[2]], ovector[3] - ovector[2]); // get first scheme
-    printf("Matched: %s\n", matched);
+    int length = ovector[3] - ovector[2];
+    schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
+    scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
 
     pcre2_match_data_free(match_data);
     value = &value[ovector[3] + 1]; // move pointer forward by one word
   }
-
   pcre2_code_free(code);
+
+  gchar scheme_pattern[scheme_length_sum];
+  gchar* p = scheme_pattern;
+  for (GSList* scheme = schemes; scheme; scheme = scheme->next) {
+    p = g_stpcpy(p, scheme->data);
+    *p = '|';
+    ++p;
+  }
+  g_slist_free(schemes);
+
+  scheme_pattern[scheme_length_sum - 1] = '\0'; // replace last `|` with null char
+  gchar* uri_pattern = g_strconcat("(?:", scheme_pattern, ")", SCHEMELESS_URI, NULL);
+
+  GError* error = NULL;
+  VteRegex* regex = vte_regex_new_for_match(uri_pattern, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
+  g_free(uri_pattern);
+
+  if (error) {
+    g_warning("Error when parsing css: %s", error->message);
+    g_error_free(error);
+  } else {
+    int tag = vte_terminal_match_add_regex(context->layout.vte, regex, 0);
+    context->layout.uri_tag = g_malloc0(sizeof(int));
+    *context->layout.uri_tag = tag;
+    vte_terminal_match_set_cursor_name(context->layout.vte, tag, "hand");
+    vte_regex_unref(regex);
+  }
 }
 
 // INT
