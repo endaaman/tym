@@ -287,13 +287,23 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
 
     PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
     int length = ovector[3] - ovector[2];
-    schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
-    scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
+    if (length > 0) {
+        schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
+        scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
+    }
 
     pcre2_match_data_free(match_data);
     value = &value[ovector[3] + 1]; // move pointer forward by one word
   }
   pcre2_code_free(code);
+
+  // if no schemes specified, remove current regex and return immediately
+  if (scheme_length_sum == 0) {
+    if (context->layout.uri_tag >= 0) {
+      vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
+    }
+    return;
+  }
 
   gchar scheme_pattern[scheme_length_sum];
   gchar* p = scheme_pattern;
@@ -302,10 +312,9 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     *p = '|';
     ++p;
   }
-  g_slist_free(schemes);
-
   scheme_pattern[scheme_length_sum - 1] = '\0'; // replace last `|` with null char
   gchar* uri_pattern = g_strconcat("(?:", scheme_pattern, ")", SCHEMELESS_URI, NULL);
+  g_slist_free(schemes);
 
   GError* error = NULL;
   VteRegex* regex = vte_regex_new_for_match(uri_pattern, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
