@@ -12,7 +12,6 @@
 #include "builtin.h"
 #include "property.h"
 #include "command.h"
-#include "regex.h"
 
 
 typedef void (*TymCommandFunc)(Context* context);
@@ -420,24 +419,12 @@ void context_build_layout(Context* context)
   VteTerminal* vte = context->layout.vte = VTE_TERMINAL(vte_terminal_new());
   GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
+  context->layout.uri_tag = -1;
 
   gtk_container_add(GTK_CONTAINER(hbox), GTK_WIDGET(vte));
   gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(vbox));
   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
-
-  GError* error = NULL;
-  VteRegex* regex = vte_regex_new_for_match(URI, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
-  if (error) {
-    g_warning("Error when parsing css: %s", error->message);
-    g_error_free(error);
-  } else {
-    int tag = vte_terminal_match_add_regex(vte, regex, 0);
-    context->layout.uri_tag = g_malloc0(sizeof(int));
-    *context->layout.uri_tag = tag;
-    vte_terminal_match_set_cursor_name(vte, tag, "hand");
-    vte_regex_unref(regex);
-  }
 
   GdkScreen* screen = gtk_widget_get_screen(GTK_WIDGET(window));
   GdkVisual* visual = gdk_screen_get_rgba_visual(screen);

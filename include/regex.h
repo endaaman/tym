@@ -4,7 +4,10 @@
  * URI regular expression in PCRE2
  * reference: RFC 3986 Appendix A (https://tools.ietf.org/html/rfc3986#appendix-A)
  *
- * NOTE: the following definitions are omitted:
+ * NOTE:
+ *   * URI is repleced by SCHEMELESS_URI, because the entire URI regex is dynamically constructed
+ *     using an user-configured list of target schemes. SCHEME is used to validate the list.
+ *   * Also, the following definitions are omitted:
  *     - URI-reference      only used in relative URIs.
  *     - relative-ref       (as above)
  *     - relative-part      (as above)
@@ -36,16 +39,25 @@
 
 #define HEXDIG          "(?:" DIGIT "|" "[a-f]" ")"
 
+#define SP              "(?:" " " ")"
+
+
+/*
+ * rules to validate the user-configured scheme list
+ */
+
+#define SCHEME          "(" ALPHA "(?:" ALPHA "|" DIGIT "|" "[\\+\\-\\.]" ")*" ")"
+
+#define SCHEME_LIST     SCHEME "(?:" SP SCHEME ")*"
+
 
 /*
  * main rules
  */
 
-#define URI             SCHEME ":" HIER_PART "(?:" "\\?" QUERY ")?" "(?:" "\\#" FRAGMENT ")?"
+#define SCHEMELESS_URI  "(?:" ":" HIER_PART "(?:" "\\?" QUERY ")?" "(?:" "\\#" FRAGMENT ")?" ")"
 
 #define HIER_PART       "(?:" "\\/\\/" AUTHORITY PATH_ABEMPTY "|" PATH_ABSOLUTE "|" PATH_ROOTLESS ")"
-
-#define SCHEME          "(?:" ALPHA "(?:" ALPHA "|" DIGIT "|" "[\\+\\-\\.]" ")*" ")"
 
 #define AUTHORITY       "(?:" USERINFO "@" ")?" HOST "(?:" ":" PORT ")?"
 

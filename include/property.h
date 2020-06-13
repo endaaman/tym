@@ -55,6 +55,7 @@ void setter_cjk_width(Context* context, const char* key, const char* value);
 
 void setter_background_image(Context* context, const char* key, const char* value);
 
+void setter_uri_schemes(Context* context, const char* key, const char* value);
 
 // int
 int getter_width(Context* context, const char* key);

@@ -73,6 +73,7 @@ All available config values are shown below.
 | `cursor_blink_mode` | string | `'system'` | `'system'`, `'on'` or `'off'` can be used. |
 | `cjk_width` | string | `'narrow'` | `'narrow'` or `'wide'` can be used. |
 | `background_image` | string | `''` | Path to background image file. |
+| `uri_schemes` | string | `'http https file mailto'` | Space-separated list of URI schemes to be highlighted and clickable. Specify empty string to disable highlighting. Specify `'*'` to accept any strings valid as schemes (according to RFC 3986). |
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `scale` | integer | `100` | Font scale in **percent(%)** |

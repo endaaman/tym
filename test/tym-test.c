@@ -10,6 +10,8 @@
 #include "tym.h"
 #include "regex.h"
 
+#define URI "(?:http|https|file|mailto)" SCHEMELESS_URI
+
 
 int check_match(int anchored, const char* pattern, const char* subject, const char* expected, int invert)
 {
