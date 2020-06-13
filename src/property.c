@@ -238,89 +238,96 @@ void setter_background_image(Context* context, const char* key, const char* valu
 
 void setter_uri_schemes(Context* context, const char* key, const char* value)
 {
-  int errorcode;
-  PCRE2_SIZE erroroffset;
-  pcre2_code* code = pcre2_compile(
-    SCHEME_LIST,
-    PCRE2_ZERO_TERMINATED,
-    PCRE2_ANCHORED | PCRE2_CASELESS | PCRE2_ENDANCHORED,
-    &errorcode,
-    &erroroffset,
-    NULL
-  );
-  if (!code) {
-    g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
-    return;
-  }
+  gchar* uri_pattern;
 
-  // repetitivelly get all schemes in the list, one by one.
-  GSList* schemes = NULL;
-  int scheme_length_sum = 0;
-  while (true) {
-    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
-    int res = pcre2_match(
-        code,
-        value,
-        PCRE2_ZERO_TERMINATED,
-        0,
-        PCRE2_ANCHORED | PCRE2_ENDANCHORED | PCRE2_NOTEMPTY,
-        match_data,
-        NULL
+  if (g_strcmp0("*", value) == 0) {
+    uri_pattern = g_strconcat(SCHEME, SCHEMELESS_URI, NULL);
+
+  } else {
+    int errorcode;
+    PCRE2_SIZE erroroffset;
+    pcre2_code* code = pcre2_compile(
+      SCHEME_LIST,
+      PCRE2_ZERO_TERMINATED,
+      PCRE2_ANCHORED | PCRE2_CASELESS | PCRE2_ENDANCHORED,
+      &errorcode,
+      &erroroffset,
+      NULL
     );
-
-    if (res <= 0) {
-        switch (res) {
-        case 0:
-            g_warning("Ovector was not big enough. This should not happen.");
-            break;
-        case PCRE2_ERROR_NOMATCH:
-            g_warning("No match\n");
-            break;
-        default:
-            g_warning("PCRE2 match error %d\n", res);
-            break;
-        }
-        pcre2_match_data_free(match_data);
-        pcre2_code_free(code);
-        return;
+    if (!code) {
+      g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
+      return;
     }
 
-    PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
-    int length = ovector[3] - ovector[2];
-    if (length > 0) {
-        schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
-        scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
+    // repetitivelly get all schemes in the list, one by one.
+    GSList* schemes = NULL;
+    int scheme_length_sum = 0;
+    while (true) {
+      pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
+      int res = pcre2_match(
+          code,
+          value,
+          PCRE2_ZERO_TERMINATED,
+          0,
+          PCRE2_ANCHORED | PCRE2_ENDANCHORED | PCRE2_NOTEMPTY,
+          match_data,
+          NULL
+      );
+
+      if (res <= 0) {
+          switch (res) {
+          case 0:
+              g_warning("Ovector was not big enough. This should not happen.");
+              break;
+          case PCRE2_ERROR_NOMATCH:
+              g_warning("No match\n");
+              break;
+          default:
+              g_warning("PCRE2 match error %d\n", res);
+              break;
+          }
+          pcre2_match_data_free(match_data);
+          pcre2_code_free(code);
+          return;
+      }
+
+      PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
+      int length = ovector[3] - ovector[2];
+      if (length > 0) {
+          schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
+          scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
+      }
+
+      if (ovector[1] > ovector[3]) {
+        // there is at least one more scheme in the list, so move the pointer forward
+        value = &value[ovector[3] + 1];
+      } else {
+        break;
+      }
+      pcre2_match_data_free(match_data);
+    }
+    pcre2_code_free(code);
+
+    // if no schemes specified, remove current regex and return immediately
+    if (scheme_length_sum == 0) {
+      if (context->layout.uri_tag >= 0) {
+        vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
+        context->layout.uri_tag = -1;
+      }
+      return;
     }
 
-    if (ovector[1] > ovector[3]) {
-      // there is at least one more scheme in the list, so move the pointer forward
-      value = &value[ovector[3] + 1];
-    } else {
-      break;
+    gchar scheme_pattern[scheme_length_sum];
+    gchar* p = scheme_pattern;
+    for (GSList* scheme = schemes; scheme; scheme = scheme->next) {
+      p = g_stpcpy(p, scheme->data);
+      *p = '|';
+      ++p;
     }
-    pcre2_match_data_free(match_data);
+    scheme_pattern[scheme_length_sum - 1] = '\0'; // replace last `|` with null char
+    uri_pattern = g_strconcat("(?:", scheme_pattern, ")", SCHEMELESS_URI, NULL);
+    g_slist_free_full(schemes, g_free);
   }
-  pcre2_code_free(code);
-
-  // if no schemes specified, remove current regex and return immediately
-  if (scheme_length_sum == 0) {
-    if (context->layout.uri_tag >= 0) {
-      vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
-      context->layout.uri_tag = -1;
-    }
-    return;
-  }
-
-  gchar scheme_pattern[scheme_length_sum];
-  gchar* p = scheme_pattern;
-  for (GSList* scheme = schemes; scheme; scheme = scheme->next) {
-    p = g_stpcpy(p, scheme->data);
-    *p = '|';
-    ++p;
-  }
-  scheme_pattern[scheme_length_sum - 1] = '\0'; // replace last `|` with null char
-  gchar* uri_pattern = g_strconcat("(?:", scheme_pattern, ")", SCHEMELESS_URI, NULL);
-  g_slist_free_full(schemes, g_free);
 
   GError* error = NULL;
   VteRegex* regex = vte_regex_new_for_match(uri_pattern, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
