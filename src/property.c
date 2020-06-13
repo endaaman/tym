@@ -301,6 +301,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   if (scheme_length_sum == 0) {
     if (context->layout.uri_tag >= 0) {
       vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
+      context->layout.uri_tag = -1;
     }
     return;
   }
