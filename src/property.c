@@ -260,13 +260,15 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     }
 
     // repetitivelly get all schemes in the list, one by one.
+    // TODO: handle ill-formatted inputs
     GSList* schemes = NULL;
     int scheme_length_sum = 0;
+    char* v = value;
     while (true) {
       pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
       int res = pcre2_match(
           code,
-          value,
+          v,
           PCRE2_ZERO_TERMINATED,
           0,
           PCRE2_ANCHORED | PCRE2_ENDANCHORED | PCRE2_NOTEMPTY,
@@ -294,13 +296,13 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
       PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
       int length = ovector[3] - ovector[2];
       if (length > 0) {
-          schemes = g_slist_prepend(schemes, g_strndup(value + ovector[2], length)); // get first scheme
+          schemes = g_slist_prepend(schemes, g_strndup(v + ovector[2], length)); // get first scheme
           scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
       }
 
       if (ovector[1] > ovector[3]) {
         // there is at least one more scheme in the list, so move the pointer forward
-        value = &value[ovector[3] + 1];
+        v = &v[ovector[3] + 1];
       } else {
         break;
       }
@@ -313,6 +315,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
       if (context->layout.uri_tag >= 0) {
         vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
         context->layout.uri_tag = -1;
+        config_set_str(context->config, key, "");
       }
       return;
     }
@@ -344,6 +347,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     context->layout.uri_tag = tag;
     vte_terminal_match_set_cursor_name(context->layout.vte, tag, "hand");
     vte_regex_unref(regex);
+    config_set_str(context->config, key, value);
   }
 }
 
