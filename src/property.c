@@ -256,7 +256,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   // repetitivelly get all schemes in the list, one by one.
   GSList* schemes = NULL;
   int scheme_length_sum = 0;
-  while (value[0]) {
+  while (true) {
     pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
     int res = pcre2_match(
         code,
@@ -292,8 +292,13 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
         scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
     }
 
+    if (ovector[1] > ovector[3]) {
+      // there is at least one more scheme in the list, so move the pointer forward
+      value = &value[ovector[3] + 1];
+    } else {
+      break;
+    }
     pcre2_match_data_free(match_data);
-    value = &value[ovector[3] + 1]; // move pointer forward by one word
   }
   pcre2_code_free(code);
 
@@ -315,7 +320,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   }
   scheme_pattern[scheme_length_sum - 1] = '\0'; // replace last `|` with null char
   gchar* uri_pattern = g_strconcat("(?:", scheme_pattern, ")", SCHEMELESS_URI, NULL);
-  g_slist_free(schemes);
+  g_slist_free_full(schemes, g_free);
 
   GError* error = NULL;
   VteRegex* regex = vte_regex_new_for_match(uri_pattern, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
