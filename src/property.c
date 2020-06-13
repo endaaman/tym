@@ -271,13 +271,13 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     if (res <= 0) {
         switch (res) {
         case 0:
-            printf("Ovector was not big enough. This should not happen.");
+            g_warning("Ovector was not big enough. This should not happen.");
             break;
         case PCRE2_ERROR_NOMATCH:
-            printf("No match\n");
+            g_warning("No match\n");
             break;
         default:
-            printf("PCRE2 match error %d\n", res);
+            g_warning("PCRE2 match error %d\n", res);
             break;
         }
         pcre2_match_data_free(match_data);
@@ -322,7 +322,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   g_free(uri_pattern);
 
   if (error) {
-    g_warning("Error when parsing css: %s", error->message);
+    g_warning("Error when adding regex to VTE: %s", error->message);
     g_error_free(error);
   } else {
     if (context->layout.uri_tag >= 0) {
