@@ -240,9 +240,8 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
 {
   gchar* uri_pattern;
 
-  if (g_strcmp0("*", value) == 0) {
+  if (g_strcmp0(TYM_SYMBOL_WILDCARD, value) == 0) {
     uri_pattern = g_strconcat(SCHEME, SCHEMELESS_URI, NULL);
-
   } else {
     int errorcode;
     PCRE2_SIZE erroroffset;
@@ -263,7 +262,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     // TODO: handle ill-formatted inputs
     GSList* schemes = NULL;
     int scheme_length_sum = 0;
-    char* v = value;
+    const char* v = value;
     while (true) {
       pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
       int res = pcre2_match(
@@ -277,20 +276,20 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
       );
 
       if (res <= 0) {
-          switch (res) {
-          case 0:
-              g_warning("Ovector was not big enough. This should not happen.");
-              break;
-          case PCRE2_ERROR_NOMATCH:
-              g_warning("No match\n");
-              break;
-          default:
-              g_warning("PCRE2 match error %d\n", res);
-              break;
-          }
-          pcre2_match_data_free(match_data);
-          pcre2_code_free(code);
-          return;
+        switch (res) {
+        case 0:
+          g_warning("Ovector was not big enough. This should not happen.");
+          break;
+        case PCRE2_ERROR_NOMATCH:
+          g_warning("No match\n");
+          break;
+        default:
+          g_warning("PCRE2 match error %d\n", res);
+          break;
+        }
+        pcre2_match_data_free(match_data);
+        pcre2_code_free(code);
+        return;
       }
 
       PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
@@ -315,7 +314,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
       if (context->layout.uri_tag >= 0) {
         vte_terminal_match_remove(context->layout.vte, context->layout.uri_tag);
         context->layout.uri_tag = -1;
-        config_set_str(context->config, key, "");
+        config_set_str(context->config, key, value);
       }
       return;
     }

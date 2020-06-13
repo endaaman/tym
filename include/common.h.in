@@ -34,6 +34,7 @@
 #define TYM_THEME_FILE_NAME "theme.lua"
 #define TYM_SYMBOL_NONE "NONE"
 #define TYM_FALL_BACK_SHELL "/bin/sh"
+#define TYM_SYMBOL_WILDCARD "*"
 
 #define TYM_CURSOR_SHAPE_BLOCK "block"
 #define TYM_CURSOR_SHAPE_IBEAM "ibeam"
