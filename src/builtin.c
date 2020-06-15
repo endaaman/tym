@@ -196,7 +196,6 @@ static int builtin_set_config(lua_State* L)
 static int builtin_reset_config(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  config_reset(context->config);
   context_restore_default(context);
   return 0;
 }

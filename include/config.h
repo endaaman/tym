@@ -16,15 +16,14 @@
 
 
 typedef struct {
-  Meta* meta;
   GHashTable* data;
   bool restoring;
 } Config;
 
 
-Config* config_init(Meta* meta);
+Config* config_init();
 void config_close(Config* config);
-void config_reset(Config* config);
+void config_restore_default(Config* config, Meta* meta);
 const char* config_get_str(Config* config, const char* key);
 void config_set_str(Config* config, const char* key, const char* value);
 int config_get_int(Config* config, const char* key);

@@ -180,6 +180,7 @@ static void context_on_error(Context* context, const char* fmt, ...)
 
 void context_restore_default(Context* context)
 {
+  config_restore_default(context->config, context->meta);
   for (GList* li = context->meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     char* target = NULL;
@@ -439,7 +440,7 @@ void context_build_layout(Context* context)
 void context_notify(Context* context, const char* body, const char* title)
 {
   GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
-  GIcon* icon = g_themed_icon_new_with_default_fallbacks(config_get_str(context->config, "icon"));
+  GIcon* icon = g_themed_icon_new_with_default_fallbacks(context_get_str(context, "icon"));
 
   g_notification_set_icon(notification, G_ICON(icon));
   g_notification_set_body(notification, body);

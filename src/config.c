@@ -10,17 +10,15 @@
 #include "config.h"
 
 
-Config* config_init(Meta* meta)
+Config* config_init()
 {
   Config* config = g_malloc0(sizeof(Config));
-  config->meta = meta;
   config->data = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,
     (GDestroyNotify)g_free,
     (GDestroyNotify)g_free
   );
-  config_reset(config);
   return config;
 }
 
@@ -104,13 +102,13 @@ void config_set_bool(Config* config, const char* key, bool value)
   config_set_raw(config, key, g_memdup((gpointer)&value, sizeof(bool)));
 }
 
-void config_reset(Config* config)
+void config_restore_default(Config* config, Meta* meta)
 {
   df();
   config->restoring = true;
   g_hash_table_remove_all(config->data);
 
-  for (GList* li = config->meta->list; li != NULL; li = li->next) {
+  for (GList* li = meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     if (e->getter) {
       // if getter exists, do not save value in hash
