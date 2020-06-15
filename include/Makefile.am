@@ -11,4 +11,5 @@ noinst_HEADERS = \
 	option.h \
 	property.h \
 	regex.h \
+	test.h \
 	tym.h
