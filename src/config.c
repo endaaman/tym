@@ -19,6 +19,7 @@ Config* config_init()
     (GDestroyNotify)g_free,
     (GDestroyNotify)g_free
   );
+  config->locked = true;
   return config;
 }
 
@@ -34,6 +35,9 @@ static void* config_get_raw(Config* config, const char* key)
   if (!ptr) {
     dd("tried to refer null field: '%s'", key);
   }
+  if (config->locked) {
+    dd("tried to get when locked");
+  }
   return ptr;
 }
 
@@ -46,8 +50,8 @@ static void config_set_raw(Config* config, const char* key, void* value)
   void* old_key = NULL;
   bool has_value = g_hash_table_lookup_extended(config->data, key, &old_key, NULL);
   // warn if: not reseting and attempt to insert value
-  if (!config->restoring && !has_value) {
-    dd("tried to add new field: '%s'", key);
+  if (config->locked && !has_value) {
+    dd("tried to add new field when locked: '%s'", key);
     return;
   }
   if (old_key) {
@@ -105,7 +109,7 @@ void config_set_bool(Config* config, const char* key, bool value)
 void config_restore_default(Config* config, Meta* meta)
 {
   df();
-  config->restoring = true;
+  config->locked = false;
   g_hash_table_remove_all(config->data);
 
   for (GList* li = meta->list; li != NULL; li = li->next) {
@@ -128,5 +132,5 @@ void config_restore_default(Config* config, Meta* meta)
         break;
     }
   }
-  config->restoring = false;
+  config->locked = true;
 }

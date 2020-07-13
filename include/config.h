@@ -17,7 +17,7 @@
 
 typedef struct {
   GHashTable* data;
-  bool restoring;
+  bool locked;
 } Config;
 
 
