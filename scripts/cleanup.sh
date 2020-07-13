@@ -20,9 +20,6 @@ rm -f stamp-h1
 rm -rf autom4te.cache/
 rm -rf aux-dist/
 rm -rf m4/
-rm -f include/common.h
-rm -f include/Makefile
-rm -f include/Makefile.in
 rm -f src/*.la
 rm -f src/*.lo
 rm -f src/*.o
@@ -31,13 +28,11 @@ rm -f src/Makefile.in
 rm -f src/tym
 rm -rf src/.deps/
 
-rm -f test/*.log
-rm -f test/*.o
-rm -f test/*.trs
-rm -f test/Makefile
-rm -f test/Makefile.in
-rm -f test/tym-test
-rm -rf test/.deps/
+rm -f src/common.h
+
+rm -f src/*.log
+rm -f src/*.trs
+rm -f src/tym-test
 
 rm -f tym.1
 rm -f test-driver

@@ -12,3 +12,4 @@ noinst_HEADERS = \
 	property.h \
 	regex.h \
 	tym.h
+	tym_test.h

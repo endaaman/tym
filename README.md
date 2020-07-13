@@ -318,6 +318,8 @@ Clone this repo and run as below
 ```
 $ autoreconf -fvi
 $ ./configure --enable-debug
+$ make && ./src/tym -u ./path/to/config.lua   # for debug
+$ make check; cat src/tym-test.log            # for unit tests
 ```
 
 ## Pro tips

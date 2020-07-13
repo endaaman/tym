@@ -1,4 +1,29 @@
-include $(top_srcdir)/common.am
+if DEBUG
+ENV_OPT=-g3 -O0
+else
+ENV_OPT=-O3 -mtune=native -march=native
+endif
+
+COMMON_CFLAGS = \
+	$(ENV_OPT) \
+	-std=c11 \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter \
+	-Wno-sign-compare \
+	-Wno-pointer-sign \
+	-Wno-missing-field-initializers \
+	-Wformat=2 \
+	-Wstrict-aliasing=2 \
+	-Wdisabled-optimization \
+	-Wfloat-equal \
+	-Wpointer-arith \
+	-Wbad-function-cast \
+	-Wcast-align \
+	-Wredundant-decls \
+	-Winline \
+	-I$(top_srcdir)/include
+
 bin_PROGRAMS = tym
 tym_SOURCES = \
 	app.c \
@@ -15,3 +40,13 @@ tym_SOURCES = \
 	tym.c
 tym_LDADD = $(TYM_LIBS)
 tym_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS)
+
+TESTS = tym-test
+check_PROGRAMS = tym-test
+tym_test_SOURCES = \
+	config.c \
+	config_test.c \
+	regex_test.c \
+	tym_test.c
+tym_test_LDADD = $(TYM_LIBS)
+tym_test_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS)

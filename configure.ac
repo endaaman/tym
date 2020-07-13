@@ -16,7 +16,6 @@ AC_CONFIG_HEADERS([app-config.h], [])
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
-  test/Makefile
   include/Makefile
   include/common.h
   tym.1
