@@ -35,9 +35,6 @@ static void* config_get_raw(Config* config, const char* key)
   if (!ptr) {
     dd("tried to refer null field: '%s'", key);
   }
-  if (config->locked) {
-    dd("tried to get when locked");
-  }
   return ptr;
 }
 

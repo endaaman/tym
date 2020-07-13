@@ -41,6 +41,14 @@ static int builtin_get(lua_State* L)
   return 1;
 }
 
+
+static int builtin_quit(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  g_application_quit(G_APPLICATION(context->app));
+  return 0;
+}
+
 static int builtin_set(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -667,6 +675,7 @@ static int builtin_apply(lua_State* L)
 int builtin_register_module(lua_State* L)
 {
   const luaL_Reg table[] = {
+    { "quit"                , builtin_quit                 },
     { "get"                 , builtin_get                  },
     { "set"                 , builtin_set                  },
     { "get_default_value"   , get_default_value            },

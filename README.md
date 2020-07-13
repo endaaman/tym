@@ -315,11 +315,18 @@ $ tym --shell=/bin/zsh --color_background=red --width=40 --ignore_default_keymap
 
 Clone this repo and run as below
 
-```
+```console
 $ autoreconf -fvi
 $ ./configure --enable-debug
 $ make && ./src/tym -u ./path/to/config.lua   # for debug
 $ make check; cat src/tym-test.log            # for unit tests
+```
+
+Run tests in docker container
+
+```console
+$ docker build -t tym .
+$ docker run tym
 ```
 
 ## Pro tips
