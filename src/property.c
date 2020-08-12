@@ -417,6 +417,7 @@ void setter_silent(Context* context, const char* key, bool value)
   vte_terminal_set_audible_bell(context->layout.vte, !value);
 }
 
+#ifndef TYM_UNUSE_ALLOW_BOLD
 bool getter_ignore_bold(Context* context, const char* key)
 {
   return !vte_terminal_get_allow_bold(context->layout.vte);
@@ -426,6 +427,7 @@ void setter_ignore_bold(Context* context, const char* key, bool value)
 {
   vte_terminal_set_allow_bold(context->layout.vte, !value);
 }
+#endif
 
 bool getter_autohide(Context* context, const char* key)
 {

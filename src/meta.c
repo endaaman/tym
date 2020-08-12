@@ -147,11 +147,13 @@ Meta* meta_init()
       .name="ignore_default_keymap", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
       .desc="Whether to use default keymap",
     },
+#ifndef TYM_UNUSE_ALLOW_BOLD
     {
       .name="ignore_bold", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
       .desc="Whether to ignore bold style",
       .getter=CB(getter_ignore_bold), .setter=CB(setter_ignore_bold)
     },
+#endif
     {
       .name="autohide", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
       .desc="Whether to hide mouse cursor when key is pressed",

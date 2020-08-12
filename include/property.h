@@ -78,8 +78,10 @@ void setter_scrollback_length(Context* context, const char* key, int value);
 bool getter_silent(Context* context, const char* key);
 void setter_silent(Context* context, const char* key, bool value);
 
+#ifndef TYM_UNUSE_ALLOW_BOLD
 bool getter_ignore_bold(Context* context, const char* key);
 void setter_ignore_bold(Context* context, const char* key, bool value);
+#endif
 
 bool getter_autohide(Context* context, const char* key);
 void setter_autohide(Context* context, const char* key, bool value);
