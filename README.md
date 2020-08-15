@@ -24,6 +24,12 @@ $ sudo make install
 <details><summary>Build dependencies</summary>
 <p>
 
+#### Arch Linux
+
+```
+$ sudo pacman -S vte3 lua53
+```
+
 #### Ubuntu
 
 ```
