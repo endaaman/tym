@@ -131,13 +131,6 @@ Default:	\fIfalse\fR
 .fi
 If it is provided, the default keymap will not be used.
 
-.IP \fBignore_bold_font\fR
-Type:	\fBboolean\fR
-.fi
-Default:	\fIfalse\fR
-.fi
-If it is provided, bold font is drawn with normal weight.
-
 .IP \fBautohide\fR
 Type:	\fBboolean\fR
 .fi

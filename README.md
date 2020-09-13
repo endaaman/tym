@@ -87,7 +87,6 @@ All available config values are shown below.
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
-| `ignore_bold` | boolean | `false` | Whether to allow drawing bold text. (cf. [vte_terminal_set_allow_bold()](https://developer.gnome.org/vte/unstable/VteTerminal.html#vte-terminal-set-allow-bold)). |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
