@@ -38,20 +38,20 @@ $ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev libpcre2-dev
 
 #### Other distros / macOS / Windows
 
-I did not check which packages are needed to build on other distros or OS. I'm waiting for your contribution ;)
+We did not check which packages are needed to build on other distros or OS. We are waiting for your contribution ;)
 
 </p>
 </details>
 
 ## Configuration
 
-When `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed. You can change the path by `--use`/`-u` option.
+If `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed when the app starts. You can change the path by `--use`/`-u` option.
 
 ```lua
--- Firstly, you need to require tym module
+-- At first, you need to require tym module
 local tym = require('tym')
 
--- set config individually
+-- set individually
 tym.set('width', 100)
 
 tym.set('font', 'DejaVu Sans Mono 11')
@@ -69,9 +69,9 @@ All available config values are shown below.
 
 | field name | type | default value | description |
 | --- | --- | --- | --- |
-| `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to excute. |
-| `term` | string | `'xterm-256color'` | Value to assign to `$TERM` |
-| `title` | string | `'tym'` | Window title. |
+| `shell` | string | `$SHELL` → `vte_get_user_shell()` → `'/bin/sh'` | Shell to execute. |
+| `term` | string | `'xterm-256color'` | Value of `$TERM`. |
+| `title` | string | `'tym'` | Initial window title. |
 | `font` | string | `''` | You can specify font with `'FAMILY-LIST [SIZE]'`, for example `'Ubuntu Mono 12'`. The value is parsed by [`pango_font_description_from_string()`](https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string). If empty string is set, the system default fixed width font will be used. |
 | `icon` | string | `'utilities-terminal'` | Name of icon. cf. [Icon Naming Specification](https://developer.gnome.org/icon-naming-spec/) |
 | `role` | string | `''` | Unique identifier for the window. If empty string is set, no value set. (cf. [gtk_window_set_role()](https://developer.gnome.org/gtk3/stable/GtkWindow.html#gtk-window-set-role)) |
@@ -95,7 +95,7 @@ All available config values are shown below.
 
 ## Theme customization
 
-When `$XDG_CONFIG_HOME/tym/theme.lua` exists, it is loaded before config is loadig. You can change the path by `--theme`/`-t` option. The following is an example and it shows builtin default values, which are ported from [iceberg](https://cocopon.github.io/iceberg.vim/).
+When `$XDG_CONFIG_HOME/tym/theme.lua` exists, it is loaded **before** loading config. You can change the path by `--theme`/`-t` option. The following is an example, whose color values are built-in default. They were ported from [iceberg](https://cocopon.github.io/iceberg.vim/).
 
 ```lua
 local bg = '#161821'
@@ -167,7 +167,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register keymap(s) with `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the key input event propagation will **not be stopped**.
+You can register keymap(s) using `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the event propagation will **not be stopped**.
 
 ```lua
 -- also can set keymap
