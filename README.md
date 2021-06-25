@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym) [![Gitter chat](https://badges.gitter.im/tym-terminal/gitter.png)](https://gitter.im/tym-terminal/Lobby)
 
-`tym` is a tiny VTE-based terminal emulator, which is configurable by Lua.
+`tym` is a Lua-configurable terminal emulator base on VTE.
 
 ## Installation
 
@@ -21,7 +21,7 @@ $ ./configure
 $ sudo make install
 ```
 
-<details><summary>Build dependencies</summary>
+<details><summary>Build dependencies (click to open)</summary>
 <p>
 
 #### Arch Linux
@@ -129,7 +129,7 @@ return {
 
 You need to return the color map as table.
 
-<details><summary>Color correspondence</summary>
+<details><summary>Color correspondence (click to open)</summary>
 <div>
 
 ```
