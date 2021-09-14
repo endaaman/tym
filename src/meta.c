@@ -54,7 +54,7 @@ Meta* meta_init()
   const MetaEntryType T_NONE = META_ENTRY_TYPE_NONE;
 
   char* (*sdup)(const char*) = g_strdup;
-  void* (*mdup)(const void*, unsigned) = g_memdup;
+  void* (*mdup)(const void*, unsigned long) = g_memdup2;
   const bool v_false = false;
   const int v_zero = 0;
 
@@ -187,7 +187,7 @@ Meta* meta_init()
   unsigned i = 0;
   unsigned len = sizeof(ee) / sizeof(MetaEntry);
   while (i < len) {
-    MetaEntry* entry = (MetaEntry*)g_memdup(&ee[i], sizeof(ee[i]));
+    MetaEntry* entry = (MetaEntry*)g_memdup2(&ee[i], sizeof(ee[i]));
     if (entry->getter && !entry->setter) {
       dw("Invalid meta `%s`: setter is provided but getter is not provided.", entry->name);
     }
