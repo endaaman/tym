@@ -61,7 +61,7 @@ static const int TYM_DEFAULT_HEIGHT = 22;
 static const int TYM_DEFAULT_SCALE = 100;
 static const int TYM_DEFAULT_SCROLLBACK = 512;
 
-// theme: iceberg (https://cocopon.github.io/iceberg.vim/)
+/* theme: iceberg (https://cocopon.github.io/iceberg.vim/) */
 #define TYM_DEFAULT_COLOR_0  "#161821"
 #define TYM_DEFAULT_COLOR_1  "#e27878"
 #define TYM_DEFAULT_COLOR_2  "#b4be82"
@@ -85,14 +85,20 @@ static const int TYM_DEFAULT_SCROLLBACK = 512;
 #define BUILD_DATE "@DATE@"
 
 
-// compat definition
+/* compat definition */
 #ifndef LUA_LOADED_TABLE
 #define LUA_LOADED_TABLE "_LOADED"
 #endif
 
+/* use g_memdup2 if glib >= 2.66 */
+#if GLIB_CHECK_VERSION(2, 66, 0)
+#define memdup g_memdup2
+#else
+#define memdup g_memdup
+#endif
+
 /* Switch to use old api */
 /* #define TYM_USE_OLD_API */
-
 #ifndef TYM_USE_OLD_API /* START: TYM_USE_OLD_VTE */
 
 #if GDK_MAJOR_VERSION == 3

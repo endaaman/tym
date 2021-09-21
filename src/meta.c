@@ -54,7 +54,6 @@ Meta* meta_init()
   const MetaEntryType T_NONE = META_ENTRY_TYPE_NONE;
 
   char* (*sdup)(const char*) = g_strdup;
-  void* (*mdup)(const void*, unsigned long) = g_memdup2;
   const bool v_false = false;
   const int v_zero = 0;
 
@@ -113,47 +112,47 @@ Meta* meta_init()
     },
     // INT
     {
-      .name="width", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_WIDTH, sizeof(int)),
+      .name="width", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_WIDTH, sizeof(int)),
       .arg_desc="<int>", .desc="Initial columns",
       .getter=CB(getter_width), .setter=CB(setter_width)
     },
     {
-      .name="height", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_HEIGHT, sizeof(int)),
+      .name="height", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_HEIGHT, sizeof(int)),
       .arg_desc="<int>", .desc="Initial rows",
       .getter=CB(getter_height), .setter=CB(setter_height)
     },
     {
-      .name="scale", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_SCALE, sizeof(int)),
+      .name="scale", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_SCALE, sizeof(int)),
       .arg_desc="<int>", .desc="Font scale in percent",
       .getter=CB(getter_scale), .setter=CB(setter_scale)
     },
     {
-      .name="padding_horizontal", .type=T_INT, .default_value=mdup(&v_zero, sizeof(int)),
+      .name="padding_horizontal", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
       .arg_desc="<int>", .desc="Horizontal padding",
       .setter=CB(setter_padding_horizontal)
     },
     {
-      .name="padding_vertical", .type=T_INT, .default_value=mdup(&v_zero, sizeof(int)),
+      .name="padding_vertical", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
       .arg_desc="<int>", .desc="Vertical padding",
       .setter=CB(setter_padding_vertical)
     },
     {
-      .name="scrollback_length", .type=T_INT, .default_value=mdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)),
+      .name="scrollback_length", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)),
       .arg_desc="<int>", .desc="Scrollback buffer length",
       .getter=CB(getter_scrollback_length), .setter=CB(setter_scrollback_length)
     },
     // BOOL
     {
-      .name="ignore_default_keymap", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
+      .name="ignore_default_keymap", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to use default keymap",
     },
     {
-      .name="autohide", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
+      .name="autohide", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to hide mouse cursor when key is pressed",
       .getter=CB(getter_autohide), .setter=CB(setter_autohide)
     },
     {
-      .name="silent", .type=T_BOOL, .default_value=mdup(&v_false, sizeof(bool)),
+      .name="silent", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to beep when bell sequence is sent",
       .getter=CB(getter_silent), .setter=CB(setter_silent),
     },
@@ -187,7 +186,7 @@ Meta* meta_init()
   unsigned i = 0;
   unsigned len = sizeof(ee) / sizeof(MetaEntry);
   while (i < len) {
-    MetaEntry* entry = (MetaEntry*)g_memdup2(&ee[i], sizeof(ee[i]));
+    MetaEntry* entry = (MetaEntry*)memdup(&ee[i], sizeof(ee[i]));
     if (entry->getter && !entry->setter) {
       dw("Invalid meta `%s`: setter is provided but getter is not provided.", entry->name);
     }

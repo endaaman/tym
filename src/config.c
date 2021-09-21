@@ -85,7 +85,7 @@ int config_get_int(Config* config, const char* key)
 
 void config_set_int(Config* config, const char* key, int value)
 {
-  config_set_raw(config, key, g_memdup2((gpointer)&value, sizeof(int)));
+  config_set_raw(config, key, memdup((gpointer)&value, sizeof(int)));
 }
 
 bool config_get_bool(Config* config, const char* key)
@@ -100,7 +100,7 @@ bool config_get_bool(Config* config, const char* key)
 
 void config_set_bool(Config* config, const char* key, bool value)
 {
-  config_set_raw(config, key, g_memdup2((gpointer)&value, sizeof(bool)));
+  config_set_raw(config, key, memdup((gpointer)&value, sizeof(bool)));
 }
 
 void config_restore_default(Config* config, Meta* meta)

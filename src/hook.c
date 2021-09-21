@@ -83,7 +83,7 @@ bool hook_set_ref(Hook* hook, const char* key, int ref, int* old_ref)
     return false;
   }
   g_hash_table_remove(hook->refs, old_key);
-  g_hash_table_insert(hook->refs, g_strdup(key), g_memdup2(&ref, sizeof(int)));
+  g_hash_table_insert(hook->refs, g_strdup(key), memdup(&ref, sizeof(int)));
   dd("hook (%s) is registered. ref: %d", key, ref);
   return true;
 }
