@@ -38,8 +38,8 @@ tym_SOURCES = \
 	option.c \
 	property.c \
 	tym.c
-tym_LDADD = $(TYM_LIBS)
-tym_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS)
+tym_LDADD = $(TYM_LIBS) $(LUA_LIBS)
+tym_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS) $(LUA_CFLAGS)
 
 TESTS = tym-test
 check_PROGRAMS = tym-test
@@ -48,5 +48,5 @@ tym_test_SOURCES = \
 	config_test.c \
 	regex_test.c \
 	tym_test.c
-tym_test_LDADD = $(TYM_LIBS)
-tym_test_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS)
+tym_test_LDADD = $(TYM_LIBS) $(LUA_LIBS)
+tym_test_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS) $(LUA_CFLAGS)

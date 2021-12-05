@@ -24,7 +24,13 @@ AC_CONFIG_FILES([
 AC_PROG_CC
 CFLAGS=""
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 lua53 libpcre2-8])
+PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 libpcre2-8])
+# PKG_CHECK_MODULES(LUA, [lua5.3])
+PKG_CHECK_MODULES(LUA, [lua], [
+  PKG_CHECK_MODULES(LUA, [lua])
+], [
+  PKG_CHECK_MODULES(LUA, [lua5.3])
+])
 
 AC_ARG_ENABLE(debug,
   [AC_HELP_STRING([--enable-debug],[turn on debugging(default=no)])],
