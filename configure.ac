@@ -1,6 +1,3 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 m4_define([tym_major_version],[3])
 m4_define([tym_minor_version],[1])
 m4_define([tym_micro_version],[2])
@@ -25,7 +22,6 @@ AC_PROG_CC
 CFLAGS=""
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(TYM, [gtk+-3.0 vte-2.91 libpcre2-8])
-# PKG_CHECK_MODULES(LUA, [lua5.3])
 PKG_CHECK_MODULES(LUA, [lua], [
   PKG_CHECK_MODULES(LUA, [lua])
 ], [
