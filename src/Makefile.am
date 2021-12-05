@@ -1,7 +1,7 @@
 if DEBUG
 ENV_OPT=-g3 -O0
 else
-ENV_OPT=-O3 -mtune=native -march=native
+ENV_OPT=-O3
 endif
 
 COMMON_CFLAGS = \
