@@ -249,6 +249,8 @@ void on_activate(GApplication* app, void* user_data)
   VteTerminal* vte = context->layout.vte;
   GtkWindow* window = context->layout.window;
 
+  vte_terminal_set_enable_sixel(context->layout.vte, true);
+
   GtkTargetEntry drop_types[] = {
     {"text/uri-list", 0, 0}
   };
