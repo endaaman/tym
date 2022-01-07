@@ -61,7 +61,7 @@
 
 #define AUTHORITY       "(?:" USERINFO "@" ")?" HOST "(?:" ":" PORT ")?"
 
-#define USERINFO        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" ")*"
+#define USERINFO        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" ")*+"
 
 #define HOST            "(?:" IP_LITERAL "|" IPV4ADDRESS "|" REG_NAME")"
 
@@ -69,7 +69,7 @@
 
 #define IP_LITERAL      "(?:" "\\[" "(?:" IPV6ADDRESS "|" IPVFUTURE ")" "\\]" ")"
 
-#define IPVFUTURE       "(?:" "v" "(?:" HEXDIG ")+" "\\." "(?:" UNRESERVED "|" SUB_DELIMS "|" ":" ")+" ")"
+#define IPVFUTURE       "(?:" "v" "(?:" HEXDIG ")++" "\\." "(?:" UNRESERVED "|" SUB_DELIMS "|" ":" ")++" ")"
 
 #define IPV6ADDRESS     "(?:"                                            "(?:" H16 ":" "){6}" LS32 \
                           "|"                                       "::" "(?:" H16 ":" "){5}" LS32 \
@@ -90,23 +90,23 @@
 
 #define DEC_OCTET       "(?:" DIGIT "|" "[1-9]" DIGIT "|" "1" DIGIT DIGIT "|" "2" "[0-4]" DIGIT "|" "25" "[0-5]" ")"
 
-#define REG_NAME        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS ")*"
+#define REG_NAME        "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS ")*+"
 
-#define PATH_ABEMPTY    "(?:" "\\/" SEGMENT ")*"
+#define PATH_ABEMPTY    "(?:" "\\/" SEGMENT ")*+"
 
 #define PATH_ABSOLUTE   "(?:" "\\/" "(?:" SEGMENT_NZ PATH_ABEMPTY ")?" ")"
 
 #define PATH_ROOTLESS   "(?:" SEGMENT_NZ PATH_ABEMPTY ")"
 
-#define SEGMENT         "(?:" PCHAR ")*"
+#define SEGMENT         "(?:" PCHAR ")*+"
 
-#define SEGMENT_NZ      "(?:" PCHAR ")+"
+#define SEGMENT_NZ      "(?:" PCHAR ")++"
 
 #define PCHAR           "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" "|" "@" ")"
 
-#define QUERY           "(?:" PCHAR "|" "\\/" "|" "\\?" ")*"
+#define QUERY           "(?:" PCHAR "|" "\\/" "|" "\\?" ")*+"
 
-#define FRAGMENT        "(?:" PCHAR "|" "\\/" "|" "\\?" ")*"
+#define FRAGMENT        "(?:" PCHAR "|" "\\/" "|" "\\?" ")*+"
 
 #define PCT_ENCODED     "(?:" "%" HEXDIG HEXDIG ")"
 

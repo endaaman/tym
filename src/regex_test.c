@@ -40,6 +40,8 @@ static int check_match(int anchored, const char* pattern, const char* subject, c
   }
 
   pcre2_match_data_8 *match_data = pcre2_match_data_create_8(256, NULL);
+  pcre2_match_context_8 *match_context = pcre2_match_context_create_8(NULL);
+  pcre2_set_recursion_limit_8(match_context, 64);
   int res = pcre2_match(
     code,
     subject,
@@ -49,7 +51,7 @@ static int check_match(int anchored, const char* pattern, const char* subject, c
     PCRE2_NOTEMPTY |
     (anchored ? PCRE2_ANCHORED : 0),
     match_data,
-    NULL
+    match_context
   );
 
   if (res > 0) {
