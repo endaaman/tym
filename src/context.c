@@ -435,6 +435,9 @@ void context_build_layout(Context* context)
     visual = gdk_screen_get_system_visual(screen);
   }
   gtk_widget_set_visual(GTK_WIDGET(window), visual);
+#ifdef TYM_USE_SIXEL
+  vte_terminal_set_enable_sixel(vte, true);
+#endif
 }
 
 void context_notify(Context* context, const char* body, const char* title)
