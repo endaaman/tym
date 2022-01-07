@@ -336,6 +336,31 @@ $ docker run tym
 
 ## Pro tips
 
+<details><summary>Use libsixel (for Arch Linux users)</summary>
+<div>
+
+### Build latest VTE with libsixel support enabled
+
+Install latest VTE.
+
+```
+$ yay -S vte3-git --editmenu
+```
+
+Edit `PKGBUILD` to add `-D sixel=true` option in `prepare()` function like the following.
+
+```
+prepare() {
+  arch-meson vte build \
+      -D sixel=true -D b_lto=false
+}
+```
+
+And you should install `tym-git` package, since new features about libsixel might be always on HEAD.
+
+</div>
+</details>
+
 <details><summary>Scroll mouse wheel to set window transparency/font scale</summary>
 <div>
 
