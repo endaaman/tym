@@ -135,6 +135,7 @@ static const int TYM_DEFAULT_SCROLLBACK = 512;
 #if VTE_MINOR_VERSION >= 62
 #define TYM_USE_SIXEL
 #endif
+#endif
 
 #endif /* END: TYM_USE_OLD_VTE */
 
