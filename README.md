@@ -336,10 +336,10 @@ $ docker run tym
 
 ## Pro tips
 
-<details><summary>Use libsixel (for Arch Linux users)</summary>
+<details><summary>Enable sixel support(for Arch Linux users)</summary>
 <div>
 
-### Build latest VTE with libsixel support enabled
+### Build latest VTE with sixel support enabled
 
 Install latest VTE.
 
@@ -356,7 +356,7 @@ prepare() {
 }
 ```
 
-And you should install `tym-git` package, since new features about libsixel might be always on HEAD.
+And you should install `tym-git` package, since new features about sixel might be always on HEAD.
 
 </div>
 </details>
