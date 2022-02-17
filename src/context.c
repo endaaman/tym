@@ -22,11 +22,6 @@ typedef struct {
   TymCommandFunc func;
 } KeyPair;
 
-typedef struct {
-  const char* name;
-  TymCommandFunc func;
-} SignalDefinition;
-
 #define TYM_MODULE_NAME "tym"
 #define TYM_DEFAULT_NOTIFICATION_TITLE "tym"
 
@@ -37,18 +32,11 @@ static KeyPair DEFAULT_KEY_PAIRS[] = {
   {},
 };
 
-static SignalDefinition SIGNALS[] = {
-  { "ReloadTheme", command_reload_theme },
-  {},
-};
 
 char* context_acquire_config_path(Context* context)
 {
-  char* path = option_get_config_path(context->option);
-  if (is_none(path)) {
-    return NULL;
-  }
-  if (!path) {
+  char* path = NULL;
+  if (!option_get_str_value(context->option, "use", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -59,22 +47,19 @@ char* context_acquire_config_path(Context* context)
   }
 
   if (g_path_is_absolute(path)) {
-    return g_strdup(path);
+    return path;
   }
   char* cwd = g_get_current_dir();
-  path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  char* abs_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
   g_free(cwd);
-  return path;
+  g_free(path);
+  return abs_path;
 }
 
 char* context_acquire_theme_path(Context* context)
 {
-  char* path = option_get_theme_path(context->option);
-  if (is_none(path)) {
-    return NULL;
-  }
-
-  if (!path) {
+  char* path = NULL;
+  if (!option_get_str_value(context->option, "theme", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -95,10 +80,6 @@ char* context_acquire_theme_path(Context* context)
 
 void context_load_lua_context(Context* context)
 {
-  if (option_get_nolua(context->option)) {
-    g_message("Lua context is not loaded");
-    return;
-  }
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
@@ -106,45 +87,48 @@ void context_load_lua_context(Context* context)
   context->lua = L;
 }
 
-Context* context_init()
+Context* context_init(int id, Option* option)
 {
-  dd("init");
+  dd("init context id=%d", id);
   Context* context = g_malloc0(sizeof(Context));
-  context->meta = meta_init();
-  context->option = option_init(context->meta);
-  context->config = config_init(context->meta);
+  g_assert(id >= 0);
+  context->id = id;
+  context->meta = app->meta;
+  context->option = option;
+  context->config_loading = false;
+  context->initialized = false;
+  context->object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT, context->id);
+  context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();
-  context->app = G_APPLICATION(gtk_application_new(
-    TYM_APP_ID,
-    G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE)
-  );
   return context;
+}
+
+void context_dispose_only(Context* context)
+{
+  dd("dispose only context id=%d", context->id);
+  context->id = -1;
+  g_free(context->object_path);
+  option_close(context->option); /* dispose here */
+  config_close(context->config);
+  keymap_close(context->keymap);
+  hook_close(context->hook);
+  lua_close(context->lua);
+  context->option = NULL;
+  context->config = NULL;
+  context->keymap = NULL;
+  context->hook = NULL;
+  context->lua = NULL;
+}
+
+bool context_is_disposed(Context* context)
+{
+  return context->id < 0;
 }
 
 void context_close(Context* context)
 {
-  dd("close");
-  meta_close(context->meta);
-  option_close(context->option);
-  config_close(context->config);
-  keymap_close(context->keymap);
-  hook_close(context->hook);
-  g_object_unref(context->app);
-  if (context->lua) {
-    lua_close(context->lua);
-  }
   g_free(context);
-}
-
-int context_start(Context* context, int argc, char** argv)
-{
-  GApplication* app = context->app;
-  option_register_entries(context->option, app);
-
-  g_signal_connect(app, "activate", G_CALLBACK(on_activate), context);
-  g_signal_connect(app, "command-line", G_CALLBACK(on_command_line), context);
-  return g_application_run(app, argc, argv);
 }
 
 void context_load_device(Context* context)
@@ -167,14 +151,33 @@ void context_load_device(Context* context)
 #endif
 }
 
-static void context_on_error(Context* context, const char* fmt, ...)
+void context_log_message(Context* context, bool notify, const char* fmt, ...)
 {
   va_list argp;
   va_start(argp, fmt);
-  char* message = g_strdup_vprintf(fmt, argp);
-  g_message("tym error: %s", message);
-  context_notify(context, message, "tym error");
+  char* base = g_strdup_vprintf(fmt, argp);
   va_end(argp);
+  char* message = g_strdup_printf("[id=%d] %s", context->id, base);
+  g_message("%s", message);
+  if (notify) {
+    context_notify(context, base, NULL);
+  }
+  g_free(base);
+  g_free(message);
+}
+
+void context_log_warn(Context* context, bool notify, const char* fmt, ...)
+{
+  va_list argp;
+  va_start(argp, fmt);
+  char* base = g_strdup_vprintf(fmt, argp);
+  va_end(argp);
+  char* message = g_strdup_printf("[id=%d] %s", context->id, base);
+  g_warning("%s", message);
+  if (notify) {
+    context_notify(context, base, NULL);
+  }
+  g_free(base);
   g_free(message);
 }
 
@@ -229,7 +232,7 @@ void context_override_by_option(Context* context)
     char* key = e->name;
     switch (e->type) {
       case META_ENTRY_TYPE_STRING: {
-        const char* v = NULL;
+        char* v = NULL;
         bool has_value = option_get_str_value(context->option, key, &v);
         if (has_value) {
           context_set_str(context, key, v);
@@ -261,27 +264,23 @@ void context_override_by_option(Context* context)
 void context_load_config(Context* context)
 {
   df();
-  if (!context->lua) {
-    g_message("Skipped loading config because Lua context is not loaded.");
+
+  if (context->config_loading) {
+    context_log_message(context, true, "Tried to load config recursively. Ignoring loading.");
     return;
   }
 
-  if (context->state.config_loading) {
-    g_message("Tried to load config recursively. Ignoring loading.");
-    return;
-  }
-
-  context->state.config_loading = true;
+  context->config_loading = true;
 
   char* config_path = context_acquire_config_path(context);
   dd("config path: `%s`", config_path);
   if (!config_path) {
-    g_message("Skipped config loading.");
+    context_log_message(context, false, "Tried to load config recursively. Ignoring loading.");
     goto EXIT;
   }
 
   if (!g_file_test(config_path, G_FILE_TEST_EXISTS)) {
-    g_message("Config file (`%s`) does not exist. Skipped config loading.", config_path);
+    context_log_message(context, false, "Config file `%s` doesn't exist.", config_path);
     goto EXIT;
   }
 
@@ -290,12 +289,14 @@ void context_load_config(Context* context)
   if (result != LUA_OK) {
     const char* error = lua_tostring(L, -1);
     lua_pop(L, 1);
-    context_on_error(context, error);
+    context_log_warn(context, true, error);
     goto EXIT;
   }
 
+  context_log_message(context, false, "Config file `%s` loaded.", config_path);
+
 EXIT:
-  context->state.config_loading = false;
+  context->config_loading = false;
   if (config_path) {
     g_free(config_path);
   }
@@ -306,20 +307,19 @@ void context_load_theme(Context* context)
 {
   df();
   if (!context->lua) {
-    g_message("Skipped loading theme because Lua context is not loaded.");
+    context_log_message(context, false, "Skipped loading theme because Lua context is not loaded.");
     return;
   }
 
   char* theme_path = context_acquire_theme_path(context);
   dd("theme path: `%s`", theme_path);
   if (!theme_path) {
-    g_message("Skipped theme loading.");
+    context_log_message(context, false, "Skipped theme loading.");
     goto EXIT;
   }
 
   if (!g_file_test(theme_path, G_FILE_TEST_EXISTS)) {
-    // do not warn
-    g_message("Theme file (`%s`) does not exist. Skiped theme loading.", theme_path);
+    context_log_message(context, false, "Theme file `%s` doesn't exist.", theme_path);
     goto EXIT;
   }
 
@@ -327,12 +327,14 @@ void context_load_theme(Context* context)
   int result = luaL_dofile(L, theme_path);
   if (result != LUA_OK) {
     const char* error = lua_tostring(L, -1);
-    context_on_error(context, error);
+    context_log_warn(context, true, error);
     goto EXIT;
   }
 
+  context_log_message(context, false, "Theme file `%s` loaded.", theme_path);
+
   if (!lua_istable(L, -1)) {
-    context_on_error(
+    context_log_warn(
         context,
         "Theme script(%s) must return a table (got %s). Skiped theme assignment.",
         theme_path, lua_typename(L, lua_type(L, -1)));
@@ -387,7 +389,7 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
       }
     } else {
       if (error) {
-        context_on_error(context, error);
+        context_log_warn(context, true, error);
         g_free(error);
         // if the keymap func has error, default action will be canceled.
         return true;
@@ -403,20 +405,11 @@ bool context_perform_keymap(Context* context, unsigned key, GdkModifierType mod)
 void context_handle_signal(Context* context, const char* signal_name, GVariant* parameters)
 {
   dd("receive signal: %s", signal_name);
-  unsigned i = 0;
-  while (SIGNALS[i].func) {
-    SignalDefinition* def = &SIGNALS[i];
-    if (is_equal(def->name, signal_name)) {
-      def->func(context);
-      return;
-    }
-    i++;
-  }
 }
 
 void context_build_layout(Context* context)
 {
-  GtkWindow* window = context->layout.window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(context->app)));
+  GtkWindow* window = context->layout.window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(app->gapp)));
   VteTerminal* vte = context->layout.vte = VTE_TERMINAL(vte_terminal_new());
   GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
@@ -431,7 +424,7 @@ void context_build_layout(Context* context)
   GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
   context->layout.alpha_supported = visual;
   if (!context->layout.alpha_supported) {
-    g_message("Your screen does not support alpha channel.");
+    context_log_message(context, false, "Your screen doesn't support alpha channel.");
     visual = gdk_screen_get_system_visual(screen);
   }
   gtk_widget_set_visual(GTK_WIDGET(window), visual);
@@ -442,13 +435,20 @@ void context_build_layout(Context* context)
 
 void context_notify(Context* context, const char* body, const char* title)
 {
-  GNotification* notification = g_notification_new(title ? title : TYM_DEFAULT_NOTIFICATION_TITLE);
+  char* default_title = NULL;
+  if (!title) {
+    title = default_title = g_strdup_printf("tym[id=%d]", context->id);
+  }
+  GNotification* notification = g_notification_new(title);
+  if (default_title) {
+    g_free(default_title);
+  }
   GIcon* icon = g_themed_icon_new_with_default_fallbacks(context_get_str(context, "icon"));
 
   g_notification_set_icon(notification, G_ICON(icon));
   g_notification_set_body(notification, body);
-  g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_URGENT);
-  g_application_send_notification(context->app, TYM_APP_ID, notification);
+  g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_HIGH);
+  g_application_send_notification(app->gapp, TYM_APP_ID, notification);
 
   g_object_unref(notification);
   g_object_unref(icon);
@@ -463,7 +463,7 @@ void context_launch_uri(Context* context, const char* uri)
   gdk_app_launch_context_set_screen(ctx, gdk_screen_get_default());
   /* gdk_app_launch_context_set_timestamp(ctx, event->time); */
   if (!g_app_info_launch_default_for_uri(uri, G_APP_LAUNCH_CONTEXT(ctx), &error)) {
-    context_on_error(context, "Failed to launch uri: %s", error->message);
+    context_log_warn(context, "Failed to launch uri: %s", error->message);
     g_error_free(error);
   }
 }

@@ -1,5 +1,5 @@
 /**
- * tym.c
+ * app.c
  *
  * Copyright (c) 2017 endaaman
  *
@@ -8,8 +8,114 @@
  */
 
 #include "app.h"
-#include "context.h"
 
+App* app = NULL;
+
+
+int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data);
+int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
+
+void app_init()
+{
+  df();
+  app = g_malloc0(sizeof(App));
+  app->gapp = G_APPLICATION(gtk_application_new(
+    TYM_APP_ID,
+    /* G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE */
+    G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT
+  ));
+  app->meta = meta_init();
+  app->ipc = ipc_init();
+}
+
+void app_close()
+{
+  df();
+  for (GList* li = app->contexts; li != NULL; li = li->next) {
+    Context* c = (Context*)li->data;
+    if (!context_is_disposed(c)) {
+      context_dispose_only(c);
+    }
+    context_close(c);
+  }
+  g_application_quit(app->gapp);
+  g_object_unref(app->gapp);
+  meta_close(app->meta);
+  ipc_close(app->ipc);
+  g_free(app);
+}
+
+int app_start(int argc, char** argv)
+{
+  df();
+  GError* error = NULL;
+  GApplication* gapp = app->gapp;
+
+  g_application_register(app->gapp, NULL, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+  }
+
+  GOptionEntry* entries = meta_get_option_entries(app->meta);
+  g_application_add_main_option_entries(gapp, entries);
+
+  g_signal_connect(gapp, "handle-local-options", G_CALLBACK(on_local_options), NULL);
+  g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), NULL);
+
+  return g_application_run(gapp, argc, argv);
+}
+
+static int _contexts_sort_func(const void* a, const void* b)
+{
+  return ((Context*)a)->id - ((Context*)b)->id;
+}
+
+Context* app_spawn_context(Option* option)
+{
+  unsigned index = 0;
+  int ordered_id = -1;
+  if (option_get_int_value(option, "id", &ordered_id)) {
+    for (GList* li = app->contexts; li != NULL; li = li->next) {
+      Context* c = (Context*)li->data;
+      if (c->id == ordered_id) {
+        context_log_warn(c, true, "id=%d has been already acquired.", ordered_id);
+        return NULL;
+      }
+    }
+    index = ordered_id;
+  } else {
+    for (GList* li = app->contexts; li != NULL; li = li->next) {
+      Context* c = (Context*)li->data;
+      if (c->id < 0) {
+        /* ignores id=-1 ctx that is disposed */
+        continue;
+      }
+      /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
+      if (c->id != index) {
+        break;
+      }
+      index += 1;
+    }
+  }
+
+  Context* context = context_init(index, option);
+  app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
+  g_application_hold(app->gapp);
+  return context;
+}
+
+void app_quit_context(Context* context)
+{
+  df();
+  g_application_release(app->gapp);
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+  g_dbus_connection_unregister_object(conn, context->registration_id);
+  context_dispose_only(context);
+
+  context_log_message(context, false, "Quit.", context->id);
+  /* app->contexts = g_list_remove(app->contexts, context); */
+}
 
 static void on_vte_drag_data_received(
   VteTerminal* vte,
@@ -74,12 +180,15 @@ static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user
 
 static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
-  g_application_quit(G_APPLICATION(context->app));
+  gtk_window_close(context->layout.window);
+  app_quit_context(context);
 }
 
 static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   GtkWindow* window = context->layout.window;
   bool result = false;
@@ -94,6 +203,7 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 
 static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   bool result = false;
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
@@ -107,6 +217,7 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
 
 static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   char* uri = NULL;
   if (context->layout.uri_tag >= 0) {
@@ -125,6 +236,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   if (!vte_terminal_get_has_selection(context->layout.vte)) {
     hook_perform_unselected(context->hook, context->lua);
@@ -140,14 +252,22 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
 {
   Context* context = (Context*)user_data;
-  context->state.initialized = false;
+  context->initialized = false;
   if (error) {
     g_error("%s", error->message);
-    g_application_quit(context->app);
+    context_close(context);
     return;
   }
 }
 #endif
+
+static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
+{
+  df();
+  /* Context* context = (Context*)user_data; */
+  /* app_quit_context(context); */
+  return true;
+}
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
@@ -167,6 +287,10 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
 static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
   Context* context = (Context*)user_data;
+  /* NOTICE: need check because this cb would be called after the window closed */
+  if (context_is_disposed(context)) {
+    return false;
+  }
   const char* value = context_get_str(context, "color_window_background");
   if (is_none(value)) {
     return false;
@@ -193,50 +317,158 @@ void on_dbus_signal(
   GVariant* parameters,
   void* user_data)
 {
-  context_handle_signal((Context*)user_data, signal_name, parameters);
-}
-
-int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
-{
-  df();
   Context* context = (Context*)user_data;
+  dd("DBus signal received");
+  dd("\tcontext id: %d", context->id);
+  dd("\tsender_name: %s", sender_name);
+  dd("\tobject_path: %s", object_path);
+  dd("\tinterface_name: %s", interface_name);
+  dd("\tsignal_name: %s", signal_name);
 
-  option_load_from_cli(context->option, cli);
-  bool version = option_get_version(context->option);
-  if (version) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return 0;
-  }
-  char* signal = option_get_signal(context->option);
-  if (signal) {
-    const char* path = g_application_get_dbus_object_path(app);
-    dd("DBus is active: %s", path);
-    GDBusConnection* conn = g_application_get_dbus_connection(app);
-    GError* error = NULL;
-    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
-    g_message("Signal `%s` has been sent.\n", signal);
-    if (error) {
-      g_error("%s", error->message);
-      g_error_free(error);
-    }
-    return 0;
-  }
-  g_application_activate(app);
-  return 0;
-}
-
-void on_activate(GApplication* app, void* user_data)
-{
-  GError* error = NULL;
-
-  df();
-  GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(app));
-  if (w) {
-    gtk_window_present(w);
+  if (ipc_signal_perform(app->ipc, context, signal_name, parameters)) {
     return;
   }
 
+  context_log_message(context, true, "Unsupported signal: %s", signal_name);
+}
+
+void on_dbus_call_method(
+    GDBusConnection *connection,
+    const gchar* sender_name,
+    const gchar* object_path,
+    const gchar* interface_name,
+    const gchar* method_name,
+    GVariant* parameters,
+    GDBusMethodInvocation* invocation,
+    gpointer user_data)
+{
   Context* context = (Context*)user_data;
+  dd("DBus method call");
+  dd("\tcontext id: %d", context->id);
+  dd("\tsender_name: %s", sender_name);
+  dd("\tobject_path: %s", object_path);
+  dd("\tinterface_name: %s", interface_name);
+  dd("\tmethod_name: %s", method_name);
+
+  if (ipc_method_perform(app->ipc, context, method_name, parameters, invocation)) {
+    return;
+  }
+
+  GError* error = g_error_new(
+      g_quark_from_static_string("TymInvalidMethodCall"),
+      TYM_ERROR_INVALID_METHOD_CALL,
+      "unsupported method call: %s",
+      method_name);
+
+  g_dbus_method_invocation_return_gerror(invocation, error);
+}
+
+static char* _get_dest_path_from_option(Option* option) {
+  char* path = NULL;
+  char* dest = "0";
+  if (option_get_str_value(option, "dest", &dest)) {
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest);
+  } else {
+    char** env = g_get_environ();
+    const char* dest_str = g_environ_getenv(env, "TYM_ID");
+    if (!dest_str) {
+      return NULL;
+    }
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
+  }
+  return path;
+}
+
+int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
+{
+  df();
+  GError* error = NULL;
+
+  Option* option = option_init(app->meta);
+  option_set_values(option, values);
+
+  bool opt_version = false;
+  if (option_get_bool_value(option, "version", &opt_version)) {
+    g_print("version %s\n", PACKAGE_VERSION);
+    return 0;
+  }
+
+  char* signal_name = NULL;
+  char* method_name = NULL;
+  if (option_get_str_value(option, "send", &signal_name) || option_get_str_value(option, "call", &method_name)) {
+    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+    char* path = _get_dest_path_from_option(option);
+    if (!path) {
+      g_warning("--dest is not provided and $TYM_ID is not set.");
+    }
+
+    /* process signal */
+    if (signal_name) {
+      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, NULL, &error);
+      g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, path, TYM_APP_ID);
+      g_free(signal_name);
+      g_free(path);
+      if (error) {
+        g_error("%s", error->message);
+        g_error_free(error);
+      }
+      return 0;
+    }
+
+    /* process method call */
+    GVariant* parameters = NULL;
+    char* param = NULL;
+    if (option_get_str_value(option, "param", &param)) {
+      parameters = g_variant_new("(s)", param);
+    } else {
+      parameters = g_variant_new("()");
+    }
+
+    GVariant* result = g_dbus_connection_call_sync(
+        conn,        // conn
+        TYM_APP_ID,  // bus_name
+        path,        // object_path
+        TYM_APP_ID,  // interface_name
+        method_name, // method_name
+        parameters,  // parameters
+        NULL,        // reply_type
+        G_DBUS_CALL_FLAGS_NONE, // flags
+        1000,        // timeout
+        NULL,        // cancellable
+        &error
+    );
+    g_print("Call method:%s on path:%s interface:%s\n", method_name, path, TYM_APP_ID);
+    g_free(method_name);
+    if (error) {
+      g_warning("%s", error->message);
+      g_error_free(error);
+      return 1;
+    }
+    dd("result type:%s", g_variant_get_type_string(result));
+    char* msg = g_variant_print(result, true);
+    g_print("%s\n", msg);
+    g_free(msg);
+    return 0;
+  }
+
+  return -1;
+}
+
+
+int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
+{
+  df();
+  GError* error = NULL;
+
+  Option* option = option_init(app->meta);
+  option_set_values(option, g_application_command_line_get_options_dict(cli));
+
+  Context* context = app_spawn_context(option);
+  if (!context) {
+    return 1;
+  }
+  context_log_message(context, false, "Started.", context->id);
+
   context_load_device(context);
   context_load_lua_context(context);
 
@@ -262,45 +494,110 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
   g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
   g_signal_connect(vte, "selection-changed", G_CALLBACK(on_vte_selection_changed), context);
+  g_signal_connect(window, "destroy", G_CALLBACK(on_window_close), context);
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
-  const char* path = g_application_get_dbus_object_path(app);
-  dd("DBus object path: '%s' interface_name: '%s'", path, TYM_APP_ID);
-  GDBusConnection* conn = g_application_get_dbus_connection(app);
+  const char* app_id = g_application_get_application_id(app->gapp);
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+
   g_dbus_connection_signal_subscribe(
     conn,
-    NULL,       // sender
-    TYM_APP_ID, // interface_name
-    NULL,       // member
-    path,       // object_path
-    NULL,       // arg0
+    NULL,        // sender
+    app_id,      // interface_name
+    NULL,        // member
+    context->object_path, // object_path
+    NULL,        // arg0
     G_DBUS_SIGNAL_FLAGS_NONE,
     on_dbus_signal,
     context,
-    NULL        // user data free func
+    NULL         // user data free func
   );
 
-  char** argv;
-  const char* line = context_get_str(context, "shell");
-  g_shell_parse_argv(line, NULL, &argv, &error);
+  GDBusInterfaceVTable vtable = {
+    on_dbus_call_method,
+    NULL,
+    NULL,
+  };
+
+  static const char introspection_xml[] =
+    "<node>"
+    "  <interface name='" TYM_APP_ID "'>"
+    "    <method name='echo'>"
+    "      <arg type='s' direction='in'/>"
+    "      <arg type='s' direction='out'/>"
+    "    </method>"
+    "    <method name='get_ids'>"
+    "      <arg type='ai' direction='out'/>"
+    "    </method>"
+    "    <method name='eval'>"
+    "      <arg type='s' direction='in'/>"
+    "      <arg type='s' direction='out'/>"
+    "    </method>"
+    "    <method name='exec'>"
+    "      <arg type='s' direction='in'/>"
+    "    </method>"
+    "    <method name='exec_file'>"
+    "      <arg type='s' direction='in'/>"
+    "    </method>"
+    "  </interface>"
+    "</node>";
+
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
   if (error) {
     g_error("%s", error->message);
     g_error_free(error);
-    g_application_quit(app);
-    return;
+    app_quit_context(context);
+    return 1;
   }
-  char** env = g_get_environ();
-  env = g_environ_setenv(env, "TERM", context_get_str(context, "term"), true);
+
+  context_log_message(context, false, "DBus: object_path='%s' interface_name:'%s'", context->object_path, app_id);
+  context->registration_id = g_dbus_connection_register_object(
+      conn,
+      context->object_path,
+      introspection_data->interfaces[0], // interface_info,
+      &vtable, // vtable
+      context, // user_data,
+      NULL,    // user_data_free_func,
+      &error   // error
+  );
+  if (context->registration_id <= 0) {
+    context_log_warn(context, true, "Could not subscribe DBus with path:%s", context->object_path);
+  }
+
+  const char* shell_line = context_get_str(context, "shell");
+
+  char** shell_argv = NULL;
+  g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+    app_quit_context(context);
+    return 1;
+  }
+
+  const char* const* env = g_application_command_line_get_environ(cli);
+  char** shell_env = (char**)g_malloc0_n(
+      g_strv_length((char**)env) + 1,
+      sizeof(char*));
+  int i = 0;
+  while (env[i]) {
+    shell_env[i] = g_strdup(env[i]);
+    i += 1;
+  }
+  shell_env = g_environ_setenv(shell_env, "TERM", context_get_str(context, "term"), true);
+  char* id_str = g_strdup_printf("%i", context->id);
+  shell_env = g_environ_setenv(shell_env, "TYM_ID", id_str, true);
+  g_free(id_str);
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
   vte_terminal_spawn_async(
     vte,                 // terminal
     VTE_PTY_DEFAULT,     // pty flag
     NULL,                // working directory
-    argv,                // argv
-    env,                 // envv
+    shell_argv,          // argv
+    shell_env,           // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
     NULL,                // child_setup
     NULL,                // child_setup_data
@@ -316,8 +613,8 @@ void on_activate(GApplication* app, void* user_data)
     vte,
     VTE_PTY_DEFAULT,
     NULL,
-    argv,
-    env,
+    shell_argv,
+    shell_env,
     G_SPAWN_SEARCH_PATH,
     NULL,
     NULL,
@@ -327,17 +624,18 @@ void on_activate(GApplication* app, void* user_data)
   );
 
   if (error) {
-    g_strfreev(env);
-    g_strfreev(argv);
+    g_strfreev(shell_env);
+    g_strfreev(shell_argv);
     g_error("%s", error->message);
     g_error_free(error);
-    g_application_quit(app);
+    app_quit_context(context);
     return;
   }
 #endif
 
-  g_strfreev(env);
-  g_strfreev(argv);
+  g_strfreev(shell_env);
+  g_strfreev(shell_argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(GTK_WIDGET(window));
+  return 0;
 }

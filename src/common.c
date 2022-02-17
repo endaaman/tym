@@ -9,6 +9,11 @@
 
 #include "common.h"
 
+const int TYM_DEFAULT_WIDTH = 80;
+const int TYM_DEFAULT_HEIGHT = 22;
+const int TYM_DEFAULT_SCALE = 100;
+const int TYM_DEFAULT_SCROLLBACK = 512;
+
 
 #ifdef DEBUG
 void debug_dump_stack(lua_State* L, char* file, unsigned line)
@@ -106,7 +111,7 @@ int luaX_warn(lua_State* L, const char* fmt, ...)
   lua_pushvfstring(L, fmt, argp);
   va_end(argp);
   lua_concat(L, 2);
-  g_message("%s",lua_tostring(L,-1));
+  g_message("%s", lua_tostring(L,-1));
   lua_pop(L, 1);
   return 0;
 }

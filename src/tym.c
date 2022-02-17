@@ -10,11 +10,18 @@
 #include "tym.h"
 
 
+
+bool local_command_line(GApplication* application,char*** arguments, int* exit_status)
+{
+  df();
+  return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
   dd("start");
-  Context* context = context_init();
-  int exit_code =  context_start(context, argc, argv);
-  context_close(context);
+  app_init();
+  int exit_code = app_start(argc, argv);
+  app_close();
   return exit_code;
 }

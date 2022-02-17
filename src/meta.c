@@ -222,3 +222,105 @@ MetaEntry* meta_get_entry(Meta* meta, const char* key)
   }
   return NULL;
 }
+
+GOptionEntry* meta_get_option_entries(Meta* meta)
+{
+  GOptionEntry app_options[] = {
+    {
+      .long_name = "version",
+      .short_name = 'v',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = NULL,
+      .description = "Show version",
+      .arg_description = NULL,
+    }, {
+      .long_name = "use",
+      .short_name = 'u',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "theme",
+      .short_name = 't',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "id",
+      .short_name = 'i',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_INT,
+      .arg_data = NULL,
+      .description = "<id> to use in the new instance",
+      .arg_description = "<id>",
+    }, {
+      .long_name = "send",
+      .short_name = 's',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<signal name> to send via DBus",
+      .arg_description = "<signal name>",
+    }, {
+      .long_name = "call",
+      .short_name = 'c',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<method name> to call via DBus",
+      .arg_description = "<method name>",
+    }, {
+      .long_name = "param",
+      .short_name = 'p',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "param with which is called method via DBus",
+      .arg_description = "<param>",
+    }, {
+      .long_name = "dest",
+      .short_name = 'd',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<dest id> to send signal/call method($TYM_ID is default)",
+      .arg_description = "<dest id>",
+    }
+  };
+
+  GOptionEntry* options_entries = (GOptionEntry*)g_malloc0_n(
+      sizeof(app_options) / sizeof(GOptionEntry) + meta_size(meta) + 1,
+      sizeof(GOptionEntry));
+  memmove(options_entries, app_options, sizeof(app_options));
+  unsigned i = sizeof(app_options) / sizeof(GOptionEntry);
+
+  for (GList* li = meta->list; li != NULL; li = li->next) {
+    MetaEntry* me = (MetaEntry*)li->data;
+    GOptionEntry* e = &options_entries[i];
+    i += 1;
+    e->long_name = me->name;
+    e->short_name = me->short_name;
+    e->flags = me->option_flag;
+    e->arg_description = me->arg_desc;
+    e->description = me->desc;
+    switch (me->type) {
+      case META_ENTRY_TYPE_STRING:
+        e->arg = G_OPTION_ARG_STRING;
+        break;
+      case META_ENTRY_TYPE_INTEGER:
+        e->arg = G_OPTION_ARG_INT;
+        break;
+      case META_ENTRY_TYPE_BOOLEAN:
+        e->arg = G_OPTION_ARG_NONE;
+        break;
+      case META_ENTRY_TYPE_NONE:;
+        break;
+    }
+  }
+  return options_entries;
+}

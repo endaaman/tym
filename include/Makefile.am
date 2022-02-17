@@ -6,6 +6,7 @@ noinst_HEADERS = \
 	config.h \
 	context.h \
 	hook.h \
+	ipc.h \
 	keymap.h \
 	meta.h \
 	option.h \

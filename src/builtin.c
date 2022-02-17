@@ -10,6 +10,7 @@
 #include "builtin.h"
 #include "context.h"
 #include "command.h"
+#include "app.h"
 
 
 static int builtin_get(lua_State* L)
@@ -45,7 +46,9 @@ static int builtin_get(lua_State* L)
 static int builtin_quit(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  g_application_quit(G_APPLICATION(context->app));
+  /* TODO: impl */
+  /* g_application_quit(G_APPLICATION(context->app)); */
+  app_quit_context(context);
   return 0;
 }
 
@@ -673,15 +676,29 @@ static int builtin_get_theme_path(lua_State* L)
   return 1;
 }
 
-static int builtin_get_version(lua_State* L)
+static int builtin_get_id(lua_State* L)
 {
-  lua_pushstring(L, PACKAGE_VERSION);
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  lua_pushnumber(L, context->id);
+  return 1;
+}
+
+static int builtin_get_object_path(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  lua_pushstring(L, context->object_path);
   return 1;
 }
 
 static int builtin_get_pid(lua_State* L)
 {
   lua_pushinteger(L, getpid());
+  return 1;
+}
+
+static int builtin_get_version(lua_State* L)
+{
+  lua_pushstring(L, PACKAGE_VERSION);
   return 1;
 }
 
@@ -734,6 +751,8 @@ int builtin_register_module(lua_State* L)
     { "get_text"            , builtin_get_text             },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
+    { "get_id"              , builtin_get_id               },
+    { "get_object_path"     , builtin_get_object_path      },
     { "get_pid"             , builtin_get_pid              },
     { "get_version"         , builtin_get_version          },
     // DEPRECATED
