@@ -193,12 +193,18 @@ void on_dbus_signal(
   GVariant* parameters,
   void* user_data)
 {
+  dd("signal received");
+  dd("\tsender_name: %s", sender_name);
+  dd("\tobject_path: %s", object_path);
+  dd("\tinterface_name: %s", interface_name);
+  dd("\tsignal_name: %s", signal_name);
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
 int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
 {
   df();
+  GError* error = NULL;
   Context* context = (Context*)user_data;
 
   option_load_from_cli(context->option, cli);
@@ -212,7 +218,6 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
     const char* path = g_application_get_dbus_object_path(app);
     dd("DBus is active: %s", path);
     GDBusConnection* conn = g_application_get_dbus_connection(app);
-    GError* error = NULL;
     g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
     g_message("Signal `%s` has been sent.\n", signal);
     if (error) {
@@ -221,6 +226,14 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
     }
     return 0;
   }
+  bool reg = g_application_register(app, NULL, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+  }
+  bool is_remote = g_application_get_is_registered(app);
+  dd("remote %d", reg);
+
   g_application_activate(app);
   return 0;
 }
@@ -267,14 +280,17 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
   const char* path = g_application_get_dbus_object_path(app);
-  dd("DBus is active: %s", path);
+  const char* id = g_application_get_application_id(app);
+  bool valid = g_application_id_is_valid(id);
+
+  dd("id %s path %s valid %d %d", id, path, valid, true);
   GDBusConnection* conn = g_application_get_dbus_connection(app);
   g_dbus_connection_signal_subscribe(
     conn,
     NULL,       // sender
-    TYM_APP_ID, // interface_name
+    "me.endaaman.tym", // interface_name
     NULL,       // member
-    path,       // object_path
+    "/me/endaaman/tym2",       // object_path
     NULL,       // arg0
     G_DBUS_SIGNAL_FLAGS_NONE,
     on_dbus_signal,
