@@ -36,6 +36,11 @@ $ sudo pacman -S vte3 lua53
 $ sudo apt install libgtk-3-dev libvte-2.91-dev liblua5.3-dev libpcre2-dev
 ```
 
+#### Void Linux
+```
+$ sudo xbps-install -S vte3-devel lua-devel
+```
+
 #### Other distros / macOS / Windows
 
 We did not check which packages are needed to build on other distros or OS. We are waiting for your contribution ;)
