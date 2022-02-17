@@ -236,6 +236,7 @@ tym.set_keymaps({
 | `tym.color_to_rgba(color)`           | r, g, b, a | Convert color string to RGB bytes and alpha float using [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). |
 | `tym.rgba_to_color(r, g, b, a)`      | string   | Convert RGB bytes and alpha float to color string like `rgba(255, 128, 0, 0.5)` can be used in color option such as `color_background`. |
 | `tym.rgb_to_hex(r, g, b)`            | string   | Convert RGB bytes to 24bit HEX like `#ABCDEF`. |
+| `tym.hex_to_rgb(hex)`                | r, g, b  | Convert 24bit HEX like `#ABCDEF` to RGB bytes. |
 | `tym.get_monitor_model()`            | string   | Get monitor model on which the window is shown. |
 | `tym.get_cursor_position()`          | int, int | Get where column and row the cursor is. |
 | `tym.get_clipboard(target='clipboard')` | string | Get content in the clipboard. |

@@ -554,6 +554,22 @@ static int builtin_rgb_to_hex(lua_State* L)
   return 1;
 }
 
+static int builtin_hex_to_rgb(lua_State* L)
+{
+  const char* hex = luaL_checkstring(L, 1);
+
+  GdkRGBA color = {};
+  bool valid = gdk_rgba_parse(&color, hex);
+  if (!valid) {
+    luaX_warn(L, "Invalid hex string: '%s'", hex);
+    return 0;
+  }
+  lua_pushinteger(L, roundup(color.red * 255));
+  lua_pushinteger(L, roundup(color.green * 255));
+  lua_pushinteger(L, roundup(color.blue * 255));
+  return 3;
+}
+
 static int builtin_check_mod_state(lua_State* L)
 {
   const char* accelerator = luaL_checkstring(L, 1);
@@ -704,6 +720,7 @@ int builtin_register_module(lua_State* L)
     { "color_to_rgba"       , builtin_color_to_rgba        },
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
+    { "hex_to_rgb"          , builtin_hex_to_rgb           },
     { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_cursor_position" , builtin_get_cursor_position  },
     { "get_clipboard"       , builtin_get_clipboard        },
