@@ -8,8 +8,54 @@
  */
 
 #include "app.h"
-#include "context.h"
 
+App* app = NULL;
+
+void app_init()
+{
+  df();
+  app = g_malloc0(sizeof(App));
+  app->gapp = G_APPLICATION(gtk_application_new(
+    TYM_APP_ID,
+    /* G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE */
+    G_APPLICATION_HANDLES_COMMAND_LINE
+  ));
+  app->meta = meta_init();
+}
+
+void app_quit()
+{
+  df();
+  g_application_quit(app->gapp);
+  g_object_unref(app->gapp);
+  meta_close(app->meta);
+  g_free(app);
+}
+
+int app_start(int argc, char** argv)
+{
+  df();
+  GError* error = NULL;
+
+  g_application_register(app->gapp, NULL, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+  }
+
+  /* Option* option = option_init(app->meta); */
+  /* option_register_entries(option, app->gapp); */
+
+  g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
+  /* g_signal_connect(app->gapp, "activate", G_CALLBACK(on_activate), app); */
+  return g_application_run(app->gapp, argc, argv);
+}
+
+void app_drop_context(Context* context)
+{
+  context_close(context);
+  app->contexts = g_list_remove(app->contexts, context);
+}
 
 static void on_vte_drag_data_received(
   VteTerminal* vte,
@@ -49,6 +95,11 @@ static void on_vte_drag_data_received(
   g_regex_unref(regex);
 }
 
+static int _contexts_sort_func(const void* a, const void* b)
+{
+  return ((Context*)a)->id - ((Context*)b)->id;
+}
+
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
   Context* context = (Context*)user_data;
@@ -74,12 +125,16 @@ static bool on_vte_mouse_scroll(GtkWidget* widget, GdkEventScroll* e, void* user
 
 static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
-  g_application_quit(G_APPLICATION(context->app));
+  gtk_window_close(context->layout.window);
+  /* g_application_release() */
+  /* g_application_quit(G_APPLICATION(context->app)); */
 }
 
 static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   GtkWindow* window = context->layout.window;
   bool result = false;
@@ -94,6 +149,7 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
 
 static void on_vte_bell(VteTerminal* vte, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   bool result = false;
   if (hook_perform_bell(context->hook, context->lua, &result) && result) {
@@ -107,6 +163,7 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
 
 static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   char* uri = NULL;
   if (context->layout.uri_tag >= 0) {
@@ -125,6 +182,7 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
 
 static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   if (!vte_terminal_get_has_selection(context->layout.vte)) {
     hook_perform_unselected(context->hook, context->lua);
@@ -139,18 +197,31 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
 static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   context->state.initialized = false;
   if (error) {
     g_error("%s", error->message);
-    g_application_quit(context->app);
+    /* TODO: impl */
+    /* context_close(context); */
     return;
   }
 }
 #endif
 
+static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
+{
+  df();
+  Context* context = (Context*)user_data;
+  /* context_quit(context); */
+  app_drop_context(context);
+  /* g_application_release(context->gapp); */
+  return false;
+}
+
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   gtk_window_set_urgency_hint(window, false);
   hook_perform_activated(context->hook, context->lua);
@@ -159,6 +230,7 @@ static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_da
 
 static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
   hook_perform_deactivated(context->hook, context->lua);
   return false;
@@ -193,6 +265,7 @@ void on_dbus_signal(
   GVariant* parameters,
   void* user_data)
 {
+  df();
   dd("signal received");
   dd("\tsender_name: %s", sender_name);
   dd("\tobject_path: %s", object_path);
@@ -201,11 +274,40 @@ void on_dbus_signal(
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
-int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data)
+int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
 {
   df();
+  Option* option = (Option*)user_data;
   GError* error = NULL;
-  Context* context = (Context*)user_data;
+
+  unsigned index = 0;
+  /* create new context */
+  for (GList* li = app->contexts; li != NULL; li = li->next) {
+    Context* c = (Context*)li->data;
+    /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
+    if (c->id != index) {
+      break;
+    }
+    index += 1;
+  }
+  dd("new context id: %d", index);
+  Context* context = context_init(index, app->meta, app->gapp);
+  app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
+
+  GOptionContext* option_context = g_option_context_new(NULL);
+  g_option_context_set_help_enabled(option_context, FALSE);
+  g_option_context_add_main_entries(option_context, context->option->entries, NULL);
+
+  int argc = -1;
+  char** argv = g_application_command_line_get_arguments(cli, &argc);
+  g_option_context_parse(option_context, &argc, &argv, &error);
+  if (error){
+    g_error("%s", error->message);
+    g_error_free(error);
+    return 1;
+  }
+
+  /* g_option_context_add_main_entries(context, entries, NULL); */
 
   option_load_from_cli(context->option, cli);
   bool version = option_get_version(context->option);
@@ -215,9 +317,9 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
   }
   char* signal = option_get_signal(context->option);
   if (signal) {
-    const char* path = g_application_get_dbus_object_path(app);
+    const char* path = g_application_get_dbus_object_path(gapp);
     dd("DBus is active: %s", path);
-    GDBusConnection* conn = g_application_get_dbus_connection(app);
+    GDBusConnection* conn = g_application_get_dbus_connection(gapp);
     g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
     g_message("Signal `%s` has been sent.\n", signal);
     if (error) {
@@ -226,30 +328,21 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
     }
     return 0;
   }
-  bool reg = g_application_register(app, NULL, &error);
-  if (error) {
-    g_error("%s", error->message);
-    g_error_free(error);
-  }
-  bool is_remote = g_application_get_is_registered(app);
-  dd("remote %d", reg);
 
-  g_application_activate(app);
-  return 0;
-}
+  g_application_hold(gapp);
+  /* g_application_activate(gapp); */
 
-void on_activate(GApplication* app, void* user_data)
-{
-  GError* error = NULL;
 
-  df();
-  GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(app));
-  if (w) {
-    gtk_window_present(w);
-    return;
-  }
+  /* GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(gapp)); */
+  /* if (w) { */
+  /*   gtk_window_present(w); */
+  /*   return; */
+  /* } */
 
-  Context* context = (Context*)user_data;
+  // TODO:
+  // - context list
+  // - option manage
+
   context_load_device(context);
   context_load_lua_context(context);
 
@@ -275,16 +368,17 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
   g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
   g_signal_connect(vte, "selection-changed", G_CALLBACK(on_vte_selection_changed), context);
+  g_signal_connect(window, "destroy", G_CALLBACK(on_window_close), context);
   g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
-  const char* path = g_application_get_dbus_object_path(app);
-  const char* id = g_application_get_application_id(app);
+  const char* path = g_application_get_dbus_object_path(context->gapp);
+  const char* id = g_application_get_application_id(context->gapp);
   bool valid = g_application_id_is_valid(id);
 
   dd("id %s path %s valid %d %d", id, path, valid, true);
-  GDBusConnection* conn = g_application_get_dbus_connection(app);
+  GDBusConnection* conn = g_application_get_dbus_connection(context->gapp);
   g_dbus_connection_signal_subscribe(
     conn,
     NULL,       // sender
@@ -298,15 +392,18 @@ void on_activate(GApplication* app, void* user_data)
     NULL        // user data free func
   );
 
-  char** argv;
   const char* line = context_get_str(context, "shell");
-  g_shell_parse_argv(line, NULL, &argv, &error);
-  if (error) {
-    g_error("%s", error->message);
-    g_error_free(error);
-    g_application_quit(app);
-    return;
-  }
+
+  /* char** argv; */
+  /* g_shell_parse_argv(line, NULL, &argv, &error); */
+  /* if (error) { */
+  /*   g_error("%s", error->message); */
+  /*   g_error_free(error); */
+  /*   #<{(| g_application_quit(app); |)}># */
+  /*   return 1; */
+  /* } */
+
+/* TODO: get local env */
   char** env = g_get_environ();
   env = g_environ_setenv(env, "TERM", context_get_str(context, "term"), true);
 
@@ -356,4 +453,5 @@ void on_activate(GApplication* app, void* user_data)
   g_strfreev(argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(GTK_WIDGET(window));
+  return 0;
 }

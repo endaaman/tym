@@ -13,8 +13,8 @@
 int main(int argc, char* argv[])
 {
   dd("start");
-  Context* context = context_init();
-  int exit_code =  context_start(context, argc, argv);
-  context_close(context);
+  app_init();
+  int exit_code = app_start(argc, argv);
+  app_quit();
   return exit_code;
 }

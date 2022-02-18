@@ -32,12 +32,13 @@ typedef struct {
 } Layout;
 
 typedef struct {
-  Meta* meta;
+  unsigned id;
+  Meta* meta; /* ref */
+  GApplication* gapp; /* ref */
   Option* option;
   Config* config;
   Keymap* keymap;
   Hook* hook;
-  GApplication* app;
   GdkDevice* device;
   lua_State* lua;
   Layout layout;
@@ -45,7 +46,7 @@ typedef struct {
 } Context;
 
 
-Context* context_init();
+Context* context_init(unsigned id, Meta* meta, GApplication* gapp);
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);

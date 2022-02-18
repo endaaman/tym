@@ -45,7 +45,9 @@ static int builtin_get(lua_State* L)
 static int builtin_quit(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  g_application_quit(G_APPLICATION(context->app));
+  /* TODO: impl */
+  /* g_application_quit(G_APPLICATION(context->app)); */
+  /* context_close(context); */
   return 0;
 }
 

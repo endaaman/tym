@@ -11,7 +11,19 @@
 #define APP_H
 
 #include "common.h"
+#include "context.h"
 
+typedef struct {
+  GApplication* gapp;
+  Meta* meta;
+  GList* contexts;
+} App;
+
+extern App* app;
+
+void app_init();
+void app_quit();
+int app_start(int argc, char **argv);
 
 int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
 void on_activate(GApplication* gapp, void* user_data);

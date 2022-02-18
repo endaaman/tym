@@ -99,9 +99,9 @@ void option_close(Option* option)
   g_free(option);
 }
 
-void option_register_entries(Option* option, GApplication* app)
+void option_register_entries(Option* option, GApplication* gapp)
 {
-  g_application_add_main_option_entries(app, option->entries);
+  g_application_add_main_option_entries(gapp, option->entries);
 }
 
 void option_load_from_cli(Option* option, GApplicationCommandLine* cli)

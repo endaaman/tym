@@ -28,7 +28,13 @@
 #define __IDENTITY(x) __PRE_IDENTITY(x)
 #define TYM_VTE_VERSION __IDENTITY(VTE_MAJOR_VERSION) "." __IDENTITY(VTE_MINOR_VERSION) "." __IDENTITY(VTE_MICRO_VERSION)
 
+
+#ifdef DEBUG /* START: DEBUG */
+#define TYM_APP_ID "me.endaaman.tym-dev"
+#else
 #define TYM_APP_ID "me.endaaman.tym"
+#endif
+
 #define TYM_CONFIG_DIR_NAME "tym"
 #define TYM_CONFIG_FILE_NAME "config.lua"
 #define TYM_THEME_FILE_NAME "theme.lua"
