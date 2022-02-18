@@ -127,7 +127,7 @@ static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
   df();
   Context* context = (Context*)user_data;
-  gtk_window_close(context->layout.window);
+  /* gtk_window_close(context->layout.window); */
   /* g_application_release() */
   /* g_application_quit(G_APPLICATION(context->app)); */
 }
@@ -277,7 +277,6 @@ void on_dbus_signal(
 int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
 {
   df();
-  Option* option = (Option*)user_data;
   GError* error = NULL;
 
   unsigned index = 0;
@@ -294,22 +293,26 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   Context* context = context_init(index, app->meta, app->gapp);
   app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
 
-  GOptionContext* option_context = g_option_context_new(NULL);
-  g_option_context_set_help_enabled(option_context, FALSE);
-  g_option_context_add_main_entries(option_context, context->option->entries, NULL);
-
+  dd("hi");
   int argc = -1;
   char** argv = g_application_command_line_get_arguments(cli, &argc);
-  g_option_context_parse(option_context, &argc, &argv, &error);
-  if (error){
-    g_error("%s", error->message);
-    g_error_free(error);
-    return 1;
+
+  dd("ARGC: %d", argc);
+  int i;
+  for(i=1;i<argc;i++) {
+      dd("%s", argv[i]);
   }
 
-  /* g_option_context_add_main_entries(context, entries, NULL); */
+  GOptionContext* option_context = g_option_context_new(NULL);
+  /* g_option_context_set_help_enabled(option_context, FALSE); */
+  g_option_context_add_main_entries(option_context, context->option->entries, NULL);
+  g_option_context_parse(option_context, &argc, &argv, &error);
 
-  option_load_from_cli(context->option, cli);
+
+  char* s = NULL;
+  option_get_str_value(context->option, "shell", &s);
+  dd("shell: '%s'", s);
+
   bool version = option_get_version(context->option);
   if (version) {
     g_print("version %s\n", PACKAGE_VERSION);
@@ -331,7 +334,6 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 
   g_application_hold(gapp);
   /* g_application_activate(gapp); */
-
 
   /* GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(gapp)); */
   /* if (w) { */
@@ -394,14 +396,14 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 
   const char* line = context_get_str(context, "shell");
 
-  /* char** argv; */
-  /* g_shell_parse_argv(line, NULL, &argv, &error); */
-  /* if (error) { */
-  /*   g_error("%s", error->message); */
-  /*   g_error_free(error); */
-  /*   #<{(| g_application_quit(app); |)}># */
-  /*   return 1; */
-  /* } */
+  char** shell_argv;
+  g_shell_parse_argv(line, NULL, &shell_argv, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+    /* g_application_quit(app); */
+    return 1;
+  }
 
 /* TODO: get local env */
   char** env = g_get_environ();
@@ -412,7 +414,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     vte,                 // terminal
     VTE_PTY_DEFAULT,     // pty flag
     NULL,                // working directory
-    argv,                // argv
+    shell_argv,                // argv
     env,                 // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
     NULL,                // child_setup
@@ -429,7 +431,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     vte,
     VTE_PTY_DEFAULT,
     NULL,
-    argv,
+    shell_argv,
     env,
     G_SPAWN_SEARCH_PATH,
     NULL,
@@ -450,7 +452,8 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 #endif
 
   g_strfreev(env);
-  g_strfreev(argv);
+  /* g_strfreev(argv); */
+  g_strfreev(shell_argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(GTK_WIDGET(window));
   return 0;

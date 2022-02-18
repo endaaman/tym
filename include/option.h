@@ -24,6 +24,8 @@ typedef struct {
 } Option;
 
 
+void* option_get(Option* option, const char* key);
+
 Option* option_init(Meta* meta);
 void option_close(Option* option);
 void option_register_entries(Option* option, GApplication* app);
