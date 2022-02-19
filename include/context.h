@@ -34,8 +34,7 @@ typedef struct {
 typedef struct {
   unsigned id;
   Meta* meta; /* ref */
-  GApplication* gapp; /* ref */
-  Option* option;
+  Option* option; /* ref */
   Config* config;
   Keymap* keymap;
   Hook* hook;
@@ -46,7 +45,7 @@ typedef struct {
 } Context;
 
 
-Context* context_init(unsigned id, Meta* meta, GApplication* gapp);
+Context* context_init(unsigned id, Meta* meta, Option* option);
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);

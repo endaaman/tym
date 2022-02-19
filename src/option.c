@@ -110,9 +110,23 @@ void option_close(Option* option)
   g_free(option);
 }
 
-void option_register_entries(Option* option, GApplication* gapp)
+bool option_parse(Option* option, int* argc, char*** argv)
 {
-  g_application_add_main_option_entries(gapp, option->entries);
+  if (option->option_context) {
+    g_message("option context is already registerd.");
+    return false;
+  }
+  GError* error = NULL;
+  option->option_context = g_option_context_new(NULL);
+  /* g_option_context_set_help_enabled(option_context, FALSE); */
+  g_option_context_add_main_entries(option->option_context, option->entries, NULL);
+  g_option_context_parse(option->option_context, argc, argv, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+    return false;
+  }
+  return true;
 }
 
 void option_load_from_cli(Option* option, GApplicationCommandLine* cli)

@@ -43,16 +43,63 @@ int app_start(int argc, char** argv)
     g_error_free(error);
   }
 
-  /* Option* option = option_init(app->meta); */
-  /* option_register_entries(option, app->gapp); */
+  Option* option = option_init(app->meta);
+  option_parse(option, &argc, &argv);
 
-  g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
+  bool version = option_get_version(option);
+  if (version) {
+    g_print("version %s\n", PACKAGE_VERSION);
+    return 0;
+  }
+  char* signal = option_get_signal(option);
+  if (signal) {
+    const char* path = g_application_get_dbus_object_path(app->gapp);
+    dd("DBus is active: %s", path);
+    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
+    g_message("Signal `%s` has been sent.\n", signal);
+    if (error) {
+      g_error("%s", error->message);
+      g_error_free(error);
+    }
+    return 0;
+  }
+
+  g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), option);
   /* g_signal_connect(app->gapp, "activate", G_CALLBACK(on_activate), app); */
   return g_application_run(app->gapp, argc, argv);
 }
 
-void app_drop_context(Context* context)
+static int _contexts_sort_func(const void* a, const void* b)
 {
+  return ((Context*)a)->id - ((Context*)b)->id;
+}
+
+Context* app_start_context(Option* option)
+{
+  df();
+  unsigned index = 0;
+  /* create new context */
+  for (GList* li = app->contexts; li != NULL; li = li->next) {
+    Context* c = (Context*)li->data;
+    /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
+    if (c->id != index) {
+      break;
+    }
+    index += 1;
+  }
+
+  dd("new context id: %d", index);
+  Context* context = context_init(index, app->meta, option);
+  app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
+  g_application_hold(app->gapp);
+  return context;
+}
+
+void app_quit_context(Context* context)
+{
+  df();
+  g_application_release(app->gapp);
   context_close(context);
   app->contexts = g_list_remove(app->contexts, context);
 }
@@ -95,11 +142,6 @@ static void on_vte_drag_data_received(
   g_regex_unref(regex);
 }
 
-static int _contexts_sort_func(const void* a, const void* b)
-{
-  return ((Context*)a)->id - ((Context*)b)->id;
-}
-
 static bool on_vte_key_press(GtkWidget* widget, GdkEventKey* event, void* user_data)
 {
   Context* context = (Context*)user_data;
@@ -127,8 +169,8 @@ static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
   df();
   Context* context = (Context*)user_data;
+  app_quit_context(context);
   /* gtk_window_close(context->layout.window); */
-  /* g_application_release() */
   /* g_application_quit(G_APPLICATION(context->app)); */
 }
 
@@ -212,11 +254,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
   df();
-  Context* context = (Context*)user_data;
-  /* context_quit(context); */
-  app_drop_context(context);
-  /* g_application_release(context->gapp); */
-  return false;
+  return true;
 }
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
@@ -279,71 +317,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   df();
   GError* error = NULL;
 
-  unsigned index = 0;
-  /* create new context */
-  for (GList* li = app->contexts; li != NULL; li = li->next) {
-    Context* c = (Context*)li->data;
-    /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
-    if (c->id != index) {
-      break;
-    }
-    index += 1;
-  }
-  dd("new context id: %d", index);
-  Context* context = context_init(index, app->meta, app->gapp);
-  app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
-
-  dd("hi");
-  int argc = -1;
-  char** argv = g_application_command_line_get_arguments(cli, &argc);
-
-  dd("ARGC: %d", argc);
-  int i;
-  for(i=1;i<argc;i++) {
-      dd("%s", argv[i]);
-  }
-
-  GOptionContext* option_context = g_option_context_new(NULL);
-  /* g_option_context_set_help_enabled(option_context, FALSE); */
-  g_option_context_add_main_entries(option_context, context->option->entries, NULL);
-  g_option_context_parse(option_context, &argc, &argv, &error);
-
-
-  char* s = NULL;
-  option_get_str_value(context->option, "shell", &s);
-  dd("shell: '%s'", s);
-
-  bool version = option_get_version(context->option);
-  if (version) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return 0;
-  }
-  char* signal = option_get_signal(context->option);
-  if (signal) {
-    const char* path = g_application_get_dbus_object_path(gapp);
-    dd("DBus is active: %s", path);
-    GDBusConnection* conn = g_application_get_dbus_connection(gapp);
-    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
-    g_message("Signal `%s` has been sent.\n", signal);
-    if (error) {
-      g_error("%s", error->message);
-      g_error_free(error);
-    }
-    return 0;
-  }
-
-  g_application_hold(gapp);
-  /* g_application_activate(gapp); */
-
-  /* GtkWindow* w = gtk_application_get_active_window(GTK_APPLICATION(gapp)); */
-  /* if (w) { */
-  /*   gtk_window_present(w); */
-  /*   return; */
-  /* } */
-
-  // TODO:
-  // - context list
-  // - option manage
+  Context* context = app_start_context((Option*)user_data);
 
   context_load_device(context);
   context_load_lua_context(context);
@@ -375,12 +349,12 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
-  const char* path = g_application_get_dbus_object_path(context->gapp);
-  const char* id = g_application_get_application_id(context->gapp);
+  const char* path = g_application_get_dbus_object_path(app->gapp);
+  const char* id = g_application_get_application_id(app->gapp);
   bool valid = g_application_id_is_valid(id);
 
   dd("id %s path %s valid %d %d", id, path, valid, true);
-  GDBusConnection* conn = g_application_get_dbus_connection(context->gapp);
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   g_dbus_connection_signal_subscribe(
     conn,
     NULL,       // sender
@@ -401,7 +375,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   if (error) {
     g_error("%s", error->message);
     g_error_free(error);
-    /* g_application_quit(app); */
+    app_quit_context(context);
     return 1;
   }
 
@@ -446,7 +420,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     g_strfreev(argv);
     g_error("%s", error->message);
     g_error_free(error);
-    g_application_quit(app);
+    app_quit_context(context);
     return;
   }
 #endif

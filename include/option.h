@@ -14,6 +14,7 @@
 #include "meta.h"
 
 typedef struct {
+  GOptionContext* option_context;
   GOptionEntry* entries;
   bool version;
   bool nolua;
@@ -28,7 +29,7 @@ void* option_get(Option* option, const char* key);
 
 Option* option_init(Meta* meta);
 void option_close(Option* option);
-void option_register_entries(Option* option, GApplication* app);
+bool option_parse(Option* option, int* argc, char*** argv);
 void option_load_from_cli(Option* option, GApplicationCommandLine* cli);
 bool option_get_str_value(Option* option, const char* key, const char** value);
 bool option_get_int_value(Option* option, const char* key, int* value);

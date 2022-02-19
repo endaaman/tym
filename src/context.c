@@ -106,13 +106,13 @@ void context_load_lua_context(Context* context)
   context->lua = L;
 }
 
-Context* context_init(unsigned id, Meta* meta, GApplication* gapp)
+Context* context_init(unsigned id, Meta* meta, Option* option)
 {
   df();
   Context* context = g_malloc0(sizeof(Context));
   context->id = id;
   context->meta = meta;
-  context->gapp = gapp;
+  context->option = option;
   context->option = option_init(meta);
   context->config = config_init(meta);
   context->keymap = keymap_init();
@@ -122,7 +122,7 @@ Context* context_init(unsigned id, Meta* meta, GApplication* gapp)
 
 void context_close(Context* context)
 {
-  option_close(context->option);
+  option_close(context->option); /* dispose here */
   config_close(context->config);
   keymap_close(context->keymap);
   hook_close(context->hook);
@@ -401,7 +401,7 @@ void context_handle_signal(Context* context, const char* signal_name, GVariant* 
 
 void context_build_layout(Context* context)
 {
-  GtkWindow* window = context->layout.window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(context->gapp)));
+  GtkWindow* window = context->layout.window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(app->gapp)));
   VteTerminal* vte = context->layout.vte = VTE_TERMINAL(vte_terminal_new());
   GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
@@ -433,7 +433,7 @@ void context_notify(Context* context, const char* body, const char* title)
   g_notification_set_icon(notification, G_ICON(icon));
   g_notification_set_body(notification, body);
   g_notification_set_priority(notification, G_NOTIFICATION_PRIORITY_URGENT);
-  g_application_send_notification(context->gapp, TYM_APP_ID, notification);
+  g_application_send_notification(app->gapp, TYM_APP_ID, notification);
 
   g_object_unref(notification);
   g_object_unref(icon);
