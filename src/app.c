@@ -267,7 +267,7 @@ void on_activate(GApplication* app, void* user_data)
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
   const char* path = g_application_get_dbus_object_path(app);
-  dd("DBus is active: %s", path);
+  dd("DBus object path: '%s' interface_name: '%s'", path, TYM_APP_ID);
   GDBusConnection* conn = g_application_get_dbus_connection(app);
   g_dbus_connection_signal_subscribe(
     conn,
