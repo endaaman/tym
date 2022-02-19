@@ -15,6 +15,6 @@ int main(int argc, char* argv[])
   dd("start");
   app_init();
   int exit_code = app_start(argc, argv);
-  app_quit();
+  app_close();
   return exit_code;
 }

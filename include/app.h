@@ -22,7 +22,7 @@ typedef struct {
 extern App* app;
 
 void app_init();
-void app_quit();
+void app_close();
 int app_start(int argc, char **argv);
 
 int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);

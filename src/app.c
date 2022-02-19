@@ -23,9 +23,16 @@ void app_init()
   app->meta = meta_init();
 }
 
-void app_quit()
+void app_close()
 {
   df();
+  for (GList* li = app->contexts; li != NULL; li = li->next) {
+    Context* c = (Context*)li->data;
+    if (!context_is_disposed(c)) {
+      context_dispose_only(c);
+    }
+    context_close(c);
+  }
   g_application_quit(app->gapp);
   g_object_unref(app->gapp);
   meta_close(app->meta);
@@ -100,8 +107,8 @@ void app_quit_context(Context* context)
 {
   df();
   g_application_release(app->gapp);
-  context_close(context);
-  app->contexts = g_list_remove(app->contexts, context);
+  context_dispose_only(context);
+  /* app->contexts = g_list_remove(app->contexts, context); */
 }
 
 static void on_vte_drag_data_received(
@@ -169,9 +176,8 @@ static void on_vte_child_exited(VteTerminal* vte, int status, void* user_data)
 {
   df();
   Context* context = (Context*)user_data;
+  gtk_window_close(context->layout.window);
   app_quit_context(context);
-  /* gtk_window_close(context->layout.window); */
-  /* g_application_quit(G_APPLICATION(context->app)); */
 }
 
 static void on_vte_title_changed(VteTerminal* vte, void* user_data)
@@ -241,7 +247,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 {
   df();
   Context* context = (Context*)user_data;
-  context->state.initialized = false;
+  context->initialized = false;
   if (error) {
     g_error("%s", error->message);
     /* TODO: impl */
@@ -254,6 +260,8 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
   df();
+  /* Context* context = (Context*)user_data; */
+  /* app_quit_context(context); */
   return true;
 }
 
@@ -276,7 +284,15 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
 
 static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
+  df();
   Context* context = (Context*)user_data;
+
+  dd("is disposed?: %d", context_is_disposed(context));
+  /* NOTICE: need check because this cb would be called after the window closed */
+  if (context_is_disposed(context)) {
+    dd("guarded!");
+    return false;
+  }
   const char* value = context_get_str(context, "color_window_background");
   if (is_none(value)) {
     return false;
@@ -349,29 +365,30 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
   g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
 
-  const char* path = g_application_get_dbus_object_path(app->gapp);
-  const char* id = g_application_get_application_id(app->gapp);
-  bool valid = g_application_id_is_valid(id);
+  const char* app_id = g_application_get_application_id(app->gapp);
 
-  dd("id %s path %s valid %d %d", id, path, valid, true);
+  char* object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT, context->id);
+
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   g_dbus_connection_signal_subscribe(
     conn,
-    NULL,       // sender
-    "me.endaaman.tym", // interface_name
-    NULL,       // member
-    "/me/endaaman/tym2",       // object_path
-    NULL,       // arg0
+    NULL,        // sender
+    app_id,      // interface_name
+    NULL,        // member
+    object_path, // object_path
+    NULL,        // arg0
     G_DBUS_SIGNAL_FLAGS_NONE,
     on_dbus_signal,
     context,
-    NULL        // user data free func
+    NULL         // user data free func
   );
+  g_message("DBus active on object_path:'%s' interface_name: '%s'", object_path, app_id);
+  g_free(object_path);
 
-  const char* line = context_get_str(context, "shell");
+  const char* shell_line = context_get_str(context, "shell");
 
   char** shell_argv;
-  g_shell_parse_argv(line, NULL, &shell_argv, &error);
+  g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
   if (error) {
     g_error("%s", error->message);
     g_error_free(error);
@@ -388,7 +405,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     vte,                 // terminal
     VTE_PTY_DEFAULT,     // pty flag
     NULL,                // working directory
-    shell_argv,                // argv
+    shell_argv,          // argv
     env,                 // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
     NULL,                // child_setup

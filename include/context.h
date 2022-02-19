@@ -18,11 +18,6 @@
 
 
 typedef struct {
-  bool config_loading;
-  bool initialized;
-} State;
-
-typedef struct {
   GtkWindow* window;
   VteTerminal* vte;
   GtkBox* hbox;
@@ -32,7 +27,10 @@ typedef struct {
 } Layout;
 
 typedef struct {
-  unsigned id;
+  int id; /* minus means the context is disposed */
+  bool config_loading;
+  bool initialized;
+
   Meta* meta; /* ref */
   Option* option; /* ref */
   Config* config;
@@ -41,11 +39,12 @@ typedef struct {
   GdkDevice* device;
   lua_State* lua;
   Layout layout;
-  State state;
 } Context;
 
 
-Context* context_init(unsigned id, Meta* meta, Option* option);
+Context* context_init(int id, Meta* meta, Option* option);
+void context_dispose_only(Context* context);
+bool context_is_disposed(Context* context);
 void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);

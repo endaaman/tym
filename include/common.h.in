@@ -29,10 +29,12 @@
 #define TYM_VTE_VERSION __IDENTITY(VTE_MAJOR_VERSION) "." __IDENTITY(VTE_MINOR_VERSION) "." __IDENTITY(VTE_MICRO_VERSION)
 
 
-#ifdef DEBUG /* START: DEBUG */
-#define TYM_APP_ID "me.endaaman.tym-dev"
+#ifdef DEBUG
+#define TYM_APP_ID "me.endaaman.tym_dev"
+#define TYM_OBJECT_PATH_FMT "/me/endaaman/tym_dev%d"
 #else
 #define TYM_APP_ID "me.endaaman.tym"
+#define TYM_OBJECT_PATH_FMT "/me/endaaman/tym%d"
 #endif
 
 #define TYM_CONFIG_DIR_NAME "tym"

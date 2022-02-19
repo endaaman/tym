@@ -106,13 +106,17 @@ void context_load_lua_context(Context* context)
   context->lua = L;
 }
 
-Context* context_init(unsigned id, Meta* meta, Option* option)
+Context* context_init(int id, Meta* meta, Option* option)
 {
   df();
   Context* context = g_malloc0(sizeof(Context));
+  g_assert(id >= 0);
   context->id = id;
   context->meta = meta;
   context->option = option;
+  context->config_loading = false;
+  context->initialized = false;
+
   context->option = option_init(meta);
   context->config = config_init(meta);
   context->keymap = keymap_init();
@@ -120,15 +124,31 @@ Context* context_init(unsigned id, Meta* meta, Option* option)
   return context;
 }
 
-void context_close(Context* context)
+void context_dispose_only(Context* context)
 {
+  dd("dispose %d", context->id);
+  context->id = -1;
   option_close(context->option); /* dispose here */
+  context->option = NULL;
   config_close(context->config);
+  context->config = NULL;
   keymap_close(context->keymap);
+  context->keymap = NULL;
   hook_close(context->hook);
+  context->hook = NULL;
   if (context->lua) {
     lua_close(context->lua);
+    context->lua = NULL;
   }
+}
+
+bool context_is_disposed(Context* context)
+{
+  return context->id < 0;
+}
+
+void context_close(Context* context)
+{
   g_free(context);
 }
 
@@ -251,12 +271,12 @@ void context_load_config(Context* context)
     return;
   }
 
-  if (context->state.config_loading) {
+  if (context->config_loading) {
     g_message("Tried to load config recursively. Ignoring loading.");
     return;
   }
 
-  context->state.config_loading = true;
+  context->config_loading = true;
 
   char* config_path = context_acquire_config_path(context);
   dd("config path: `%s`", config_path);
@@ -280,7 +300,7 @@ void context_load_config(Context* context)
   }
 
 EXIT:
-  context->state.config_loading = false;
+  context->config_loading = false;
   if (config_path) {
     g_free(config_path);
   }

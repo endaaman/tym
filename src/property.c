@@ -51,7 +51,7 @@ static void set_size(Context* context, int width, int height)
 
 void setter_shell(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
+  if (!is_equal(context_get_str(context, key), value) && context->initialized) {
     g_message("To override `%s`, you need to set value before terminal finish initialization.`", key);
     return;
   }
@@ -60,7 +60,7 @@ void setter_shell(Context* context, const char* key, const char* value)
 
 void setter_term(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
+  if (!is_equal(context_get_str(context, key), value) && context->initialized) {
     g_message("To override `%s`, you need to set value before the terminal finish initialization.`", key);
     return;
   }
