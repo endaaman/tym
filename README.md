@@ -244,6 +244,7 @@ tym.set_keymaps({
 | `tym.get_text(start_row, start_col, end_row, end_col)` | string | Get text on the terminal screen. If you set `-1` to `end_row` and `end_col`, the target area will be the size of termianl. |
 | `tym.get_config_path()`              | string   | Get full path to config file. |
 | `tym.get_theme_path()`               | string   | Get full path to theme file. |
+| `tym.get_pid()`                      | integer  | Get pid. |
 | `tym.get_version()`                  | string   | Get version string. |
 
 ### Hooks

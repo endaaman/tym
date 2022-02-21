@@ -679,6 +679,12 @@ static int builtin_get_version(lua_State* L)
   return 1;
 }
 
+static int builtin_get_pid(lua_State* L)
+{
+  lua_pushinteger(L, getpid());
+  return 1;
+}
+
 static int builtin_apply(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -728,6 +734,7 @@ int builtin_register_module(lua_State* L)
     { "get_text"            , builtin_get_text             },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
+    { "get_pid"             , builtin_get_pid              },
     { "get_version"         , builtin_get_version          },
     // DEPRECATED
     { "apply"               , builtin_apply                },
