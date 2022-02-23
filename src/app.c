@@ -11,6 +11,9 @@
 
 App* app = NULL;
 
+int on_local_options(GApplication* gapp, GVariantDict* options, void* user_data);
+
+
 void app_init()
 {
   df();
@@ -73,6 +76,7 @@ int app_start(int argc, char** argv)
   }
 
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), option);
+  /* g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option); */
   /* g_signal_connect(app->gapp, "activate", G_CALLBACK(on_activate), app); */
   return g_application_run(app->gapp, argc, argv);
 }
@@ -284,10 +288,7 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
 
 static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
-  df();
   Context* context = (Context*)user_data;
-
-  dd("is disposed?: %d", context_is_disposed(context));
   /* NOTICE: need check because this cb would be called after the window closed */
   if (context_is_disposed(context)) {
     dd("guarded!");
@@ -328,12 +329,20 @@ void on_dbus_signal(
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
+int on_local_options(GApplication* gapp, GVariantDict* option_values, void* user_data)
+{
+  df();
+  Option* option = (Option*)user_data;
+  option->values = g_variant_dict_ref(option_values);
+  return on_command_line(gapp, NULL, option);
+}
+
 int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
 {
   df();
   GError* error = NULL;
-
-  Context* context = app_start_context((Option*)user_data);
+  Option* option = (Option*)user_data;
+  Context* context = app_start_context(option);
 
   context_load_device(context);
   context_load_lua_context(context);
