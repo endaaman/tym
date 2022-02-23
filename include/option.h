@@ -25,6 +25,12 @@ typedef struct {
 } Option;
 
 
+typedef struct{
+  bool version;
+  char* signal;
+} LocalOption;
+
+
 void* option_get(Option* option, const char* key);
 
 Option* option_init(Meta* meta);

@@ -45,6 +45,7 @@ static SignalDefinition SIGNALS[] = {
 char* context_acquire_config_path(Context* context)
 {
   char* path = option_get_config_path(context->option);
+  dd("option config_path %s", path);
   if (is_none(path)) {
     return NULL;
   }
@@ -117,7 +118,6 @@ Context* context_init(int id, Meta* meta, Option* option)
   context->config_loading = false;
   context->initialized = false;
 
-  context->option = option_init(meta);
   context->config = config_init(meta);
   context->keymap = keymap_init();
   context->hook = hook_init();

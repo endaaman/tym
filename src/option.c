@@ -25,6 +25,14 @@ Option* option_init(Meta* meta)
       .description = "Show version",
       .arg_description = NULL,
     }, {
+      .long_name = "signal",
+      .short_name = 's',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = &option->signal,
+      .description = "Signal to send via D-Bus",
+      .arg_description = "<signal>",
+    }, {
       .long_name = "use",
       .short_name = 'u',
       .flags = G_OPTION_FLAG_NONE,
@@ -40,14 +48,6 @@ Option* option_init(Meta* meta)
       .arg_data = &option->theme_path,
       .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
       .arg_description = "<path>",
-    }, {
-      .long_name = "signal",
-      .short_name = 's',
-      .flags = G_OPTION_FLAG_NONE,
-      .arg = G_OPTION_ARG_STRING,
-      .arg_data = &option->signal,
-      .description = "Signal to send via D-Bus",
-      .arg_description = "<signal>",
     }, {
       .long_name = "nolua",
       .flags = G_OPTION_FLAG_NONE,
@@ -131,11 +131,11 @@ bool option_parse(Option* option, int* argc, char*** argv)
 
 void option_load_from_cli(Option* option, GApplicationCommandLine* cli)
 {
-  /* GVariantDict* values = g_application_command_line_get_options_dict(cli); */
-  /* if (option->values) { */
-  /*   g_variant_dict_unref(option->values); */
-  /* } */
-  /* option->values = g_variant_dict_ref(values); */
+  GVariantDict* values = g_application_command_line_get_options_dict(cli);
+  if (option->values) {
+    g_variant_dict_unref(option->values);
+  }
+  option->values = g_variant_dict_ref(values);
 }
 
 
@@ -154,10 +154,52 @@ void* option_get(Option* option, const char* key)
   return NULL;
 }
 
+/* bool option_get_str_value(Option* option, const char* key, const char** value) */
+/* { */
+/*   if (!option->values) { */
+/*     return false; */
+/*   } */
+/*   char* v; */
+/*   bool has_value = g_variant_dict_lookup(option->values, key, "s", &v); */
+/*   if (has_value) { */
+/*     *value = v; */
+/*   } */
+/*   return has_value; */
+/* } */
+/*  */
+/* bool option_get_int_value(Option* option, const char* key, int* value) */
+/* { */
+/*   if (!option->values) { */
+/*     return false; */
+/*   } */
+/*   int v; */
+/*   bool has_value = g_variant_dict_lookup(option->values, key, "i", &v); */
+/*   if (has_value) { */
+/*     *value = v; */
+/*   } */
+/*   return has_value; */
+/* } */
+/*  */
+/* bool option_get_bool_value(Option* option, const char* key, bool* value) */
+/* { */
+/*   if (!option->values) { */
+/*     return false; */
+/*   } */
+/*   gboolean v; */
+/*   bool has_value = g_variant_dict_lookup(option->values, key, "b", &v); */
+/*   if (has_value) { */
+/*     *value = v; */
+/*   } */
+/*   return has_value; */
+/* } */
+
 bool option_get_str_value(Option* option, const char* key, const char** value)
 {
   void* p = option_get(option, key);
   if (!p) {
+    return false;
+  }
+  if (!(char**)p) {
     return false;
   }
   *value = *(char**)p;

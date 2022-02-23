@@ -54,30 +54,29 @@ int app_start(int argc, char** argv)
   }
 
   Option* option = option_init(app->meta);
-  option_parse(option, &argc, &argv);
+  /* option_parse(option, &argc, &argv); */
+  /* bool version = option_get_version(option); */
+  /* if (version) { */
+  /*   g_print("version %s\n", PACKAGE_VERSION); */
+  /*   return 0; */
+  /* } */
+  /* char* signal = option_get_signal(option); */
+  /* if (signal) { */
+  /*   const char* path = g_application_get_dbus_object_path(app->gapp); */
+  /*   dd("DBus is active: %s", path); */
+  /*   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp); */
+  /*   g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error); */
+  /*   g_message("Signal `%s` has been sent.\n", signal); */
+  /*   if (error) { */
+  /*     g_error("%s", error->message); */
+  /*     g_error_free(error); */
+  /*   } */
+  /*   return 0; */
+  /* } */
 
-  bool version = option_get_version(option);
-  if (version) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return 0;
-  }
-  char* signal = option_get_signal(option);
-  if (signal) {
-    const char* path = g_application_get_dbus_object_path(app->gapp);
-    dd("DBus is active: %s", path);
-    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
-    g_message("Signal `%s` has been sent.\n", signal);
-    if (error) {
-      g_error("%s", error->message);
-      g_error_free(error);
-    }
-    return 0;
-  }
+  /* g_application_add_main_option_entries(app->gapp, option->entries); */
 
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), option);
-  /* g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option); */
-  /* g_signal_connect(app->gapp, "activate", G_CALLBACK(on_activate), app); */
   return g_application_run(app->gapp, argc, argv);
 }
 
@@ -86,7 +85,7 @@ static int _contexts_sort_func(const void* a, const void* b)
   return ((Context*)a)->id - ((Context*)b)->id;
 }
 
-Context* app_start_context(Option* option)
+Context* app_spawn_context(Option* option)
 {
   df();
   unsigned index = 0;
@@ -271,7 +270,6 @@ static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 
 static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  df();
   Context* context = (Context*)user_data;
   gtk_window_set_urgency_hint(window, false);
   hook_perform_activated(context->hook, context->lua);
@@ -280,7 +278,6 @@ static bool on_window_focus_in(GtkWindow* window, GdkEvent* event, void* user_da
 
 static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_data)
 {
-  df();
   Context* context = (Context*)user_data;
   hook_perform_deactivated(context->hook, context->lua);
   return false;
@@ -291,7 +288,6 @@ static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
   Context* context = (Context*)user_data;
   /* NOTICE: need check because this cb would be called after the window closed */
   if (context_is_disposed(context)) {
-    dd("guarded!");
     return false;
   }
   const char* value = context_get_str(context, "color_window_background");
@@ -341,8 +337,23 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 {
   df();
   GError* error = NULL;
-  Option* option = (Option*)user_data;
-  Context* context = app_start_context(option);
+
+  /* Option* option = (Option*)user_data; */
+  /* option_load_from_cli(option, cli); */
+
+  int argc = -1;
+  char** argv = g_application_command_line_get_arguments(cli, &argc);
+  int i = 0;
+  printf("ARGC: %d\n",argc);
+  for(i=1;i<argc;i++) {
+    printf("ARG: %s\n", argv[i]);
+  }
+
+  Option* option = option_init(app->meta);
+  option_parse(option, &argc, &argv);
+  dd("CONFIG PATH opt %s", option_get_config_path(option));
+
+  Context* context = app_spawn_context(option);
 
   context_load_device(context);
   context_load_lua_context(context);
@@ -395,8 +406,9 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   g_free(object_path);
 
   const char* shell_line = context_get_str(context, "shell");
+  dd("SHELL LINE: %s", shell_line);
 
-  char** shell_argv;
+  char** shell_argv = NULL;
   g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
   if (error) {
     g_error("%s", error->message);
@@ -405,9 +417,16 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     return 1;
   }
 
-/* TODO: get local env */
-  char** env = g_get_environ();
-  env = g_environ_setenv(env, "TERM", context_get_str(context, "term"), true);
+  const char* const* env = g_application_command_line_get_environ(cli);
+  char** shell_env = (char**)g_malloc0_n(
+      g_strv_length((char**)env) + 1,
+      sizeof(char*));
+  i = 0;
+  while (env[i]) {
+    shell_env[i] = g_strdup(env[i]);
+    i += 1;
+  }
+  shell_env = g_environ_setenv(shell_env, "TERM", context_get_str(context, "term"), true);
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
   vte_terminal_spawn_async(
@@ -415,7 +434,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     VTE_PTY_DEFAULT,     // pty flag
     NULL,                // working directory
     shell_argv,          // argv
-    env,                 // envv
+    shell_env,           // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
     NULL,                // child_setup
     NULL,                // child_setup_data
@@ -432,7 +451,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     VTE_PTY_DEFAULT,
     NULL,
     shell_argv,
-    env,
+    shell_env,
     G_SPAWN_SEARCH_PATH,
     NULL,
     NULL,
@@ -442,8 +461,8 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   );
 
   if (error) {
-    g_strfreev(env);
-    g_strfreev(argv);
+    g_strfreev(shell_env);
+    g_strfreev(shell_argv);
     g_error("%s", error->message);
     g_error_free(error);
     app_quit_context(context);
@@ -451,8 +470,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   }
 #endif
 
-  g_strfreev(env);
-  /* g_strfreev(argv); */
+  g_strfreev(shell_env);
   g_strfreev(shell_argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
   gtk_widget_show_all(GTK_WIDGET(window));
