@@ -73,11 +73,12 @@ void ipc_method_get_ids(Context* context, GVariant* parameters, GDBusMethodInvoc
 void ipc_method_echo(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
 {
   df();
-  GVariant* v = g_variant_new("s", "Hello");
+  GVariant* v = g_variant_new("(s)", "Hello");
   g_dbus_method_invocation_return_value(invocation, v);
 }
 
 MethodDef methods[] = {
+
   { "echo",    ipc_method_echo, },
   { "get_ids", ipc_method_get_ids, },
   { NULL, NULL, }

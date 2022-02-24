@@ -523,8 +523,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     i += 1;
   }
   shell_env = g_environ_setenv(shell_env, "TERM", context_get_str(context, "term"), true);
-
-  char* id_str =  g_strdup_printf("%i", context->id);
+  char* id_str = g_strdup_printf("%i", context->id);
   shell_env = g_environ_setenv(shell_env, "TYM_ID", id_str, true);
   g_free(id_str);
 
