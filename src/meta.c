@@ -256,7 +256,7 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_INT,
       .arg_data = NULL,
-      .description = "ID to use in the new instance",
+      .description = "<id> to use in the new instance",
       .arg_description = "<id>",
     }, {
       .long_name = "signal",
@@ -264,15 +264,31 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
       .arg_data = NULL,
-      .description = "Signal to send via DBus",
+      .description = "<signal> to send via DBus",
       .arg_description = "<signal>",
+    }, {
+      .long_name = "call",
+      .short_name = 'c',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<method name> to call via DBus",
+      .arg_description = "<method name>",
+    }, {
+      .long_name = "param",
+      .short_name = 'p',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "param with which is called method via DBus",
+      .arg_description = "<param>",
     }, {
       .long_name = "dest",
       .short_name = 'd',
       .flags = G_OPTION_FLAG_NONE,
-      .arg = G_OPTION_ARG_INT,
+      .arg = G_OPTION_ARG_STRING,
       .arg_data = NULL,
-      .description = "Destination of id to send signal/call method",
+      .description = "<dest id> to send signal/call method",
       .arg_description = "<dest id>",
     }
   };

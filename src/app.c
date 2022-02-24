@@ -362,6 +362,19 @@ void on_dbus_call_method(
   g_dbus_method_invocation_return_gerror(invocation, error);
 }
 
+static char* _get_dest_path_from_option(Option* option) {
+  char* path = NULL;
+  char* dest = "0";
+  if (option_get_str_value(option, "dest", &dest)) {
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest);
+  } else {
+    char** env = g_get_environ();
+    const char* dest_str = g_environ_getenv(env, "TYM_ID");
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
+  }
+  return path;
+}
+
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 {
   df();
@@ -376,27 +389,64 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
     return 0;
   }
 
-  char* sig = NULL;
-  if (option_get_str_value(option, "signal", &sig)) {
+  char* signal_name = NULL;
+  if (option_get_str_value(option, "signal", &signal_name)) {
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-
-    int dest = -1;
-    char* path = NULL;
-    if (option_get_int_value(option, "dest", &dest)) {
-      path = g_strdup_printf(TYM_OBJECT_PATH_FMT, dest);
-    } else {
-      char** env = g_get_environ();
-      const char* dest_str = g_environ_getenv(env, "TYM_ID");
-      path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
-    }
-    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, sig, NULL, &error);
-    g_print("Signal '%s' has been sent to path:%s interface:%s\n", sig, TYM_APP_ID, path);
-    g_free(sig);
+    char* path = _get_dest_path_from_option(option);
+    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, NULL, &error);
+    g_print("Signal '%s' has been sent to path:%s interface:%s\n", signal_name, TYM_APP_ID, path);
+    g_free(signal_name);
     g_free(path);
     if (error) {
       g_error("%s", error->message);
       g_error_free(error);
     }
+    return 0;
+  }
+
+  char* method_name = NULL;
+  if (option_get_str_value(option, "call", &method_name)) {
+    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+    char* path = _get_dest_path_from_option(option);
+
+    GVariant* parameters = NULL;
+    char* param = NULL;
+    if (option_get_str_value(option, "param", &param)) {
+      parameters = g_variant_new("(s)", param);
+    } else {
+      parameters = g_variant_new("()");
+    }
+
+    GVariant* result = g_dbus_connection_call_sync(
+        conn,        // conn
+        TYM_APP_ID,  // bus_name
+        path,        // object_path
+        TYM_APP_ID,  // interface_name
+        method_name, // method_name
+        parameters,  // parameters
+        NULL,        // reply_type
+        G_DBUS_CALL_FLAGS_NONE, // flags
+        1000,        // timeout
+        NULL,        // cancellable
+        &error
+    );
+    dd("sent path:%s method:%s param:%s", path, method_name, param);
+    g_free(method_name);
+    if (error) {
+      g_warning("%s", error->message);
+      g_error_free(error);
+      return 1;
+    }
+    int i = 0;
+    g_print("result type:%s\n", g_variant_get_type_string(result));
+    g_print("%s\n", g_variant_print(result, true));
+    /* while (i < g_variant_n_children(result)) { */
+    /*   char* v= NULL; */
+    /*   g_variant_get_child(result, i, "s", &v); */
+    /*   g_print("[%d] %s\n", i, v); */
+    /*   #<{(| g_variant_print(g_variant_get_child_value(result, i), true); |)}># */
+    /*   i += 1; */
+    /* } */
     return 0;
   }
 
@@ -473,11 +523,21 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     "<node>"
     "  <interface name='" TYM_APP_ID "'>"
     "    <method name='echo'>"
-    "      <arg type='s' name='input' direction='in'/>"
-    "      <arg type='s' name='output' direction='out'/>"
+    "      <arg type='s' direction='in'/>"
+    "      <arg type='s' direction='out'/>"
     "    </method>"
     "    <method name='get_ids'>"
-    "      <arg type='ai' name='ids' direction='out'/>"
+    "      <arg type='ai' direction='out'/>"
+    "    </method>"
+    "    <method name='eval'>"
+    "      <arg type='s' direction='in'/>"
+    "      <arg type='s' direction='out'/>"
+    "    </method>"
+    "    <method name='exec'>"
+    "      <arg type='s' direction='in'/>"
+    "    </method>"
+    "    <method name='exec_file'>"
+    "      <arg type='s' direction='in'/>"
     "    </method>"
     "  </interface>"
     "</node>";

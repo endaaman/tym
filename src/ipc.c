@@ -37,50 +37,86 @@ void ipc_signal_hook(Context* context, GVariant* parameters)
   hook_perform_signal(context->hook, context->lua, param);
 }
 
-void ipc_signal_do(Context* context, GVariant* parameters)
-{
-  df();
-   const char* src = "";
-    size_t size = g_variant_n_children(parameters);
-    if (size != 1) {
-      context_log_warn(context, true, "`do` signal was sent, but param is not provided.");
-      return;
-    }
-    g_variant_get_child(parameters, 0, "s", &src);
-    if (luaL_dostring(context->lua, src) != 0) {
-      context_log_warn(context, true, lua_tostring(context->lua, -1));
-      lua_pop(context->lua, -1);
-    }
-}
-
 SignalDef signals[] = {
   { "hook", ipc_signal_hook, },
-  { "do",   ipc_signal_do, },
   { NULL, NULL, }
 };
 
 void ipc_method_get_ids(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
 {
-  df();
   GVariantBuilder *builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
   for (GList* li = app->contexts; li != NULL; li = li->next) {
     Context* c = (Context*)li->data;
+    if (c->id < 0) {
+      continue;
+    }
     g_variant_builder_add(builder, "i", c->id);
   }
-  g_dbus_method_invocation_return_value(invocation, g_variant_builder_end(builder));
+  GVariant* v = g_variant_builder_end(builder);
+  v = g_variant_new_tuple(&v, 1);
+  g_dbus_method_invocation_return_value(invocation, v);
 }
 
 void ipc_method_echo(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
 {
-  df();
-  GVariant* v = g_variant_new("(s)", "Hello");
+  g_dbus_method_invocation_return_value(invocation, parameters);
+}
+
+void ipc_method_eval(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+{
+  lua_State* L = context->lua;
+  char* param = NULL;
+  g_variant_get_child(parameters, 0, "s", &param);
+
+  char* result = NULL;
+  if (luaL_dostring(L, param) != 0) {
+    result = g_strdup(lua_tostring(L, -1));
+    context_log_warn(context, true, result);
+    lua_pop(L, -1);
+  } else {
+    int top = lua_gettop(L);
+    if (top == 1) {
+      result = g_strdup(lua_tostring(L, -1));
+    } else {
+      result = g_strdup_printf("Stack top is not 1(top = %d)", top);
+    }
+  }
+
+  GVariant* v = g_variant_new("(s)", result);
+  g_free(result);
+  g_dbus_method_invocation_return_value(invocation, v);
+}
+
+void ipc_method_exec(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+{
+  char* param = NULL;
+  g_variant_get_child(parameters, 0, "s", &param);
+  if (luaL_dostring(context->lua, param) != 0) {
+    context_log_warn(context, true, lua_tostring(context->lua, -1));
+    lua_pop(context->lua, -1);
+  }
+  GVariant* v = g_variant_new("()");
+  g_dbus_method_invocation_return_value(invocation, v);
+}
+
+void ipc_method_exec_file(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+{
+  char* param = NULL;
+  g_variant_get_child(parameters, 0, "s", &param);
+  if (luaL_dofile(context->lua, param) != 0) {
+    context_log_warn(context, true, lua_tostring(context->lua, -1));
+    lua_pop(context->lua, -1);
+  }
+  GVariant* v = g_variant_new("()");
   g_dbus_method_invocation_return_value(invocation, v);
 }
 
 MethodDef methods[] = {
-
-  { "echo",    ipc_method_echo, },
-  { "get_ids", ipc_method_get_ids, },
+  { "echo",      ipc_method_echo, },
+  { "get_ids",   ipc_method_get_ids, },
+  { "eval",      ipc_method_eval, },
+  { "exec",      ipc_method_exec, },
+  { "exec_file", ipc_method_exec_file, },
   { NULL, NULL, }
 };
 
