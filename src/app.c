@@ -350,8 +350,12 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   df();
   GError* error = NULL;
 
-  Option* option = (Option*)user_data;
+  /* Option* option = (Option*)user_data; */
+  /* option_parse(option, &argc, &argv); */
   /* option_load_from_cli(option, cli); */
+
+  Option* option = option_init(app->meta);
+  option_set_values(option, g_application_command_line_get_options_dict(cli));
 
   int argc = -1;
   char** argv = g_application_command_line_get_arguments(cli, &argc);
@@ -360,10 +364,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   for(i=1;i<argc;i++) {
     printf("ARG: %s\n", argv[i]);
   }
-  /* Option* option = option_init(app->meta); */
-  /* option_parse(option, &argc, &argv); */
 
-  option_set_values(option, g_application_command_line_get_options_dict(cli));
 
   if (process_option(option)) {
     dd("App will not start");
