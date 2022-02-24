@@ -51,6 +51,11 @@ void option_set_values(Option* option, GVariantDict* values)
   option->values = g_variant_dict_ref(values);
 }
 
+void option_load_from_cli(Option* option, GApplicationCommandLine* cli)
+{
+  option->values = g_variant_dict_ref(g_application_command_line_get_options_dict(cli));
+}
+
 /* void* option_get(Option* option, const char* key) */
 /* { */
 /*   int i = 0; */
@@ -66,7 +71,7 @@ void option_set_values(Option* option, GVariantDict* values)
 /*   return NULL; */
 /* } */
 
-bool option_get_str_value(Option* option, const char* key, const char** value)
+bool option_get_str_value(Option* option, const char* key, char** value)
 {
   if (!option->values) {
     return false;
@@ -138,27 +143,29 @@ bool option_get_bool_value(Option* option, const char* key, bool* value)
 /*   return true; */
 /* } */
 
-bool option_get_version(Option* option)
+char* option_get_str(Option* option, const char* key)
 {
-  return option->version;
+  char* v = NULL;
+  if (option_get_str_value(option, key, &v)) {
+    return NULL;
+  }
+  return v;
 }
 
-char* option_get_config_path(Option* option)
+int option_get_int(Option* option, const char* key)
 {
-  return option->config_path;
+  int v = 0;
+  if (option_get_int_value(option, key, &v)) {
+    return 0;
+  }
+  return v;
 }
 
-char* option_get_theme_path(Option* option)
+bool option_get_bool(Option* option, const char* key)
 {
-  return option->theme_path;
-}
-
-char* option_get_signal(Option* option)
-{
-  return option->signal;
-}
-
-bool option_get_nolua(Option* option)
-{
-  return option->nolua;
+  bool v = 0;
+  if (option_get_bool_value(option, key, &v)) {
+    return 0;
+  }
+  return v;
 }

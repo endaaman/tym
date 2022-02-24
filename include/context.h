@@ -30,6 +30,7 @@ typedef struct {
   int id; /* minus means the context is disposed */
   bool config_loading;
   bool initialized;
+  char* object_path;
 
   Meta* meta; /* ref */
   Option* option; /* ref */
@@ -42,7 +43,7 @@ typedef struct {
 } Context;
 
 
-Context* context_init(int id, Meta* meta, Option* option);
+Context* context_init(int id, Option* option);
 void context_dispose_only(Context* context);
 bool context_is_disposed(Context* context);
 void context_close(Context* context);

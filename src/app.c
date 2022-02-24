@@ -11,41 +11,9 @@
 
 App* app = NULL;
 
-int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
-{
-  df();
-  Option* option = (Option*)user_data;
-  option_set_values(option, values);
-  return 0;
-  /* return on_command_line(gapp, NULL, option); */
-}
 
-static bool process_option(Option* option)
-{
-  GError* error = NULL;
-
-  bool version = option_get_version(option);
-  if (version) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return true;
-  }
-
-  char* signal = option_get_signal(option);
-  if (signal) {
-    const char* path = g_application_get_dbus_object_path(app->gapp);
-    dd("DBus is active: %s", path);
-    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal, NULL, &error);
-    g_message("Signal `%s` has been sent.\n", signal);
-    if (error) {
-      g_error("%s", error->message);
-      g_error_free(error);
-    }
-    return true;
-  }
-
-  return false;
-}
+int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data);
+int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_data);
 
 void app_init()
 {
@@ -97,6 +65,7 @@ int app_start(int argc, char** argv)
   /*   } */
   /* } */
 
+  g_signal_connect(gapp, "handle-local-options", G_CALLBACK(on_local_options), NULL);
   g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), NULL);
 
   return g_application_run(gapp, argc, argv);
@@ -121,7 +90,7 @@ Context* app_spawn_context(Option* option)
   }
 
   dd("new context id: %d", index);
-  Context* context = context_init(index, app->meta, option);
+  Context* context = context_init(index, option);
   app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
   g_application_hold(app->gapp);
   return context;
@@ -273,8 +242,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   context->initialized = false;
   if (error) {
     g_error("%s", error->message);
-    /* TODO: impl */
-    /* context_close(context); */
+    context_close(context);
     return;
   }
 }
@@ -345,6 +313,39 @@ void on_dbus_signal(
   context_handle_signal((Context*)user_data, signal_name, parameters);
 }
 
+int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
+{
+  df();
+  GError* error = NULL;
+
+  Option* option = option_init(app->meta);
+  option_set_values(option, values);
+
+  bool opt_version = false;
+  if (option_get_bool_value(option, "version", &opt_version)) {
+    g_print("version %s\n", PACKAGE_VERSION);
+    return 0;
+  }
+
+  /* char* signal = option_get_signal(option); */
+  char* sig = NULL;
+  if (option_get_str_value(option, "signal", &sig)) {
+    const char* path = g_application_get_dbus_object_path(app->gapp);
+    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+    g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, sig, NULL, &error);
+    g_message("Signal `%s` has been sent.\n", sig);
+    g_free(sig);
+    if (error) {
+      g_error("%s", error->message);
+      g_error_free(error);
+    }
+    return 0;
+  }
+
+  return -1;
+}
+
+
 int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
 {
   df();
@@ -352,10 +353,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 
   /* Option* option = (Option*)user_data; */
   /* option_parse(option, &argc, &argv); */
-  /* option_load_from_cli(option, cli); */
-
-  Option* option = option_init(app->meta);
-  option_set_values(option, g_application_command_line_get_options_dict(cli));
+  /* option_set_values(option, g_application_command_line_get_options_dict(cli)); */
 
   int argc = -1;
   char** argv = g_application_command_line_get_arguments(cli, &argc);
@@ -365,13 +363,13 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     printf("ARG: %s\n", argv[i]);
   }
 
+  Option* option = option_init(app->meta);
+  option_set_values(option, g_application_command_line_get_options_dict(cli));
 
-  if (process_option(option)) {
-    dd("App will not start");
-    return 0;
-  }
-
-  dd("CONFIG PATH opt %s", option_get_config_path(option));
+  /* if (process_option(option)) { */
+  /*   dd("App will not start"); */
+  /*   return 0; */
+  /* } */
 
   Context* context = app_spawn_context(option);
 
@@ -407,23 +405,20 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
 
   const char* app_id = g_application_get_application_id(app->gapp);
 
-  char* object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT, context->id);
-
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   g_dbus_connection_signal_subscribe(
     conn,
     NULL,        // sender
     app_id,      // interface_name
     NULL,        // member
-    object_path, // object_path
+    context->object_path, // object_path
     NULL,        // arg0
     G_DBUS_SIGNAL_FLAGS_NONE,
     on_dbus_signal,
     context,
     NULL         // user data free func
   );
-  g_message("DBus active on object_path:'%s' interface_name: '%s'", object_path, app_id);
-  g_free(object_path);
+  g_message("DBus active on object_path:'%s' interface_name: '%s'", context->object_path, app_id);
 
   const char* shell_line = context_get_str(context, "shell");
   dd("SHELL LINE: %s", shell_line);

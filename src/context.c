@@ -37,19 +37,11 @@ static KeyPair DEFAULT_KEY_PAIRS[] = {
   {},
 };
 
-static SignalDefinition SIGNALS[] = {
-  { "ReloadTheme", command_reload_theme },
-  {},
-};
 
 char* context_acquire_config_path(Context* context)
 {
-  char* path = option_get_config_path(context->option);
-  dd("option config_path %s", path);
-  if (is_none(path)) {
-    return NULL;
-  }
-  if (!path) {
+  char* path = NULL;
+  if (!option_get_str_value(context->option, "use", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -60,22 +52,19 @@ char* context_acquire_config_path(Context* context)
   }
 
   if (g_path_is_absolute(path)) {
-    return g_strdup(path);
+    return path;
   }
   char* cwd = g_get_current_dir();
-  path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  char* abs_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
   g_free(cwd);
-  return path;
+  g_free(path);
+  return abs_path;
 }
 
 char* context_acquire_theme_path(Context* context)
 {
-  char* path = option_get_theme_path(context->option);
-  if (is_none(path)) {
-    return NULL;
-  }
-
-  if (!path) {
+  char* path = NULL;
+  if (!option_get_str_value(context->option, "theme", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -96,10 +85,6 @@ char* context_acquire_theme_path(Context* context)
 
 void context_load_lua_context(Context* context)
 {
-  if (option_get_nolua(context->option)) {
-    g_message("Lua context is not loaded");
-    return;
-  }
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
   luaX_requirec(L, TYM_MODULE_NAME, builtin_register_module, true, context);
@@ -107,18 +92,18 @@ void context_load_lua_context(Context* context)
   context->lua = L;
 }
 
-Context* context_init(int id, Meta* meta, Option* option)
+Context* context_init(int id, Option* option)
 {
-  df();
+  dd("Init context id=%d", id);
   Context* context = g_malloc0(sizeof(Context));
   g_assert(id >= 0);
   context->id = id;
-  context->meta = meta;
+  context->meta = app->meta;
   context->option = option;
   context->config_loading = false;
   context->initialized = false;
-
-  context->config = config_init(meta);
+  context->object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT, context->id);
+  context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();
   return context;
@@ -128,18 +113,17 @@ void context_dispose_only(Context* context)
 {
   dd("dispose %d", context->id);
   context->id = -1;
+  g_free(context->object_path);
   option_close(context->option); /* dispose here */
-  context->option = NULL;
   config_close(context->config);
-  context->config = NULL;
   keymap_close(context->keymap);
-  context->keymap = NULL;
   hook_close(context->hook);
+  lua_close(context->lua);
+  context->option = NULL;
+  context->config = NULL;
+  context->keymap = NULL;
   context->hook = NULL;
-  if (context->lua) {
-    lua_close(context->lua);
-    context->lua = NULL;
-  }
+  context->lua = NULL;
 }
 
 bool context_is_disposed(Context* context)
@@ -266,10 +250,6 @@ void context_override_by_option(Context* context)
 void context_load_config(Context* context)
 {
   df();
-  if (!context->lua) {
-    g_message("Skipped loading config because Lua context is not loaded.");
-    return;
-  }
 
   if (context->config_loading) {
     g_message("Tried to load config recursively. Ignoring loading.");

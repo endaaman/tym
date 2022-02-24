@@ -10,6 +10,13 @@
 #include "tym.h"
 
 
+
+bool local_command_line(GApplication* application,char*** arguments, int* exit_status)
+{
+  df();
+  return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
   dd("start");

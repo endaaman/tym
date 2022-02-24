@@ -33,17 +33,20 @@ typedef struct{
 
 void* option_get(Option* option, const char* key);
 
-Option* option_init(Meta* meta);
+Option* option_init();
 void option_close(Option* option);
 bool option_parse(Option* option, int* argc, char*** argv);
+void option_load_from_cli(Option* option, GApplicationCommandLine* cli);
 void option_set_values(Option* option, GVariantDict* values);
-bool option_get_str_value(Option* option, const char* key, const char** value);
+bool option_get_str_value(Option* option, const char* key, char** value);
 bool option_get_int_value(Option* option, const char* key, int* value);
 bool option_get_bool_value(Option* option, const char* key, bool* value);
-bool option_get_version(Option* option);
-char* option_get_config_path(Option* option);
-char* option_get_theme_path(Option* option);
-char* option_get_signal(Option* option);
-bool option_get_nolua(Option* option);
+char* option_get_str(Option* option, const char* key);
+int option_get_int(Option* option, const char* key);
+bool option_get_bool(Option* option, const char* key);
+// char* option_get_config_path(Option* option);
+// char* option_get_theme_path(Option* option);
+// char* option_get_signal(Option* option);
+// bool option_get_nolua(Option* option);
 
 #endif

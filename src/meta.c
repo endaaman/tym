@@ -258,12 +258,6 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .arg_data = NULL,
       .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
       .arg_description = "<path>",
-    }, {
-      .long_name = "nolua",
-      .flags = G_OPTION_FLAG_NONE,
-      .arg = G_OPTION_ARG_NONE,
-      .arg_data = NULL,
-      .description = "Launch without Lua context",
     }
   };
 
