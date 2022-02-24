@@ -75,23 +75,22 @@ Option* option_init(Meta* meta)
     switch (me->type) {
       case META_ENTRY_TYPE_STRING:
         e->arg = G_OPTION_ARG_STRING;
-        char** ps = g_malloc0(sizeof(char*));
-        *ps = me->default_value;
-        e->arg_data = ps;
+        /* char** ps = g_malloc0(sizeof(char*)); */
+        /* *ps = me->default_value; */
+        /* e->arg_data = ps; */
         break;
       case META_ENTRY_TYPE_INTEGER:
         e->arg = G_OPTION_ARG_INT;
-        /* TODO: need to dispose */
-        int* pi = g_malloc0(sizeof(int*));
-        *pi = *(int*)me->default_value;
-        e->arg_data = pi;
+        /* int* pi = g_malloc0(sizeof(int*)); */
+        /* *pi = *(int*)me->default_value; */
+        /* e->arg_data = pi; */
         break;
       case META_ENTRY_TYPE_BOOLEAN:
         e->arg = G_OPTION_ARG_NONE;
         /* TODO: need to dispose */
-        bool* pb = g_malloc0(sizeof(bool*));
-        *pb = *(bool*)me->default_value;
-        e->arg_data = pb;
+        /* bool* pb = g_malloc0(sizeof(bool*)); */
+        /* *pb = *(bool*)me->default_value; */
+        /* e->arg_data = pb; */
         break;
       case META_ENTRY_TYPE_NONE:;
         break;
@@ -129,15 +128,10 @@ bool option_parse(Option* option, int* argc, char*** argv)
   return true;
 }
 
-void option_load_from_cli(Option* option, GApplicationCommandLine* cli)
+void option_set_values(Option* option, GVariantDict* values)
 {
-  GVariantDict* values = g_application_command_line_get_options_dict(cli);
-  if (option->values) {
-    g_variant_dict_unref(option->values);
-  }
   option->values = g_variant_dict_ref(values);
 }
-
 
 void* option_get(Option* option, const char* key)
 {
@@ -154,77 +148,77 @@ void* option_get(Option* option, const char* key)
   return NULL;
 }
 
-/* bool option_get_str_value(Option* option, const char* key, const char** value) */
-/* { */
-/*   if (!option->values) { */
-/*     return false; */
-/*   } */
-/*   char* v; */
-/*   bool has_value = g_variant_dict_lookup(option->values, key, "s", &v); */
-/*   if (has_value) { */
-/*     *value = v; */
-/*   } */
-/*   return has_value; */
-/* } */
-/*  */
-/* bool option_get_int_value(Option* option, const char* key, int* value) */
-/* { */
-/*   if (!option->values) { */
-/*     return false; */
-/*   } */
-/*   int v; */
-/*   bool has_value = g_variant_dict_lookup(option->values, key, "i", &v); */
-/*   if (has_value) { */
-/*     *value = v; */
-/*   } */
-/*   return has_value; */
-/* } */
-/*  */
-/* bool option_get_bool_value(Option* option, const char* key, bool* value) */
-/* { */
-/*   if (!option->values) { */
-/*     return false; */
-/*   } */
-/*   gboolean v; */
-/*   bool has_value = g_variant_dict_lookup(option->values, key, "b", &v); */
-/*   if (has_value) { */
-/*     *value = v; */
-/*   } */
-/*   return has_value; */
-/* } */
-
 bool option_get_str_value(Option* option, const char* key, const char** value)
 {
-  void* p = option_get(option, key);
-  if (!p) {
+  if (!option->values) {
     return false;
   }
-  if (!(char**)p) {
-    return false;
+  char* v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "s", &v);
+  if (has_value) {
+    *value = v;
   }
-  *value = *(char**)p;
-  return true;
+  return has_value;
 }
 
 bool option_get_int_value(Option* option, const char* key, int* value)
 {
-  void* p = option_get(option, key);
-  if (!p) {
+  if (!option->values) {
     return false;
   }
-  *value = *(int*)p;
-  return true;
+  int v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "i", &v);
+  if (has_value) {
+    *value = v;
+  }
+  return has_value;
 }
 
 bool option_get_bool_value(Option* option, const char* key, bool* value)
 {
-  void* p = option_get(option, key);
-  if (!p) {
+  if (!option->values) {
     return false;
   }
-  *value = *(bool*)p;
-  return true;
+  gboolean v;
+  bool has_value = g_variant_dict_lookup(option->values, key, "b", &v);
+  if (has_value) {
+    *value = v;
+  }
+  return has_value;
 }
+
+/* bool option_get_str_value(Option* option, const char* key, const char** value) */
+/* { */
+/*   void* p = option_get(option, key); */
+/*   if (!p) { */
+/*     return false; */
+/*   } */
+/*   if (!(char**)p) { */
+/*     return false; */
+/*   } */
+/*   *value = *(char**)p; */
+/*   return true; */
+/* } */
+/*  */
+/* bool option_get_int_value(Option* option, const char* key, int* value) */
+/* { */
+/*   void* p = option_get(option, key); */
+/*   if (!p) { */
+/*     return false; */
+/*   } */
+/*   *value = *(int*)p; */
+/*   return true; */
+/* } */
+/*  */
+/* bool option_get_bool_value(Option* option, const char* key, bool* value) */
+/* { */
+/*   void* p = option_get(option, key); */
+/*   if (!p) { */
+/*     return false; */
+/*   } */
+/*   *value = *(bool*)p; */
+/*   return true; */
+/* } */
 
 bool option_get_version(Option* option)
 {
