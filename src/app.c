@@ -449,8 +449,8 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   static const char introspection_xml[] =
     "<node>"
     "  <interface name='" TYM_APP_ID "'>"
-    "    <method name='echo'>"
-    "      <arg type='as' name='input' direction='in'/>"
+    "    <method name='echo'"
+    "      <arg type='s' name='input' direction='in'/>"
     "      <arg type='s' name='output' direction='out'/>"
     "    </method>"
     "    <method name='get_ids'>"
