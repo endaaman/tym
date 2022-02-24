@@ -101,12 +101,14 @@ Context* context_init(int id, Option* option)
   context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();
+
+  context_log_message(context, false, "init", context->id);
   return context;
 }
 
 void context_dispose_only(Context* context)
 {
-  dd("dispose %d", context->id);
+  context_log_message(context, false, "dispose", context->id);
   context->id = -1;
   g_free(context->object_path);
   option_close(context->option); /* dispose here */

@@ -87,6 +87,10 @@ Context* app_spawn_context(Option* option)
   } else {
     for (GList* li = app->contexts; li != NULL; li = li->next) {
       Context* c = (Context*)li->data;
+      if (c->id < 0) {
+        /* Ignores id=-1 ctx that is disposed */
+        continue;
+      }
       /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
       if (c->id != index) {
         break;
@@ -106,8 +110,10 @@ void app_quit_context(Context* context)
 {
   df();
   g_application_release(app->gapp);
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+  g_dbus_connection_unregister_object(conn, context->registration_id);
   context_dispose_only(context);
-  app->contexts = g_list_remove(app->contexts, context);
+  /* app->contexts = g_list_remove(app->contexts, context); */
 }
 
 static void on_vte_drag_data_received(
@@ -467,7 +473,8 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     return 1;
   }
 
-  int registration_id = g_dbus_connection_register_object(
+  context_log_message(context, false, "DBus is active on path:'%s' interface:'%s'", context->object_path, app_id);
+  context->registration_id = g_dbus_connection_register_object(
       conn,
       context->object_path,
       introspection_data->interfaces[0], // interface_info,
@@ -476,10 +483,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
       NULL,    // user_data_free_func,
       &error   // error
   );
-  g_assert(registration_id > 0);
-
-  context_log_message(context, false, "DBus is active on path:'%s' interface:'%s'", context->object_path, app_id);
-
+  g_assert(context->registration_id > 0);
 
   const char* shell_line = context_get_str(context, "shell");
   dd("SHELL LINE: %s", shell_line);

@@ -31,7 +31,7 @@ typedef struct {
   bool config_loading;
   bool initialized;
   char* object_path;
-
+  int registration_id;
   Meta* meta; /* ref */
   Option* option; /* ref */
   Config* config;
@@ -47,7 +47,6 @@ Context* context_init(int id, Option* option);
 void context_dispose_only(Context* context);
 bool context_is_disposed(Context* context);
 void context_close(Context* context);
-int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);
 void context_load_lua_context(Context* context);
 void context_log_message(Context* context, bool notify, const char* fmt, ...);
