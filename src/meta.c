@@ -222,3 +222,89 @@ MetaEntry* meta_get_entry(Meta* meta, const char* key)
   }
   return NULL;
 }
+
+GOptionEntry* meta_get_option_entries(Meta* meta)
+{
+  GOptionEntry app_options[] = {
+    {
+      .long_name = "version",
+      .short_name = 'v',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = NULL,
+      .description = "Show version",
+      .arg_description = NULL,
+    }, {
+      .long_name = "signal",
+      .short_name = 's',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "Signal to send via D-Bus",
+      .arg_description = "<signal>",
+    }, {
+      .long_name = "use",
+      .short_name = 'u',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "theme",
+      .short_name = 't',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
+      .arg_description = "<path>",
+    }, {
+      .long_name = "nolua",
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = NULL,
+      .description = "Launch without Lua context",
+    }
+  };
+
+  GOptionEntry* options_entries = (GOptionEntry*)g_malloc0_n(
+      sizeof(app_options) / sizeof(GOptionEntry) + meta_size(meta) + 1,
+      sizeof(GOptionEntry));
+  memmove(options_entries, app_options, sizeof(app_options));
+  unsigned i = sizeof(app_options) / sizeof(GOptionEntry);
+
+  for (GList* li = meta->list; li != NULL; li = li->next) {
+    MetaEntry* me = (MetaEntry*)li->data;
+    GOptionEntry* e = &options_entries[i];
+    i += 1;
+    e->long_name = me->name;
+    e->short_name = me->short_name;
+    e->flags = me->option_flag;
+    e->arg_description = me->arg_desc;
+    e->description = me->desc;
+    switch (me->type) {
+      case META_ENTRY_TYPE_STRING:
+        e->arg = G_OPTION_ARG_STRING;
+        /* char** ps = g_malloc0(sizeof(char*)); */
+        /* *ps = me->default_value; */
+        /* e->arg_data = ps; */
+        break;
+      case META_ENTRY_TYPE_INTEGER:
+        e->arg = G_OPTION_ARG_INT;
+        /* int* pi = g_malloc0(sizeof(int*)); */
+        /* *pi = *(int*)me->default_value; */
+        /* e->arg_data = pi; */
+        break;
+      case META_ENTRY_TYPE_BOOLEAN:
+        e->arg = G_OPTION_ARG_NONE;
+        /* TODO: need to dispose */
+        /* bool* pb = g_malloc0(sizeof(bool*)); */
+        /* *pb = *(bool*)me->default_value; */
+        /* e->arg_data = pb; */
+        break;
+      case META_ENTRY_TYPE_NONE:;
+        break;
+    }
+  }
+  return options_entries;
+}

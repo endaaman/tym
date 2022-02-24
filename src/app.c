@@ -87,7 +87,8 @@ int app_start(int argc, char** argv)
     g_error_free(error);
   }
 
-  Option* option = option_init(app->meta);
+  GOptionEntry* entries = meta_get_option_entries(app->meta);
+  g_application_add_main_option_entries(gapp, entries);
 
   /* if (g_application_get_is_remote(gapp)) { */
   /*   option_parse(option, &argc, &argv); */
@@ -95,9 +96,8 @@ int app_start(int argc, char** argv)
   /*     return 0; */
   /*   } */
   /* } */
-  g_application_add_main_option_entries(gapp, option->entries);
 
-  g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), option);
+  g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), NULL);
 
   return g_application_run(gapp, argc, argv);
 }
