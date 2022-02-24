@@ -324,7 +324,11 @@ void on_dbus_signal(
   dd("\tinterface_name: %s", interface_name);
   dd("\tsignal_name: %s", signal_name);
 
-  ipc_signal_perform(app->ipc, context, signal_name, parameters);
+  if (ipc_signal_perform(app->ipc, context, signal_name, parameters)) {
+    return;
+  }
+
+  context_log_message(context, true, "Unsupported signal: %s", signal_name);
 }
 
 void on_dbus_call_method(
@@ -345,7 +349,17 @@ void on_dbus_call_method(
   dd("\tinterface_name: %s", interface_name);
   dd("\tmethod_name: %s", method_name);
 
-  ipc_method_perform(app->ipc, context, method_name, parameters, invocation);
+  if (ipc_method_perform(app->ipc, context, method_name, parameters, invocation)) {
+    return;
+  }
+
+  GError* error = g_error_new(
+      g_quark_from_static_string("TymInvalidMethodCall"),
+      TYM_ERROR_INVALID_METHOD_CALL,
+      "unsupported method call: %s",
+      method_name);
+
+  g_dbus_method_invocation_return_gerror(invocation, error);
 }
 
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
@@ -367,11 +381,14 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
 
     int dest = -1;
-    if (!option_get_int_value(option, "dest", &dest)) {
-      g_print("--dest <id> must be provided.");
-      return 1;
+    char* path = NULL;
+    if (option_get_int_value(option, "dest", &dest)) {
+      path = g_strdup_printf(TYM_OBJECT_PATH_FMT, dest);
+    } else {
+      char** env = g_get_environ();
+      const char* dest_str = g_environ_getenv(env, "TYM_ID");
+      path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
     }
-    char* path = g_strdup_printf(TYM_OBJECT_PATH_FMT, dest);
     g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, sig, NULL, &error);
     g_print("Signal '%s' has been sent to path:%s interface:%s\n", sig, TYM_APP_ID, path);
     g_free(sig);
@@ -486,7 +503,6 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   g_assert(context->registration_id > 0);
 
   const char* shell_line = context_get_str(context, "shell");
-  dd("SHELL LINE: %s", shell_line);
 
   char** shell_argv = NULL;
   g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);

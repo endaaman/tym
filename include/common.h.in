@@ -32,10 +32,14 @@
 #ifdef DEBUG
 #define TYM_APP_ID "me.endaaman.tym_dev"
 #define TYM_OBJECT_PATH_FMT "/me/endaaman/tym_dev%d"
+#define TYM_OBJECT_PATH_FMT_STR "/me/endaaman/tym_dev%s"
 #else
 #define TYM_APP_ID "me.endaaman.tym"
 #define TYM_OBJECT_PATH_FMT "/me/endaaman/tym%d"
+#define TYM_OBJECT_PATH_FMT_STR "/me/endaaman/tym%s"
 #endif
+
+#define TYM_ERROR_INVALID_METHOD_CALL 0
 
 #define TYM_CONFIG_DIR_NAME "tym"
 #define TYM_CONFIG_FILE_NAME "config.lua"
