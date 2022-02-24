@@ -1,5 +1,5 @@
 /**
- * tym.c
+ * app.c
  *
  * Copyright (c) 2017 endaaman
  *
@@ -25,6 +25,7 @@ void app_init()
     G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT
   ));
   app->meta = meta_init();
+  app->ipc = ipc_init();
 }
 
 void app_close()
@@ -40,6 +41,7 @@ void app_close()
   g_application_quit(app->gapp);
   g_object_unref(app->gapp);
   meta_close(app->meta);
+  ipc_close(app->ipc);
   g_free(app);
 }
 
@@ -58,13 +60,6 @@ int app_start(int argc, char** argv)
   GOptionEntry* entries = meta_get_option_entries(app->meta);
   g_application_add_main_option_entries(gapp, entries);
 
-  /* if (g_application_get_is_remote(gapp)) { */
-  /*   option_parse(option, &argc, &argv); */
-  /*   if (process_option(option)) { */
-  /*     return 0; */
-  /*   } */
-  /* } */
-
   g_signal_connect(gapp, "handle-local-options", G_CALLBACK(on_local_options), NULL);
   g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), NULL);
 
@@ -79,14 +74,25 @@ static int _contexts_sort_func(const void* a, const void* b)
 Context* app_spawn_context(Option* option)
 {
   unsigned index = 0;
-  /* create new context */
-  for (GList* li = app->contexts; li != NULL; li = li->next) {
-    Context* c = (Context*)li->data;
-    /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
-    if (c->id != index) {
-      break;
+  int ordered_id = -1;
+  if (option_get_int_value(option, "id", &ordered_id)) {
+    for (GList* li = app->contexts; li != NULL; li = li->next) {
+      Context* c = (Context*)li->data;
+      if (c->id == ordered_id) {
+        context_log_warn(c, true, "id=%d has been already acquired.", ordered_id);
+        return NULL;
+      }
     }
-    index += 1;
+    index = ordered_id;
+  } else {
+    for (GList* li = app->contexts; li != NULL; li = li->next) {
+      Context* c = (Context*)li->data;
+      /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
+      if (c->id != index) {
+        break;
+      }
+      index += 1;
+    }
   }
 
   dd("new context id: %d", index);
@@ -304,13 +310,36 @@ void on_dbus_signal(
   GVariant* parameters,
   void* user_data)
 {
-  df();
-  dd("signal received");
+  Context* context = (Context*)user_data;
+  dd("DBus signal received");
+  dd("\tcontext id: %d", context->id);
   dd("\tsender_name: %s", sender_name);
   dd("\tobject_path: %s", object_path);
   dd("\tinterface_name: %s", interface_name);
   dd("\tsignal_name: %s", signal_name);
-  context_handle_signal((Context*)user_data, signal_name, parameters);
+
+  ipc_signal_perform(app->ipc, context, signal_name, parameters);
+}
+
+void on_dbus_call_method(
+    GDBusConnection *connection,
+    const gchar* sender_name,
+    const gchar* object_path,
+    const gchar* interface_name,
+    const gchar* method_name,
+    GVariant* parameters,
+    GDBusMethodInvocation* invocation,
+    gpointer user_data)
+{
+  Context* context = (Context*)user_data;
+  dd("DBus method call");
+  dd("\tcontext id: %d", context->id);
+  dd("\tsender_name: %s", sender_name);
+  dd("\tobject_path: %s", object_path);
+  dd("\tinterface_name: %s", interface_name);
+  dd("\tmethod_name: %s", method_name);
+
+  ipc_method_perform(app->ipc, context, method_name, parameters, invocation);
 }
 
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
@@ -327,14 +356,20 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
     return 0;
   }
 
-  /* char* signal = option_get_signal(option); */
   char* sig = NULL;
   if (option_get_str_value(option, "signal", &sig)) {
-    const char* path = g_application_get_dbus_object_path(app->gapp);
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+
+    int dest = -1;
+    if (!option_get_int_value(option, "dest", &dest)) {
+      g_print("--dest <id> must be provided.");
+      return 1;
+    }
+    char* path = g_strdup_printf(TYM_OBJECT_PATH_FMT, dest);
     g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, sig, NULL, &error);
-    g_message("Signal `%s` has been sent.\n", sig);
+    g_print("Signal '%s' has been sent to path:%s interface:%s\n", sig, TYM_APP_ID, path);
     g_free(sig);
+    g_free(path);
     if (error) {
       g_error("%s", error->message);
       g_error_free(error);
@@ -351,27 +386,13 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   df();
   GError* error = NULL;
 
-  /* Option* option = (Option*)user_data; */
-  /* option_parse(option, &argc, &argv); */
-  /* option_set_values(option, g_application_command_line_get_options_dict(cli)); */
-
-  int argc = -1;
-  char** argv = g_application_command_line_get_arguments(cli, &argc);
-  int i = 0;
-  printf("ARGC: %d\n",argc);
-  for(i=1;i<argc;i++) {
-    printf("ARG: %s\n", argv[i]);
-  }
-
   Option* option = option_init(app->meta);
   option_set_values(option, g_application_command_line_get_options_dict(cli));
 
-  /* if (process_option(option)) { */
-  /*   dd("App will not start"); */
-  /*   return 0; */
-  /* } */
-
   Context* context = app_spawn_context(option);
+  if (!context) {
+    return 1;
+  }
 
   context_load_device(context);
   context_load_lua_context(context);
@@ -418,7 +439,47 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     context,
     NULL         // user data free func
   );
-  g_message("DBus active on object_path:'%s' interface_name: '%s'", context->object_path, app_id);
+
+  GDBusInterfaceVTable vtable = {
+    on_dbus_call_method,
+    NULL,
+    NULL,
+  };
+
+  static const char introspection_xml[] =
+    "<node>"
+    "  <interface name='" TYM_APP_ID "'>"
+    "    <method name='echo'>"
+    "      <arg type='as' name='input' direction='in'/>"
+    "      <arg type='s' name='output' direction='out'/>"
+    "    </method>"
+    "    <method name='get_ids'>"
+    "      <arg type='ai' name='ids' direction='out'/>"
+    "    </method>"
+    "  </interface>"
+    "</node>";
+
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
+  if (error) {
+    g_error("%s", error->message);
+    g_error_free(error);
+    app_quit_context(context);
+    return 1;
+  }
+
+  int registration_id = g_dbus_connection_register_object(
+      conn,
+      context->object_path,
+      introspection_data->interfaces[0], // interface_info,
+      &vtable, // vtable
+      context, // user_data,
+      NULL,    // user_data_free_func,
+      &error   // error
+  );
+  g_assert(registration_id > 0);
+
+  context_log_message(context, false, "DBus is active on path:'%s' interface:'%s'", context->object_path, app_id);
+
 
   const char* shell_line = context_get_str(context, "shell");
   dd("SHELL LINE: %s", shell_line);
@@ -436,7 +497,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   char** shell_env = (char**)g_malloc0_n(
       g_strv_length((char**)env) + 1,
       sizeof(char*));
-  i = 0;
+  int i = 0;
   while (env[i]) {
     shell_env[i] = g_strdup(env[i]);
     i += 1;

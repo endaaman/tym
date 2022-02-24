@@ -10,6 +10,7 @@
 #include "builtin.h"
 #include "context.h"
 #include "command.h"
+#include "app.h"
 
 
 static int builtin_get(lua_State* L)
@@ -47,7 +48,7 @@ static int builtin_quit(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
   /* TODO: impl */
   /* g_application_quit(G_APPLICATION(context->app)); */
-  /* context_close(context); */
+  app_quit_context(context);
   return 0;
 }
 

@@ -33,6 +33,7 @@ tym_SOURCES = \
 	config.c \
 	context.c \
 	hook.c \
+	ipc.c \
 	keymap.c \
 	meta.c \
 	option.c \

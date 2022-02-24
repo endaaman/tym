@@ -235,14 +235,6 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .description = "Show version",
       .arg_description = NULL,
     }, {
-      .long_name = "signal",
-      .short_name = 's',
-      .flags = G_OPTION_FLAG_NONE,
-      .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
-      .description = "Signal to send via D-Bus",
-      .arg_description = "<signal>",
-    }, {
       .long_name = "use",
       .short_name = 'u',
       .flags = G_OPTION_FLAG_NONE,
@@ -258,6 +250,30 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .arg_data = NULL,
       .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
       .arg_description = "<path>",
+    }, {
+      .long_name = "id",
+      .short_name = 'i',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_INT,
+      .arg_data = NULL,
+      .description = "ID to use in the new instance",
+      .arg_description = "<id>",
+    }, {
+      .long_name = "signal",
+      .short_name = 's',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = NULL,
+      .description = "Signal to send via DBus",
+      .arg_description = "<signal>",
+    }, {
+      .long_name = "dest",
+      .short_name = 'd',
+      .flags = G_OPTION_FLAG_NONE,
+      .arg = G_OPTION_ARG_INT,
+      .arg_data = NULL,
+      .description = "Destination of id to send signal/call method",
+      .arg_description = "<dest id>",
     }
   };
 
@@ -279,22 +295,12 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
     switch (me->type) {
       case META_ENTRY_TYPE_STRING:
         e->arg = G_OPTION_ARG_STRING;
-        /* char** ps = g_malloc0(sizeof(char*)); */
-        /* *ps = me->default_value; */
-        /* e->arg_data = ps; */
         break;
       case META_ENTRY_TYPE_INTEGER:
         e->arg = G_OPTION_ARG_INT;
-        /* int* pi = g_malloc0(sizeof(int*)); */
-        /* *pi = *(int*)me->default_value; */
-        /* e->arg_data = pi; */
         break;
       case META_ENTRY_TYPE_BOOLEAN:
         e->arg = G_OPTION_ARG_NONE;
-        /* TODO: need to dispose */
-        /* bool* pb = g_malloc0(sizeof(bool*)); */
-        /* *pb = *(bool*)me->default_value; */
-        /* e->arg_data = pb; */
         break;
       case META_ENTRY_TYPE_NONE:;
         break;

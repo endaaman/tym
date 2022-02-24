@@ -50,6 +50,8 @@ void context_close(Context* context);
 int context_start(Context* context, int argc, char **argv);
 void context_load_device(Context* context);
 void context_load_lua_context(Context* context);
+void context_log_message(Context* context, bool notify, const char* fmt, ...);
+void context_log_warn(Context* context, bool notify, const char* fmt, ...);
 void context_restore_default(Context* context);
 void context_override_by_option(Context* context);
 char* context_acquire_config_path(Context* context);
