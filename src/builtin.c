@@ -570,6 +570,18 @@ static int builtin_hex_to_rgb(lua_State* L)
   return 3;
 }
 
+static int builtin_signal(lua_State* L)
+{
+  /* TODO: impl */
+  return 0;
+}
+
+static int builtin_call(lua_State* L)
+{
+  /* TODO: impl */
+  return 0;
+}
+
 static int builtin_check_mod_state(lua_State* L)
 {
   const char* accelerator = luaL_checkstring(L, 1);
@@ -741,6 +753,8 @@ int builtin_register_module(lua_State* L)
     { "rgba_to_color"       , builtin_rgba_to_color        },
     { "rgb_to_hex"          , builtin_rgb_to_hex           },
     { "hex_to_rgb"          , builtin_hex_to_rgb           },
+    { "signal"              , builtin_signal               },
+    { "call"                , builtin_call                 },
     { "get_monitor_model"   , builtin_get_monitor_model    },
     { "get_cursor_position" , builtin_get_cursor_position  },
     { "get_clipboard"       , builtin_get_clipboard        },
