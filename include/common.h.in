@@ -30,13 +30,14 @@
 
 #ifdef DEBUG
 #define TYM_APP_ID "me.endaaman.tym_dev"
-#define TYM_OBJECT_PATH_FMT "/me/endaaman/tym_dev%d"
-#define TYM_OBJECT_PATH_FMT_STR "/me/endaaman/tym_dev%s"
+#define TYM_OBJECT_PATH_BASE "/me/endaaman/tym_dev"
 #else
 #define TYM_APP_ID "me.endaaman.tym"
-#define TYM_OBJECT_PATH_FMT "/me/endaaman/tym%d"
-#define TYM_OBJECT_PATH_FMT_STR "/me/endaaman/tym%s"
+#define TYM_OBJECT_PATH_BASE "/me/endaaman/tym"
 #endif
+
+#define TYM_OBJECT_PATH_FMT_INT TYM_OBJECT_PATH_BASE"%d"
+#define TYM_OBJECT_PATH_FMT_STR TYM_OBJECT_PATH_BASE"%s"
 
 #define TYM_ERROR_INVALID_METHOD_CALL 0
 

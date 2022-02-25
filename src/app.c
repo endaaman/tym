@@ -33,9 +33,6 @@ void app_close()
   df();
   for (GList* li = app->contexts; li != NULL; li = li->next) {
     Context* c = (Context*)li->data;
-    if (!context_is_disposed(c)) {
-      context_dispose_only(c);
-    }
     context_close(c);
   }
   g_application_quit(app->gapp);
@@ -87,11 +84,7 @@ Context* app_spawn_context(Option* option)
   } else {
     for (GList* li = app->contexts; li != NULL; li = li->next) {
       Context* c = (Context*)li->data;
-      if (c->id < 0) {
-        /* ignores id=-1 ctx that is disposed */
-        continue;
-      }
-      /* Scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
+      /* scanning from 0 and if find first ctx that is not continus from 0, the index is new index. */
       if (c->id != index) {
         break;
       }
@@ -102,6 +95,8 @@ Context* app_spawn_context(Option* option)
   Context* context = context_init(index, option);
   app->contexts = g_list_insert_sorted(app->contexts, context, _contexts_sort_func);
   g_application_hold(app->gapp);
+
+  context_log_message(context, false, "Started.");
   return context;
 }
 
@@ -111,9 +106,9 @@ void app_quit_context(Context* context)
   g_application_release(app->gapp);
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   g_dbus_connection_unregister_object(conn, context->registration_id);
-  context_log_message(context, false, "Quit.", context->id);
-  context_dispose_only(context);
-  /* app->contexts = g_list_remove(app->contexts, context); */
+  context_log_message(context, false, "Quit.");
+  app->contexts = g_list_remove(app->contexts, context);
+  context_close(context);
 }
 
 static void on_vte_drag_data_received(
@@ -254,7 +249,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
   context->initialized = false;
   if (error) {
     g_error("%s", error->message);
-    context_close(context);
+    app_quit_context(context);
     return;
   }
 }
@@ -263,8 +258,7 @@ static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_d
 static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
   df();
-  /* Context* context = (Context*)user_data; */
-  /* app_quit_context(context); */
+  // close context in child-exited handler
   return true;
 }
 
@@ -286,10 +280,6 @@ static bool on_window_focus_out(GtkWindow* window, GdkEvent* event, void* user_d
 static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
   Context* context = (Context*)user_data;
-  /* NOTICE: need check because this cb would be called after the window closed */
-  if (context_is_disposed(context)) {
-    return false;
-  }
   const char* value = context_get_str(context, "color_window_background");
   if (is_none(value)) {
     return false;
@@ -325,10 +315,11 @@ void on_dbus_signal(
   dd("\tsignal_name: %s", signal_name);
 
   if (ipc_signal_perform(app->ipc, context, signal_name, parameters)) {
+    context_log_message(context, false, "Signal received:`%s` object_path:`%s`", signal_name, object_path);
     return;
   }
 
-  context_log_message(context, true, "Unsupported signal: %s", signal_name);
+  context_log_warn(context, true, "Unsupported signal: `%s`", signal_name);
 }
 
 void on_dbus_call_method(
@@ -350,13 +341,15 @@ void on_dbus_call_method(
   dd("\tmethod_name: %s", method_name);
 
   if (ipc_method_perform(app->ipc, context, method_name, parameters, invocation)) {
+    context_log_message(context, false, "Method call:`%s` object_path:`%s`", method_name, object_path);
     return;
   }
 
+  context_log_warn(context, true, "Unsupported method call:`%s`", method_name);
   GError* error = g_error_new(
       g_quark_from_static_string("TymInvalidMethodCall"),
       TYM_ERROR_INVALID_METHOD_CALL,
-      "unsupported method call: %s",
+      "Unsupported method call: %s",
       method_name);
 
   g_dbus_method_invocation_return_gerror(invocation, error);
@@ -466,7 +459,6 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   if (!context) {
     return 1;
   }
-  context_log_message(context, false, "Started.", context->id);
 
   context_load_device(context);
   context_load_lua_context(context);
@@ -485,18 +477,18 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   };
   gtk_drag_dest_set(GTK_WIDGET(vte), GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP, drop_types, G_N_ELEMENTS(drop_types), GDK_ACTION_COPY);
 
-  g_signal_connect(vte, "drag-data-received", G_CALLBACK(on_vte_drag_data_received), context);
-  g_signal_connect(vte, "key-press-event", G_CALLBACK(on_vte_key_press), context);
-  g_signal_connect(vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll), context);
-  g_signal_connect(vte, "child-exited", G_CALLBACK(on_vte_child_exited), context);
-  g_signal_connect(vte, "window-title-changed", G_CALLBACK(on_vte_title_changed), context);
-  g_signal_connect(vte, "bell", G_CALLBACK(on_vte_bell), context);
-  g_signal_connect(vte, "button-press-event", G_CALLBACK(on_vte_click), context);
-  g_signal_connect(vte, "selection-changed", G_CALLBACK(on_vte_selection_changed), context);
-  g_signal_connect(window, "destroy", G_CALLBACK(on_window_close), context);
-  g_signal_connect(window, "focus-in-event", G_CALLBACK(on_window_focus_in), context);
-  g_signal_connect(window, "focus-out-event", G_CALLBACK(on_window_focus_out), context);
-  g_signal_connect(window, "draw", G_CALLBACK(on_window_draw), context);
+  context_signal_connect(context, vte, "drag-data-received", G_CALLBACK(on_vte_drag_data_received));
+  context_signal_connect(context, vte, "key-press-event", G_CALLBACK(on_vte_key_press));
+  context_signal_connect(context, vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll));
+  context_signal_connect(context, vte, "child-exited", G_CALLBACK(on_vte_child_exited));
+  context_signal_connect(context, vte, "window-title-changed", G_CALLBACK(on_vte_title_changed));
+  context_signal_connect(context, vte, "bell", G_CALLBACK(on_vte_bell));
+  context_signal_connect(context, vte, "button-press-event", G_CALLBACK(on_vte_click));
+  context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
+  context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
+  context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));
+  context_signal_connect(context, window, "focus-out-event", G_CALLBACK(on_window_focus_out));
+  context_signal_connect(context, window, "draw", G_CALLBACK(on_window_draw));
 
   const char* app_id = g_application_get_application_id(app->gapp);
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);

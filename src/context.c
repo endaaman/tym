@@ -96,38 +96,35 @@ Context* context_init(int id, Option* option)
   context->option = option;
   context->config_loading = false;
   context->initialized = false;
-  context->object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT, context->id);
+  context->object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT_INT, context->id);
   context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();
   return context;
 }
 
-void context_dispose_only(Context* context)
+void context_close(Context* context)
 {
-  dd("dispose only context id=%d", context->id);
-  context->id = -1;
+  dd("close context id=%d", context->id);
+  for (GList* li = context->handler_tags; li != NULL; li = li->next) {
+    HandlerTag* tag = (HandlerTag*)li->data;
+    g_signal_handler_disconnect(tag->object, tag->handler_id);
+  }
   g_free(context->object_path);
   option_close(context->option); /* dispose here */
   config_close(context->config);
   keymap_close(context->keymap);
   hook_close(context->hook);
   lua_close(context->lua);
-  context->option = NULL;
-  context->config = NULL;
-  context->keymap = NULL;
-  context->hook = NULL;
-  context->lua = NULL;
-}
-
-bool context_is_disposed(Context* context)
-{
-  return context->id < 0;
-}
-
-void context_close(Context* context)
-{
   g_free(context);
+}
+
+void context_add_handler_tag(Context* context, void* object, int handler_id)
+{
+  HandlerTag* tag = g_malloc0(sizeof(HandlerTag));
+  tag->handler_id = handler_id;
+  tag->object = object;
+  context->handler_tags = g_list_append(context->handler_tags, tag);
 }
 
 void context_load_device(Context* context)

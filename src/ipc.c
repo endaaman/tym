@@ -47,9 +47,6 @@ void ipc_method_get_ids(Context* context, GVariant* parameters, GDBusMethodInvoc
   GVariantBuilder *builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
   for (GList* li = app->contexts; li != NULL; li = li->next) {
     Context* c = (Context*)li->data;
-    if (c->id < 0) {
-      continue;
-    }
     g_variant_builder_add(builder, "i", c->id);
   }
   GVariant* v = g_variant_builder_end(builder);
