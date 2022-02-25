@@ -93,7 +93,6 @@ Context* context_init(int id, Option* option)
   Context* context = g_malloc0(sizeof(Context));
   g_assert(id >= 0);
   context->id = id;
-  context->meta = app->meta;
   context->option = option;
   context->config_loading = false;
   context->initialized = false;
@@ -183,8 +182,8 @@ void context_log_warn(Context* context, bool notify, const char* fmt, ...)
 
 void context_restore_default(Context* context)
 {
-  config_restore_default(context->config, context->meta);
-  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+  config_restore_default(context->config, app->meta);
+  for (GList* li = app->meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     char* target = NULL;
     if (strncmp("color_", e->name, 6) == 0) {
@@ -218,7 +217,7 @@ void context_restore_default(Context* context)
   while (i < 16) {
     char s[10] = {};
     g_snprintf(s, 10, "color_%d", i);
-    MetaEntry* e = meta_get_entry(context->meta, s);
+    MetaEntry* e = meta_get_entry(app->meta, s);
     assert(gdk_rgba_parse(&palette[i], e->default_value));
     i += 1;
   }
@@ -227,7 +226,7 @@ void context_restore_default(Context* context)
 
 void context_override_by_option(Context* context)
 {
-  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+  for (GList* li = app->meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     char* key = e->name;
     switch (e->type) {
@@ -341,7 +340,7 @@ void context_load_theme(Context* context)
     goto EXIT;
   }
 
-  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+  for (GList* li = app->meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     if (!e->is_theme) {
       continue;
@@ -475,7 +474,7 @@ GdkWindow* context_get_gdk_window(Context* context)
 
 const char* context_get_str(Context* context, const char* key)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->getter) {
     return ((PropertyStrGetter)e->getter)(context, key);
   }
@@ -484,7 +483,7 @@ const char* context_get_str(Context* context, const char* key)
 
 int context_get_int(Context* context, const char* key)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->getter) {
     return ((PropertyIntGetter)e->getter)(context, key);
   }
@@ -493,7 +492,7 @@ int context_get_int(Context* context, const char* key)
 
 bool context_get_bool(Context* context, const char* key)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->getter) {
     return ((PropertyBoolGetter)e->getter)(context, key);
   }
@@ -502,7 +501,7 @@ bool context_get_bool(Context* context, const char* key)
 
 void context_set_str(Context* context, const char* key, const char* value)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->setter) {
     ((PropertyStrSetter)e->setter)(context, key, value);
     return;
@@ -516,7 +515,7 @@ void context_set_str(Context* context, const char* key, const char* value)
 
 void context_set_int(Context* context, const char* key, int value)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->setter) {
     ((PropertyIntSetter)e->setter)(context, key, value);
     return;
@@ -530,7 +529,7 @@ void context_set_int(Context* context, const char* key, int value)
 
 void context_set_bool(Context* context, const char* key, bool value)
 {
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (e->setter) {
     ((PropertyBoolSetter)e->setter)(context, key, value);
     return;

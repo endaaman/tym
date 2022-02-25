@@ -10,8 +10,8 @@
 #ifndef APP_H
 #define APP_H
 
-#include "common.h"
 #include "context.h"
+#include "meta.h"
 #include "ipc.h"
 
 typedef struct {

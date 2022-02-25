@@ -18,7 +18,7 @@ static int builtin_get(lua_State* L)
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
 
   const char* key = luaL_checkstring(L, 1);
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (!e) {
     luaX_warn(L, "Invalid config key: '%s'", key);
     lua_pushnil(L);
@@ -58,7 +58,7 @@ static int builtin_set(lua_State* L)
 
   const char* key = luaL_checkstring(L, 1);
 
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (!e) {
     luaX_warn(L, "Invalid config key: '%s'", key);
     return 0;
@@ -97,10 +97,10 @@ static int builtin_set(lua_State* L)
 
 static int get_default_value(lua_State* L)
 {
-  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  /* Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1)); */
 
   const char* key = luaL_checkstring(L, 1);
-  MetaEntry* e = meta_get_entry(context->meta, key);
+  MetaEntry* e = meta_get_entry(app->meta, key);
   if (!e) {
     luaX_warn(L, "Invalid config key: '%s'", key);
     lua_pushnil(L);
@@ -130,7 +130,7 @@ static int builtin_get_config(lua_State* L)
 
   lua_newtable(L);
 
-  for (GList* li = context->meta->list; li != NULL; li = li->next) {
+  for (GList* li = app->meta->list; li != NULL; li = li->next) {
     MetaEntry* e = (MetaEntry*)li->data;
     char* key = e->name;
     lua_pushstring(L, key);
@@ -165,7 +165,7 @@ static int builtin_set_config(lua_State* L)
   while (lua_next(L, -2)) {
     lua_pushvalue(L, -2);
     const char* key = lua_tostring(L, -1);
-    MetaEntry* e = meta_get_entry(context->meta, key);
+    MetaEntry* e = meta_get_entry(app->meta, key);
     if (e) {
       int type = lua_type(L, -2);
       switch (e->type) {

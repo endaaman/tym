@@ -75,14 +75,15 @@ static void ipc_do_lua(Context* context, GVariant* parameters, GDBusMethodInvoca
   if (suc != 0) {
     result = g_strdup(lua_tostring(L, -1));
     context_log_warn(context, true, result);
-    lua_pop(L, -1);
+    lua_settop(L, 0);
   } else {
     if (needs_result) {
       int top = lua_gettop(L);
-      if (top == 1) {
+      if (top > 0) {
         result = g_strdup(lua_tostring(L, -1));
       } else {
-        result = g_strdup_printf("Stack top is not 1(top = %d)", top);
+        result = g_strdup_printf("Lua stack is empty. `return` is needed.");
+        context_log_warn(context, true, result);
       }
       lua_settop(L, 0);
     }

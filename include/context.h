@@ -32,8 +32,7 @@ typedef struct {
   bool initialized;
   char* object_path;
   int registration_id;
-  Meta* meta; /* ref */
-  Option* option; /* ref */
+  Option* option;
   Config* config;
   Keymap* keymap;
   Hook* hook;
