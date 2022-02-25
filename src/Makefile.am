@@ -21,6 +21,7 @@ COMMON_CFLAGS = \
 	-Wbad-function-cast \
 	-Wcast-align \
 	-Wredundant-decls \
+	-Wformat-security \
 	-Winline \
 	-I$(top_srcdir)/include
 

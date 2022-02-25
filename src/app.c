@@ -111,9 +111,8 @@ void app_quit_context(Context* context)
   g_application_release(app->gapp);
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   g_dbus_connection_unregister_object(conn, context->registration_id);
-  context_dispose_only(context);
-
   context_log_message(context, false, "Quit.", context->id);
+  context_dispose_only(context);
   /* app->contexts = g_list_remove(app->contexts, context); */
 }
 

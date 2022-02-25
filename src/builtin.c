@@ -42,13 +42,10 @@ static int builtin_get(lua_State* L)
   return 1;
 }
 
-
 static int builtin_quit(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  /* TODO: impl */
-  /* g_application_quit(G_APPLICATION(context->app)); */
-  app_quit_context(context);
+  gtk_window_close(context->layout.window);
   return 0;
 }
 
