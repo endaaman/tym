@@ -365,11 +365,11 @@ static int builtin_send_key(lua_State* L)
 typedef struct {
   Context* context;
   int ref;
-} TimeoutNotation;
+} TimeoutCallbackNotation;
 
 static int timeout_callback(void* user_data)
 {
-  TimeoutNotation* notation = (TimeoutNotation*) user_data;
+  TimeoutCallbackNotation* notation = (TimeoutCallbackNotation*)user_data;
 
   lua_State* L = notation->context->lua;
   lua_rawgeti(L, LUA_REGISTRYINDEX, notation->ref);
@@ -398,7 +398,7 @@ static int builtin_set_timeout(lua_State* L)
 
   lua_pushvalue(L, 1);
   int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  TimeoutNotation* notation = g_malloc0(sizeof(TimeoutNotation));
+  TimeoutCallbackNotation* notation = g_malloc0(sizeof(TimeoutCallbackNotation));
   notation->context = context;
   notation->ref = ref;
   int tag = g_timeout_add_full(G_PRIORITY_DEFAULT, interval, (GSourceFunc)timeout_callback, notation, g_free);
@@ -573,23 +573,23 @@ static int builtin_hex_to_rgb(lua_State* L)
 static GVariant* table_to_variant(lua_State* L, int table_index)
 {
   luaL_argcheck(L, lua_istable(L, table_index), table_index, "table expected");
-  size_t param_len = lua_rawlen(L, table_index);
-  GVariant** vv = g_malloc0_n(param_len, sizeof(char*));
+  size_t num_params = lua_rawlen(L, table_index);
+  GVariant** vv = g_malloc0_n(num_params, sizeof(char*));
   int i = 0;
-  while (i < param_len) {
+  while (i < num_params) {
     lua_rawgeti(L, table_index, i + 1); // args[table_index][i+1]
     vv[i] = g_variant_new_string(lua_tostring(L, -1));
     lua_pop(L, 1);
     i += 1;
   }
-  GVariant* p = g_variant_new_tuple(vv, param_len);
+  GVariant* p = g_variant_new_tuple(vv, num_params);
   g_free(vv);
   return p;
 }
 
+/* usage tym.signal(0, 'hook', {'param'}) */
 static int builtin_signal(lua_State* L)
 {
-  /* usage tym.signal(0, 'hook', {'param'}) */
   int target_id = luaL_checkinteger(L, 1);
   const char* signal_name = luaL_checkstring(L, 2);
   GVariant* params = lua_gettop(L) >= 3
@@ -610,20 +610,103 @@ static int builtin_signal(lua_State* L)
   return 0;
 }
 
-static int builtin_call(lua_State* L)
+typedef struct {
+  Context* context;
+  int ref;
+} CallCallbackNotation;
+
+void push_value_by_gvariant(lua_State* L, GVariant* v) {
+  if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
+    lua_pushinteger(L, g_variant_get_int32(v));
+  } else if (g_variant_is_of_type(v, G_VARIANT_TYPE_STRING)) {
+    char* s = NULL;
+    g_variant_get(v, "s", &s);
+    lua_pushstring(L, s);
+    g_free(s);
+  } else if (g_variant_is_of_type(v, G_VARIANT_TYPE_ARRAY) || g_variant_is_of_type(v, G_VARIANT_TYPE_TUPLE)) {
+    lua_newtable(L);
+    size_t num = g_variant_n_children(v);
+    int i = 0;
+    while (i < num) {
+      GVariant* e = g_variant_get_child_value(v, i);
+      push_value_by_gvariant(L, e);
+      lua_rawseti(L, -2, i + 1);
+      i += 1;
+    }
+  } else {
+    lua_pushstring(L, g_variant_print(v, false));
+  }
+}
+
+void call_callback(GObject* source_object, GAsyncResult* res, void* user_data)
 {
-  /* usage tym.call(0, 'exec', {'param'}) */
-  int target_id = luaL_checkinteger(L, 1);
-  const char* method_name = luaL_checkstring(L, 2);
-  GVariant* params = lua_gettop(L) >= 3
-    ? table_to_variant(L, 3)
-    : g_variant_new("()");
+  GError* error = NULL;
+  TimeoutCallbackNotation* notation = (TimeoutCallbackNotation*)user_data;
+  Context* context = notation->context;
+  lua_State* L = context->lua;
 
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-  GError* error = NULL;
+  GVariant* result = g_dbus_connection_call_finish(conn, res, &error);
+
+  lua_rawgeti(L, LUA_REGISTRYINDEX, notation->ref);
+  if (!lua_isfunction(L, -1)) {
+    lua_pop(L, 1); // pop none-function
+    context_log_warn(context, true, "tried to call non-function");
+    return;
+  }
+
+  int num_args = 0;
+  if (error) {
+    char* m = g_strdup_printf("DBus error: '%s'", error->message);
+    luaX_warn(L, "%s", m);
+    lua_pushstring(L, m);
+    g_error_free(error);
+    g_free(m);
+    num_args = 1;
+  } else {
+    dd("DBus method call result: `%s`", g_variant_print(result, true));
+    int num_result = g_variant_n_children(result);
+    int i = 0;
+    while (i < num_result) {
+      GVariant* e = g_variant_get_child_value(result, i);
+      push_value_by_gvariant(L, e);
+      i += 1;
+    }
+    num_args = num_result;
+  }
+
+  if (lua_pcall(L, num_args, 0, 0) != LUA_OK) {
+    luaX_warn(L, "Error in timeout function: '%s'", lua_tostring(L, -1));
+    lua_pop(L, 1); // error
+  }
+}
+
+/* usage: tym.call(0, 'eval', {'return 1+2'}, function(...) end) */
+static int builtin_call(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  int target_id = luaL_checkinteger(L, 1);
+  const char* method_name = luaL_checkstring(L, 2);
+  GVariant* params = table_to_variant(L, 3);
+
+  bool has_cb = lua_gettop(L) >= 4;
+
+  CallCallbackNotation* notation = NULL;
+  GAsyncReadyCallback cb = NULL;
+  if (has_cb) {
+    luaL_argcheck(L, lua_isfunction(L, 4), 4, "function expected");
+    lua_pushvalue(L, 4);
+    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    notation = (CallCallbackNotation*)g_malloc(sizeof(CallCallbackNotation*));
+    notation->context = context;
+    notation->ref = ref;
+    cb = (GAsyncReadyCallback)call_callback;
+  }
+
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
   char* object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT_INT, target_id);
-  /* TODO: make this async */
-  GVariant* result = g_dbus_connection_call_sync(
+
+  g_dbus_connection_call(
       conn,        // conn
       TYM_APP_ID,  // bus_name
       object_path, // object_path
@@ -632,33 +715,13 @@ static int builtin_call(lua_State* L)
       params,      // parameters
       NULL,        // reply_type
       G_DBUS_CALL_FLAGS_NONE, // flags
-      10000,        // timeout
+      1000,        // timeout
       NULL,        // cancellable
-      &error
+      cb,          // callback
+      notation     // user_data
   );
   g_free(object_path);
-  if (error) {
-    luaX_warn(L, "DBus error: '%s'", error->message);
-    g_error_free(error);
-    return 0;
-  }
-
-  size_t result_len = g_variant_n_children(result);
-  int i = 0;
-  dd("result type %s", g_variant_get_type_string(result));
-  while (i < result_len) {
-    GVariant* v = g_variant_get_child_value(result, i);
-    if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
-      lua_pushinteger(L, g_variant_get_int32(v));
-    } else if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
-      lua_pushstring(L, g_variant_get_bytestring(v));
-    } else {
-      lua_pushstring(L, g_variant_print(v, true));
-    }
-    i += 1;
-  }
-
-  return result_len;
+  return 0;
 }
 
 static int builtin_check_mod_state(lua_State* L)
