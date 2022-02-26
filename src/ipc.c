@@ -26,13 +26,13 @@ typedef struct {
 } MethodDef;
 
 
-void ipc_signal_hook(Context* context, GVariant* parameters)
+void ipc_signal_hook(Context* context, GVariant* params)
 {
   df();
   const char* param = NULL;
-  size_t size = g_variant_n_children(parameters);
+  size_t size = g_variant_n_children(params);
   if (size > 0) {
-    g_variant_get_child(parameters, 0, "s", &param);
+    g_variant_get_child(params, 0, "s", &param);
   }
   hook_perform_signal(context->hook, context->lua, param);
 }
@@ -42,7 +42,7 @@ SignalDef signals[] = {
   { NULL, NULL, }
 };
 
-void ipc_method_get_ids(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_get_ids(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
   GVariantBuilder *builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
   for (GList* li = app->contexts; li != NULL; li = li->next) {
@@ -54,16 +54,16 @@ void ipc_method_get_ids(Context* context, GVariant* parameters, GDBusMethodInvoc
   g_dbus_method_invocation_return_value(invocation, v);
 }
 
-void ipc_method_echo(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_echo(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
-  g_dbus_method_invocation_return_value(invocation, parameters);
+  g_dbus_method_invocation_return_value(invocation, params);
 }
 
-static void ipc_do_lua(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation, bool needs_result, bool is_file)
+static void ipc_do_lua(Context* context, GVariant* params, GDBusMethodInvocation* invocation, bool needs_result, bool is_file)
 {
   lua_State* L = context->lua;
   char* param = NULL;
-  g_variant_get_child(parameters, 0, "s", &param);
+  g_variant_get_child(params, 0, "s", &param);
 
   char* result = NULL;
 
@@ -91,24 +91,24 @@ static void ipc_do_lua(Context* context, GVariant* parameters, GDBusMethodInvoca
   g_dbus_method_invocation_return_value(invocation, v);
 }
 
-void ipc_method_eval(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_eval(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
-  ipc_do_lua(context, parameters, invocation, true, false);
+  ipc_do_lua(context, params, invocation, true, false);
 }
 
-void ipc_method_eval_file(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_eval_file(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
-  ipc_do_lua(context, parameters, invocation, true, true);
+  ipc_do_lua(context, params, invocation, true, true);
 }
 
-void ipc_method_exec(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_exec(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
-  ipc_do_lua(context, parameters, invocation, false, false);
+  ipc_do_lua(context, params, invocation, false, false);
 }
 
-void ipc_method_exec_file(Context* context, GVariant* parameters, GDBusMethodInvocation* invocation)
+void ipc_method_exec_file(Context* context, GVariant* params, GDBusMethodInvocation* invocation)
 {
-  ipc_do_lua(context, parameters, invocation, false, true);
+  ipc_do_lua(context, params, invocation, false, true);
 }
 
 MethodDef methods[] = {
@@ -161,24 +161,24 @@ void ipc_close(IPC* ipc)
   g_free(ipc);
 }
 
-bool ipc_signal_perform(IPC* ipc, Context* context, const char* signal_name, GVariant* parameters)
+bool ipc_signal_perform(IPC* ipc, Context* context, const char* signal_name, GVariant* params)
 {
   SignalDef* d = g_hash_table_lookup(ipc->signals, signal_name);
   if (!d) {
     dd("invalid signal_name: '%s'", signal_name);
     return false;
   }
-  d->func(context, parameters);
+  d->func(context, params);
   return true;
 }
 
-bool ipc_method_perform(IPC* ipc, Context* context, const char* method_name, GVariant* parameters, GDBusMethodInvocation* invocation)
+bool ipc_method_perform(IPC* ipc, Context* context, const char* method_name, GVariant* params, GDBusMethodInvocation* invocation)
 {
   MethodDef* d = g_hash_table_lookup(ipc->methods, method_name);
   if (!d) {
     dd("invalid method_name: '%s'", method_name);
     return false;
   }
-  d->func(context, parameters, invocation);
+  d->func(context, params, invocation);
   return true;
 }

@@ -570,16 +570,95 @@ static int builtin_hex_to_rgb(lua_State* L)
   return 3;
 }
 
+static GVariant* table_to_variant(lua_State* L, int table_index)
+{
+  luaL_argcheck(L, lua_istable(L, table_index), table_index, "table expected");
+  size_t param_len = lua_rawlen(L, table_index);
+  GVariant** vv = g_malloc0_n(param_len, sizeof(char*));
+  int i = 0;
+  while (i < param_len) {
+    lua_rawgeti(L, table_index, i + 1); // args[table_index][i+1]
+    vv[i] = g_variant_new_string(lua_tostring(L, -1));
+    lua_pop(L, 1);
+    i += 1;
+  }
+  GVariant* p = g_variant_new_tuple(vv, param_len);
+  g_free(vv);
+  return p;
+}
+
 static int builtin_signal(lua_State* L)
 {
-  /* TODO: impl */
+  /* usage tym.signal(0, 'hook', {'param'}) */
+  int target_id = luaL_checkinteger(L, 1);
+  const char* signal_name = luaL_checkstring(L, 2);
+  GVariant* params = lua_gettop(L) >= 3
+    ? table_to_variant(L, 3)
+    : g_variant_new("()");
+
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+  GError* error = NULL;
+  char* object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT_INT, target_id);
+  g_dbus_connection_emit_signal(conn, NULL, object_path, TYM_APP_ID, signal_name, params, &error);
+  g_free(object_path);
+  if (error) {
+    luaX_warn(L, "DBus error: '%s'", error->message);
+    g_error_free(error);
+    return 0;
+  }
+
   return 0;
 }
 
 static int builtin_call(lua_State* L)
 {
-  /* TODO: impl */
-  return 0;
+  /* usage tym.call(0, 'exec', {'param'}) */
+  int target_id = luaL_checkinteger(L, 1);
+  const char* method_name = luaL_checkstring(L, 2);
+  GVariant* params = lua_gettop(L) >= 3
+    ? table_to_variant(L, 3)
+    : g_variant_new("()");
+
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+  GError* error = NULL;
+  char* object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT_INT, target_id);
+  /* TODO: make this async */
+  GVariant* result = g_dbus_connection_call_sync(
+      conn,        // conn
+      TYM_APP_ID,  // bus_name
+      object_path, // object_path
+      TYM_APP_ID,  // interface_name
+      method_name, // method_name
+      params,      // parameters
+      NULL,        // reply_type
+      G_DBUS_CALL_FLAGS_NONE, // flags
+      10000,        // timeout
+      NULL,        // cancellable
+      &error
+  );
+  g_free(object_path);
+  if (error) {
+    luaX_warn(L, "DBus error: '%s'", error->message);
+    g_error_free(error);
+    return 0;
+  }
+
+  size_t result_len = g_variant_n_children(result);
+  int i = 0;
+  dd("result type %s", g_variant_get_type_string(result));
+  while (i < result_len) {
+    GVariant* v = g_variant_get_child_value(result, i);
+    if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
+      lua_pushinteger(L, g_variant_get_int32(v));
+    } else if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
+      lua_pushstring(L, g_variant_get_bytestring(v));
+    } else {
+      lua_pushstring(L, g_variant_print(v, true));
+    }
+    i += 1;
+  }
+
+  return result_len;
 }
 
 static int builtin_check_mod_state(lua_State* L)

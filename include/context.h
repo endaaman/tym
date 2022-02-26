@@ -32,7 +32,7 @@ typedef struct {
 } HandlerTag;
 
 typedef struct {
-  int id; /* minus means the context is disposed */
+  int id;
   bool config_loading;
   bool initialized;
   char* object_path;

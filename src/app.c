@@ -246,7 +246,7 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
 static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
 {
   Context* context = (Context*)user_data;
-  context->initialized = false;
+  context->initialized = true;
   if (error) {
     g_error("%s", error->message);
     app_quit_context(context);
@@ -303,7 +303,7 @@ void on_dbus_signal(
   const char* object_path,
   const char* interface_name,
   const char* signal_name,
-  GVariant* parameters,
+  GVariant* params,
   void* user_data)
 {
   Context* context = (Context*)user_data;
@@ -314,7 +314,7 @@ void on_dbus_signal(
   dd("\tinterface_name: %s", interface_name);
   dd("\tsignal_name: %s", signal_name);
 
-  if (ipc_signal_perform(app->ipc, context, signal_name, parameters)) {
+  if (ipc_signal_perform(app->ipc, context, signal_name, params)) {
     context_log_message(context, false, "Signal received:`%s` object_path:`%s`", signal_name, object_path);
     return;
   }
@@ -323,12 +323,12 @@ void on_dbus_signal(
 }
 
 void on_dbus_call_method(
-    GDBusConnection *connection,
+    GDBusConnection* conn,
     const gchar* sender_name,
     const gchar* object_path,
     const gchar* interface_name,
     const gchar* method_name,
-    GVariant* parameters,
+    GVariant* params,
     GDBusMethodInvocation* invocation,
     gpointer user_data)
 {
@@ -340,8 +340,9 @@ void on_dbus_call_method(
   dd("\tinterface_name: %s", interface_name);
   dd("\tmethod_name: %s", method_name);
 
-  if (ipc_method_perform(app->ipc, context, method_name, parameters, invocation)) {
+  if (ipc_method_perform(app->ipc, context, method_name, params, invocation)) {
     context_log_message(context, false, "Method call:`%s` object_path:`%s`", method_name, object_path);
+    g_dbus_connection_flush(conn, NULL, NULL, NULL);
     return;
   }
 
@@ -353,6 +354,7 @@ void on_dbus_call_method(
       method_name);
 
   g_dbus_method_invocation_return_gerror(invocation, error);
+  g_dbus_connection_flush(conn, NULL, NULL, NULL);
 }
 
 static char* _get_dest_path_from_option(Option* option) {
@@ -394,9 +396,15 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
       g_warning("--dest is not provided and $TYM_ID is not set.");
     }
 
+    char* param = NULL;
+
+    GVariant* params = option_get_str_value(option, "param", &param)
+      ? g_variant_new("(s)", param)
+      : g_variant_new("()");
+
     /* process signal */
     if (signal_name) {
-      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, NULL, &error);
+      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, params, &error);
       g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, path, TYM_APP_ID);
       g_free(signal_name);
       g_free(path);
@@ -408,21 +416,13 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
     }
 
     /* process method call */
-    GVariant* parameters = NULL;
-    char* param = NULL;
-    if (option_get_str_value(option, "param", &param)) {
-      parameters = g_variant_new("(s)", param);
-    } else {
-      parameters = g_variant_new("()");
-    }
-
     GVariant* result = g_dbus_connection_call_sync(
         conn,        // conn
         TYM_APP_ID,  // bus_name
         path,        // object_path
         TYM_APP_ID,  // interface_name
         method_name, // method_name
-        parameters,  // parameters
+        params,      // parameters
         NULL,        // reply_type
         G_DBUS_CALL_FLAGS_NONE, // flags
         1000,        // timeout
@@ -593,7 +593,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     NULL,                // child_setup
     NULL,                // child_setup_data
     NULL,                // child_setup_data_destroy
-    1000,                // timeout
+    5000,                // timeout
     NULL,                // cancel callback
     on_vte_spawn,        // callback
     context              // user_data
