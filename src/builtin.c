@@ -767,7 +767,20 @@ static int builtin_get_theme_path(lua_State* L)
 static int builtin_get_id(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
-  lua_pushnumber(L, context->id);
+  lua_pushinteger(L, context->id);
+  return 1;
+}
+
+static int builtin_get_ids(lua_State* L)
+{
+  lua_newtable(L);
+  int i = 0;
+  for (GList* li = app->contexts; li != NULL; li = li->next) {
+    Context* c = (Context*)li->data;
+    lua_pushinteger(L, c->id);
+    lua_rawseti(L, -2, i + 1);
+    i += 1;
+  }
   return 1;
 }
 
@@ -842,6 +855,7 @@ int builtin_register_module(lua_State* L)
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
     { "get_id"              , builtin_get_id               },
+    { "get_ids"             , builtin_get_ids              },
     { "get_object_path"     , builtin_get_object_path      },
     { "get_pid"             , builtin_get_pid              },
     { "get_version"         , builtin_get_version          },
