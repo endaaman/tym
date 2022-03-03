@@ -389,7 +389,7 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 
   char* signal_name = NULL;
   char* method_name = NULL;
-  if (option_get_str_value(option, "send", &signal_name) || option_get_str_value(option, "call", &method_name)) {
+  if (option_get_str_value(option, "signal", &signal_name) || option_get_str_value(option, "call", &method_name)) {
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
     char* path = _get_dest_path_from_option(option);
     if (!path) {

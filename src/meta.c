@@ -259,7 +259,7 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .description = "<id> to use in the new instance",
       .arg_description = "<id>",
     }, {
-      .long_name = "send",
+      .long_name = "signal",
       .short_name = 's',
       .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
