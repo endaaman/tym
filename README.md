@@ -284,9 +284,9 @@ tym.set_hook('clicked', function(button, uri)
 end)
 ```
 
-## D-Bus interface
+## Interprocess communication using D-Bus
 
-From `v4`, each tym window has an unique ID, which can be checked by `tym.get_id()` or `$TYM_ID`, and also listen to D-Bus signal/method call on the path `/me/endaaman/tym<ID>` and the interface name `me.endaaman.tym`.
+Each tym window has an unique ID, which can be checked by `tym.get_id()` or `$TYM_ID`, and also listen to D-Bus signal/method call on the path `/me/endaaman/tym<ID>` and the interface name `me.endaaman.tym`.
 
 ### Signals
 
@@ -296,7 +296,7 @@ From `v4`, each tym window has an unique ID, which can be checked by `tym.get_id
 
 For example, when you prepare the following config and command,
 
-```
+```lua
 local tym = require('tym')
 tym.set_hook('signal', function (p)
   print('Hello from DBus signal')
@@ -308,7 +308,7 @@ end)
 $ dbus-send /me/endaaman/tym0 me.endaaman.tym.hook string:'THIS IS PARAM'
 ```
 
-You will get an output like below.
+you will get an output like below.
 
 ```
 Hello from DBus signal
@@ -331,13 +331,13 @@ $ tym --signal hook --param 'THIS IS PARAM'
 ### Methods
 
 | Name | Input (D-Bus signature) | Output (D-Bus signature) | Description |
-| ---- | --- | --- |
+| ---- | --- | --- | --- |
 | `get_ids` | None | `ai` | Get all tym instance IDs. |
 | `echo` | `s` | `s` | Echo output the same as input. |
 | `eval` | `s` | `s` | Evaluate one line lua script. `return` is needed. |
 | `eval_file` | `s` | `s` | Evaluate a script file. `return` is needed. |
-| `exec` | `s` |  | Execute one line lua script without outputs. |
-| `eval_file` | `s` |  | Execute a script filt without outputs. |
+| `exec` | `s` | None | Execute one line lua script without outputs. |
+| `eval_file` | `s` | None | Execute a script filt without outputs. |
 
 
 For example, when you exec the command,
