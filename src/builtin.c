@@ -697,7 +697,7 @@ static int builtin_call(lua_State* L)
     luaL_argcheck(L, lua_isfunction(L, 4), 4, "function expected");
     lua_pushvalue(L, 4);
     int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    notation = (CallCallbackNotation*)g_malloc(sizeof(CallCallbackNotation*));
+    notation = (CallCallbackNotation*)g_malloc(sizeof(CallCallbackNotation));
     notation->context = context;
     notation->ref = ref;
     cb = (GAsyncReadyCallback)call_callback;
