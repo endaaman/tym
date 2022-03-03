@@ -394,6 +394,7 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
     char* path = _get_dest_path_from_option(option);
     if (!path) {
       g_warning("--dest is not provided and $TYM_ID is not set.");
+      return 1;
     }
 
     char* param = NULL;
