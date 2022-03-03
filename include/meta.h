@@ -44,5 +44,6 @@ Meta* meta_init();
 void meta_close(Meta* meta);
 unsigned meta_size(Meta* meta);
 MetaEntry* meta_get_entry(Meta* meta, const char* key);
+GOptionEntry* meta_get_option_entries(Meta* meta);
 
 #endif

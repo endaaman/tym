@@ -18,11 +18,6 @@
 
 
 typedef struct {
-  bool config_loading;
-  bool initialized;
-} State;
-
-typedef struct {
   GtkWindow* window;
   VteTerminal* vte;
   GtkBox* hbox;
@@ -32,24 +27,40 @@ typedef struct {
 } Layout;
 
 typedef struct {
-  Meta* meta;
+  void* object;
+  int handler_id;
+} HandlerTag;
+
+typedef struct {
+  int id;
+  bool config_loading;
+  bool initialized;
+  char* object_path;
+  int registration_id;
+  GList* handler_tags;
   Option* option;
   Config* config;
   Keymap* keymap;
   Hook* hook;
-  GApplication* app;
   GdkDevice* device;
   lua_State* lua;
   Layout layout;
-  State state;
 } Context;
 
 
-Context* context_init();
+
+#define context_signal_connect(context, instance, detailed_signal, c_handler) {\
+  context_add_handler_tag(context, instance, g_signal_connect(instance, detailed_signal, c_handler, context)); \
+}
+
+Context* context_init(int id, Option* option);
+// void context_dispose_only(Context* context);
 void context_close(Context* context);
-int context_start(Context* context, int argc, char **argv);
+void context_add_handler_tag(Context* context, void* object, int handler_id);
 void context_load_device(Context* context);
 void context_load_lua_context(Context* context);
+void context_log_message(Context* context, bool notify, const char* fmt, ...);
+void context_log_warn(Context* context, bool notify, const char* fmt, ...);
 void context_restore_default(Context* context);
 void context_override_by_option(Context* context);
 char* context_acquire_config_path(Context* context);

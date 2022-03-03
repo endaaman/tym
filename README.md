@@ -260,6 +260,7 @@ tym.set_keymaps({
 | `deactivated` | nil    | nothing | Triggered when the window is deactivated. |
 | `selected`    | string | nothing | Triggered when the text in the terminal screen is selected. |
 | `unselected`  | nil    | nothing | Triggered when the selection is unselected. |
+| `signal`      | string | nothing | Triggered when `me.endaaman.tym.hook` signal is received. |
 
 If turethy value is returned in a callback function, the default action is will **be canceled**.
 
@@ -282,6 +283,84 @@ tym.set_hook('clicked', function(button, uri)
   end
 end)
 ```
+
+## D-Bus interface
+
+From `v4`, each tym window has an unique ID, which can be checked by `tym.get_id()` or `$TYM_ID`, and also listen to D-Bus signal/method call on the path `/me/endaaman/tym<ID>` and the interface name `me.endaaman.tym`.
+
+### Signals
+
+| Name | Input(D-Bus signature) | Description |
+| ---- | --- | --- |
+| `hook` | `s` | Triggers `signal` hook. |
+
+For example, when you prepare the following config and command,
+
+```
+local tym = require('tym')
+tym.set_hook('signal', function (p)
+  print('Hello from DBus signal')
+  print('param:', p)
+end)
+```
+
+```
+$ dbus-send /me/endaaman/tym0 me.endaaman.tym.hook string:'THIS IS PARAM'
+```
+
+You will get an output like below.
+
+```
+Hello from DBus signal
+param:  THIS IS PARAM
+```
+
+Alternatively, you can use `tym` command to send signal.
+
+```
+$ tym --signal hook --dest 0 --param 'THIS IS PARAM'
+```
+
+If the target window is its own one, it will the value of `$TYM_ID` and `--dest` can be omitted. So it is enough like below.
+
+```
+$ tym --signal hook --param 'THIS IS PARAM'
+```
+
+
+### Methods
+
+| Name | Input (D-Bus signature) | Output (D-Bus signature) | Description |
+| ---- | --- | --- |
+| `get_ids` | None | `ai` | Get all tym instance IDs. |
+| `echo` | `s` | `s` | Echo output the same as input. |
+| `eval` | `s` | `s` | Evaluate one line lua script. `return` is needed. |
+| `eval_file` | `s` | `s` | Evaluate a script file. `return` is needed. |
+| `exec` | `s` |  | Execute one line lua script without outputs. |
+| `eval_file` | `s` |  | Execute a script filt without outputs. |
+
+
+For example, when you exec the command,
+
+```
+$ dbus-send --print-reply --type=method_call --dest=me.endaaman.tym /me/endaaman/tym0 me.endaaman.tym.eval string:'return "title is " .. tym.get("title")'
+```
+
+then you will get like below.
+
+```
+method return time=1646287109.007168 sender=:1.3633 -> destination=:1.3648 serial=39 reply_serial=2
+   string "title is tym"
+```
+
+As same as signals, you can use `tym` command to execute method calling.
+
+```
+$ tym --call eval --dest 0 --param 'return "title is " .. tym.get("title")'
+```
+
+Of course, `--dest` can be omitted as well.
+
 
 ## Options
 
@@ -313,6 +392,23 @@ If `NONE` is provided, default theme will be used.
 
 ```
 $ tym -t NONE
+```
+
+### `--signal=<signal name>` `-s <signal name>`
+
+```
+$ tym --signal hook
+```
+
+Sends a D-Bus signal to the current instance (determined by `$TYM_ID` environment value). To send to another instance, use `--dest` (or `-d`) option.
+
+
+### `--call=<method name>` `-c <method name>`
+
+Calls D-Bus method of the current instance (determined by `$TYM_ID` environment value). To call it of another instance, provide `--dest` (or `-d`) option.
+
+```
+$ tym --call eval --param 'return 1 + 2'
 ```
 
 ### `--<config option>`

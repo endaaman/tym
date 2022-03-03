@@ -51,8 +51,8 @@ static void set_size(Context* context, int width, int height)
 
 void setter_shell(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
-    g_message("To override `%s`, you need to set value before terminal finish initialization.`", key);
+  if (!is_equal(context_get_str(context, key), value) && context->initialized) {
+    context_log_message(context, false, "To override `%s`, you need to set value before terminal finish initialization.`", key);
     return;
   }
   config_set_str(context->config, key, value);
@@ -60,8 +60,8 @@ void setter_shell(Context* context, const char* key, const char* value)
 
 void setter_term(Context* context, const char* key, const char* value)
 {
-  if (!is_equal(context_get_str(context, key), value) && context->state.initialized) {
-    g_message("To override `%s`, you need to set value before the terminal finish initialization.`", key);
+  if (!is_equal(context_get_str(context, key), value) && context->initialized) {
+    context_log_message(context, false, "To override `%s`, you need to set value before the terminal finish initialization.`", key);
     return;
   }
   config_set_str(context->config, key, value);
@@ -131,7 +131,7 @@ void setter_cursor_shape(Context* context, const char* key, const char* value)
   } else if (is_equal(value, TYM_CURSOR_SHAPE_IBEAM))  {
     cursor_shape = VTE_CURSOR_SHAPE_IBEAM;
   } else {
-    g_message("Invalid `cursor_shape` value. (`%s` is provided). '" \
+    context_log_message(context, true, "Invalid `cursor_shape` value. (`%s` is provided). '" \
         TYM_CURSOR_SHAPE_BLOCK "', '" TYM_CURSOR_SHAPE_IBEAM "' or '" \
         TYM_CURSOR_SHAPE_UNDERLINE "' is available.", value);
     return;
@@ -164,7 +164,7 @@ void setter_cursor_blink_mode(Context* context, const char* key, const char* val
   } else if (is_equal(value, TYM_CURSOR_BLINK_MODE_OFF))  {
     mode = VTE_CURSOR_BLINK_OFF;
   } else {
-    g_message("Invalid `cursor_blink_mode` value. (`%s` is provided). '" \
+    context_log_message(context, true, "Invalid `cursor_blink_mode` value. (`%s` is provided). '" \
         TYM_CURSOR_BLINK_MODE_SYSTEM "', '" TYM_CURSOR_BLINK_MODE_ON "' or '" \
         TYM_CURSOR_BLINK_MODE_OFF "' is available.", value);
     return;
@@ -193,7 +193,7 @@ void setter_cjk_width(Context* context, const char* key, const char* value)
   } else if (is_equal(value, TYM_CURSOR_BLINK_MODE_ON)) {
     cjk = VTE_CJK_WIDTH_WIDE;
   } else {
-    g_message("Invalid `cjk_width` value. (`%s` is provided). '" \
+    context_log_message(context, true, "Invalid `cjk_width` value. (`%s` is provided). '" \
         TYM_CJK_WIDTH_NARROW "' or '" TYM_CJK_WIDTH_WIDE "' is available.", value);
     return;
   }
@@ -215,7 +215,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
       g_free(cwd);
     }
     if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
-      g_message("`%s`: `%s` does not exist.", key, path);
+      context_log_message(context, true, "`%s`: `%s` does not exist.", key, path);
       g_free(path);
       return;
     }
@@ -227,7 +227,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
   gtk_css_provider_load_from_data(css_provider, css, -1, &error);
   g_free(css);
   if (error) {
-    g_message("`%s`: Error in css: %s", key, error->message);
+    context_log_message(context, true, "`%s`: Error in css: %s", key, error->message);
     g_error_free(error);
     return;
   }
@@ -433,7 +433,7 @@ static void setter_color_special(Context* context, const char* key, const char* 
   GdkRGBA color = {};
   bool valid = gdk_rgba_parse(&color, value);
   if (!valid) {
-    g_message("Invalid color string for '%s': %s", key, value);
+    context_log_message(context, true, "Invalid color string for '%s': %s", key, value);
     return;
   }
   color_func(context->layout.vte, &color);
@@ -462,7 +462,7 @@ void setter_color_normal(Context* context, const char* key, const char* value)
     }
     bool valid = gdk_rgba_parse(&palette[i], v);
     if (!valid) {
-      g_message("Invalid color string for '%s': %s", key, value);
+      context_log_message(context, true, "Invalid color string for '%s': %s", key, value);
       return;
     }
     i += 1;
@@ -484,7 +484,7 @@ void setter_color_window_background(Context* context, const char* key, const cha
     GdkRGBA color = {};
     bool valid = gdk_rgba_parse(&color, value);
     if (!valid) {
-      g_message("Invalid color string for '%s': %s", key, value);
+      context_log_message(context, true, "Invalid color string for '%s': %s", key, value);
       return;
     }
   } else {
@@ -501,7 +501,7 @@ void setter_color_background(Context* context, const char* key, const char* valu
     vte_terminal_set_clear_background(context->layout.vte, false);
     config_set_str(context->config, key, value);
 #else
-    g_message("`NONE` for `color_background` is supported on VTE version>=0.52 (your VTE version is %s)", TYM_VTE_VERSION);
+    context_log_message(context, true, "`NONE` for `color_background` is supported on VTE version>=0.52 (your VTE version is %s)", TYM_VTE_VERSION);
 #endif
     return;
   }
@@ -530,7 +530,7 @@ void setter_color_cursor_foreground(Context* context, const char* key, const cha
 #ifdef TYM_USE_VTE_COLOR_CURSOR_FOREGROUND
   setter_color_special(context, key, value, vte_terminal_set_color_cursor_foreground);
 #else
-  g_message("`%s` is supported on VTE version>=0.46 (your VTE version is %s)", key, TYM_VTE_VERSION);
+  context_log_message(context, true, "`%s` is supported on VTE version>=0.46 (your VTE version is %s)", key, TYM_VTE_VERSION);
 #endif
 }
 

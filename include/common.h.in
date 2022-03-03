@@ -30,9 +30,16 @@
 
 #ifdef DEBUG
 #define TYM_APP_ID "me.endaaman.tym_dev"
+#define TYM_OBJECT_PATH_BASE "/me/endaaman/tym_dev"
 #else
 #define TYM_APP_ID "me.endaaman.tym"
+#define TYM_OBJECT_PATH_BASE "/me/endaaman/tym"
 #endif
+
+#define TYM_OBJECT_PATH_FMT_INT TYM_OBJECT_PATH_BASE"%d"
+#define TYM_OBJECT_PATH_FMT_STR TYM_OBJECT_PATH_BASE"%s"
+
+#define TYM_ERROR_INVALID_METHOD_CALL 0
 
 #define TYM_CONFIG_DIR_NAME "tym"
 #define TYM_CONFIG_FILE_NAME "config.lua"
@@ -61,10 +68,10 @@
 #define TYM_DEFAULT_CURSOR_BLINK_MODE TYM_CURSOR_BLINK_MODE_SYSTEM
 #define TYM_DEFAULT_CJK TYM_CJK_WIDTH_NARROW
 #define TYM_DEFAULT_URI_SCHEMES "http https file mailto"
-static const int TYM_DEFAULT_WIDTH = 80;
-static const int TYM_DEFAULT_HEIGHT = 22;
-static const int TYM_DEFAULT_SCALE = 100;
-static const int TYM_DEFAULT_SCROLLBACK = 512;
+extern const int TYM_DEFAULT_WIDTH;
+extern const int TYM_DEFAULT_HEIGHT;
+extern const int TYM_DEFAULT_SCALE;
+extern const int TYM_DEFAULT_SCROLLBACK;
 
 /* theme: iceberg (https://cocopon.github.io/iceberg.vim/) */
 #define TYM_DEFAULT_COLOR_0  "#161821"

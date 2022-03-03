@@ -21,6 +21,7 @@ COMMON_CFLAGS = \
 	-Wbad-function-cast \
 	-Wcast-align \
 	-Wredundant-decls \
+	-Wformat-security \
 	-Winline \
 	-I$(top_srcdir)/include
 
@@ -33,6 +34,7 @@ tym_SOURCES = \
 	config.c \
 	context.c \
 	hook.c \
+	ipc.c \
 	keymap.c \
 	meta.c \
 	option.c \
