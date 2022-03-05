@@ -220,7 +220,25 @@ MetaEntry* meta_get_entry(Meta* meta, const char* key)
   if (t == META_ENTRY_TYPE_STRING || t == META_ENTRY_TYPE_INTEGER || t == META_ENTRY_TYPE_BOOLEAN) {
     return entry;
   }
+  dd("WARN: tried to get META_ENTRY_TYPE_NONE entry [%s]", key);
   return NULL;
+}
+
+static void* new_empty_bool()
+{
+  int* p = g_new(int, 1);
+  *(int*)p = 2;
+  return p;
+}
+
+static void* new_empty_str()
+{
+  return g_new0(char*, 1);
+}
+
+static void* new_empty_int()
+{
+  return g_new0(int, 1);
 }
 
 GOptionEntry* meta_get_option_entries(Meta* meta)
@@ -229,73 +247,72 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
     {
       .long_name = "version",
       .short_name = 'v',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_NONE,
-      .arg_data = NULL,
+      .arg_data = new_empty_bool(),
       .description = "Show version",
       .arg_description = NULL,
     }, {
       .long_name = "use",
       .short_name = 'u',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "<path> to config file. Set '" TYM_SYMBOL_NONE "' to start without loading config",
       .arg_description = "<path>",
     }, {
       .long_name = "theme",
       .short_name = 't',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "<path> to theme file. Set '" TYM_SYMBOL_NONE "' to start without loading theme",
       .arg_description = "<path>",
     }, {
       .long_name = "id",
       .short_name = 'i',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_INT,
-      .arg_data = NULL,
+      .arg_data = new_empty_int(),
       .description = "<id> to use in the new instance",
       .arg_description = "<id>",
     }, {
       .long_name = "signal",
       .short_name = 's',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "<signal name> to send via DBus",
       .arg_description = "<signal name>",
     }, {
       .long_name = "call",
       .short_name = 'c',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "<method name> to call via DBus",
       .arg_description = "<method name>",
     }, {
       .long_name = "param",
       .short_name = 'p',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "param with which is called method via DBus",
       .arg_description = "<param>",
     }, {
       .long_name = "dest",
       .short_name = 'd',
-      .flags = G_OPTION_FLAG_NONE,
       .arg = G_OPTION_ARG_STRING,
-      .arg_data = NULL,
+      .arg_data = new_empty_str(),
       .description = "<dest id> to send signal/call method($TYM_ID is default)",
       .arg_description = "<dest id>",
+    }, {
+      .long_name = "isolated",
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = new_empty_bool(),
+      .description = "Start as an isolated instance",
+      .arg_description = NULL,
     }
   };
 
-  GOptionEntry* options_entries = (GOptionEntry*)g_malloc0_n(
-      sizeof(app_options) / sizeof(GOptionEntry) + meta_size(meta) + 1,
-      sizeof(GOptionEntry));
+  GOptionEntry* options_entries = (GOptionEntry*)g_new0(
+      GOptionEntry,
+      sizeof(app_options) / sizeof(GOptionEntry) + meta_size(meta) + 1
+  );
   memmove(options_entries, app_options, sizeof(app_options));
   unsigned i = sizeof(app_options) / sizeof(GOptionEntry);
 
@@ -311,14 +328,20 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
     switch (me->type) {
       case META_ENTRY_TYPE_STRING:
         e->arg = G_OPTION_ARG_STRING;
+        e->arg_data = new_empty_str();
         break;
       case META_ENTRY_TYPE_INTEGER:
         e->arg = G_OPTION_ARG_INT;
+        e->arg_data = new_empty_int();
         break;
       case META_ENTRY_TYPE_BOOLEAN:
         e->arg = G_OPTION_ARG_NONE;
+        e->arg_data = new_empty_bool();
         break;
-      case META_ENTRY_TYPE_NONE:;
+      case META_ENTRY_TYPE_NONE:
+        // used for help text
+        e->arg = G_OPTION_ARG_INT;
+        e->arg_data = new_empty_int();
         break;
     }
   }

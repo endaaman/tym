@@ -36,7 +36,7 @@ static KeyPair DEFAULT_KEY_PAIRS[] = {
 char* context_acquire_config_path(Context* context)
 {
   char* path = NULL;
-  if (!option_get_str_value(context->option, "use", &path)) {
+  if (!option_get_str(context->option, "use", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -59,7 +59,7 @@ char* context_acquire_config_path(Context* context)
 char* context_acquire_theme_path(Context* context)
 {
   char* path = NULL;
-  if (!option_get_str_value(context->option, "theme", &path)) {
+  if (!option_get_str(context->option, "theme", &path)) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
@@ -229,7 +229,7 @@ void context_override_by_option(Context* context)
     switch (e->type) {
       case META_ENTRY_TYPE_STRING: {
         char* v = NULL;
-        bool has_value = option_get_str_value(context->option, key, &v);
+        bool has_value = option_get_str(context->option, key, &v);
         if (has_value) {
           context_set_str(context, key, v);
         }
@@ -237,7 +237,7 @@ void context_override_by_option(Context* context)
       }
       case META_ENTRY_TYPE_INTEGER: {
         int v = 0;
-        bool has_value = option_get_int_value(context->option, key, &v);
+        bool has_value = option_get_int(context->option, key, &v);
         if (has_value) {
           context_set_int(context, key, v);
         }
@@ -245,7 +245,7 @@ void context_override_by_option(Context* context)
       }
       case META_ENTRY_TYPE_BOOLEAN: {
         bool v = false;
-        bool has_value = option_get_bool_value(context->option, key, &v);
+        bool has_value = option_get_bool(context->option, key, &v);
         if (has_value) {
           context_set_bool(context, key, v);
         }

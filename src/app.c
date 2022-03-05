@@ -19,10 +19,6 @@ void app_init()
 {
   df();
   app = g_malloc0(sizeof(App));
-  app->gapp = G_APPLICATION(gtk_application_new(
-    TYM_APP_ID,
-    G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT
-  ));
   app->meta = meta_init();
   app->ipc = ipc_init();
 }
@@ -41,25 +37,121 @@ void app_close()
   g_free(app);
 }
 
+static char* _get_dest_path_from_option(Option* option) {
+  char* path = NULL;
+  char* dest = "0";
+  if (option_get_str(option, "dest", &dest)) {
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest);
+  } else {
+    char** env = g_get_environ();
+    const char* dest_str = g_environ_getenv(env, "TYM_ID");
+    if (!dest_str) {
+      return NULL;
+    }
+    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
+  }
+  return path;
+}
+
 int app_start(int argc, char** argv)
 {
   df();
-  GError* error = NULL;
-  GApplication* gapp = app->gapp;
+  g_assert(!app->gapp);
 
-  g_application_register(app->gapp, NULL, &error);
+  GError* error = NULL;
   if (error) {
     g_error("%s", error->message);
     g_error_free(error);
+    return 1;
   }
 
+
   GOptionEntry* entries = meta_get_option_entries(app->meta);
-  g_application_add_main_option_entries(gapp, entries);
+  Option* option = option_init(entries);
 
-  g_signal_connect(gapp, "handle-local-options", G_CALLBACK(on_local_options), NULL);
-  g_signal_connect(gapp, "command-line", G_CALLBACK(on_command_line), NULL);
+  if (!option_parse(option, argc, argv)) {
+    return 1;
+  }
 
-  return g_application_run(gapp, argc, argv);
+  bool version = false;
+  if (option_get_bool(option, "version", &version) && version) {
+    g_print("version %s\n", PACKAGE_VERSION);
+    return 0;
+  }
+
+  GApplicationFlags flags = G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT;
+  char* app_id = TYM_APP_ID;
+  if (option_get_bool(option, "isolated", &app->is_isolated) && app->is_isolated) {
+    flags |= G_APPLICATION_NON_UNIQUE;
+    app_id = TYM_APP_ID_ISOLATED;
+  }
+
+  app->gapp = G_APPLICATION(gtk_application_new(app_id, flags));
+  g_application_register(app->gapp, NULL, &error);
+
+  char* signal_name = NULL;
+  char* method_name = NULL;
+  if (option_get_str(option, "signal", &signal_name) || option_get_str(option, "call", &method_name)) {
+    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+    char* path = _get_dest_path_from_option(option);
+    if (!path) {
+      g_warning("--dest is not provided and $TYM_ID is not set.");
+      return 1;
+    }
+
+    char* param = NULL;
+
+    GVariant* params = option_get_str(option, "param", &param)
+      ? g_variant_new("(s)", param)
+      : g_variant_new("()");
+
+    /* process signal */
+    if (signal_name) {
+      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, params, &error);
+      g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, path, TYM_APP_ID);
+      g_free(signal_name);
+      g_free(path);
+      if (error) {
+        g_error("%s", error->message);
+        g_error_free(error);
+      }
+      return 0;
+    }
+
+    /* process method call */
+    GVariant* result = g_dbus_connection_call_sync(
+        conn,        // conn
+        TYM_APP_ID,  // bus_name
+        path,        // object_path
+        TYM_APP_ID,  // interface_name
+        method_name, // method_name
+        params,      // parameters
+        NULL,        // reply_type
+        G_DBUS_CALL_FLAGS_NONE, // flags
+        1000,        // timeout
+        NULL,        // cancellable
+        &error
+    );
+    g_print("Call method:%s on path:%s interface:%s\n", method_name, path, TYM_APP_ID);
+    g_free(method_name);
+    if (error) {
+      g_warning("%s", error->message);
+      g_error_free(error);
+      return 1;
+    }
+    dd("result type:%s", g_variant_get_type_string(result));
+    char* msg = g_variant_print(result, true);
+    g_print("%s\n", msg);
+    g_free(msg);
+    return 0;
+  }
+
+  /* g_application_add_main_option_entries(app->gapp, entries); */
+
+  g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option);
+  g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
+  return g_application_run(app->gapp, argc, argv);
+  return 0;
 }
 
 static int _contexts_sort_func(const void* a, const void* b)
@@ -71,7 +163,7 @@ Context* app_spawn_context(Option* option)
 {
   unsigned index = 0;
   int ordered_id = -1;
-  if (option_get_int_value(option, "id", &ordered_id)) {
+  if (option_get_int(option, "id", &ordered_id)) {
     for (GList* li = app->contexts; li != NULL; li = li->next) {
       Context* c = (Context*)li->data;
       if (c->id == ordered_id) {
@@ -356,39 +448,22 @@ void on_dbus_call_method(
   g_dbus_connection_flush(conn, NULL, NULL, NULL);
 }
 
-static char* _get_dest_path_from_option(Option* option) {
-  char* path = NULL;
-  char* dest = "0";
-  if (option_get_str_value(option, "dest", &dest)) {
-    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest);
-  } else {
-    char** env = g_get_environ();
-    const char* dest_str = g_environ_getenv(env, "TYM_ID");
-    if (!dest_str) {
-      return NULL;
-    }
-    path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest_str);
-  }
-  return path;
-}
-
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 {
   df();
+  return -1;
   GError* error = NULL;
-
-  Option* option = option_init(app->meta);
-  option_set_values(option, values);
+  Option* option = (Option*)user_data;
 
   bool opt_version = false;
-  if (option_get_bool_value(option, "version", &opt_version)) {
+  if (option_get_bool(option, "version", &opt_version)) {
     g_print("version %s\n", PACKAGE_VERSION);
     return 0;
   }
 
   char* signal_name = NULL;
   char* method_name = NULL;
-  if (option_get_str_value(option, "signal", &signal_name) || option_get_str_value(option, "call", &method_name)) {
+  if (option_get_str(option, "signal", &signal_name) || option_get_str(option, "call", &method_name)) {
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
     char* path = _get_dest_path_from_option(option);
     if (!path) {
@@ -398,7 +473,7 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 
     char* param = NULL;
 
-    GVariant* params = option_get_str_value(option, "param", &param)
+    GVariant* params = option_get_str(option, "param", &param)
       ? g_variant_new("(s)", param)
       : g_variant_new("()");
 
@@ -446,49 +521,10 @@ int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
   return -1;
 }
 
-
-int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
+static bool _subscribe_dbus(Context* context)
 {
   df();
   GError* error = NULL;
-
-  Option* option = option_init(app->meta);
-  option_set_values(option, g_application_command_line_get_options_dict(cli));
-
-  Context* context = app_spawn_context(option);
-  if (!context) {
-    return 1;
-  }
-
-  context_load_device(context);
-  context_load_lua_context(context);
-
-  context_build_layout(context);
-  context_restore_default(context);
-  context_load_theme(context);
-  context_load_config(context);
-  context_override_by_option(context);
-
-  VteTerminal* vte = context->layout.vte;
-  GtkWindow* window = context->layout.window;
-
-  GtkTargetEntry drop_types[] = {
-    {"text/uri-list", 0, 0}
-  };
-  gtk_drag_dest_set(GTK_WIDGET(vte), GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP, drop_types, G_N_ELEMENTS(drop_types), GDK_ACTION_COPY);
-
-  context_signal_connect(context, vte, "drag-data-received", G_CALLBACK(on_vte_drag_data_received));
-  context_signal_connect(context, vte, "key-press-event", G_CALLBACK(on_vte_key_press));
-  context_signal_connect(context, vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll));
-  context_signal_connect(context, vte, "child-exited", G_CALLBACK(on_vte_child_exited));
-  context_signal_connect(context, vte, "window-title-changed", G_CALLBACK(on_vte_title_changed));
-  context_signal_connect(context, vte, "bell", G_CALLBACK(on_vte_bell));
-  context_signal_connect(context, vte, "button-press-event", G_CALLBACK(on_vte_click));
-  context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
-  context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
-  context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));
-  context_signal_connect(context, window, "focus-out-event", G_CALLBACK(on_window_focus_out));
-  context_signal_connect(context, window, "draw", G_CALLBACK(on_window_draw));
 
   const char* app_id = g_application_get_application_id(app->gapp);
   GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
@@ -540,7 +576,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     g_error("%s", error->message);
     g_error_free(error);
     app_quit_context(context);
-    return 1;
+    return false;
   }
 
   context_log_message(context, false, "DBus: object_path='%s' interface_name:'%s'", context->object_path, app_id);
@@ -555,6 +591,64 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   );
   if (context->registration_id <= 0) {
     context_log_warn(context, true, "Could not subscribe DBus with path:%s", context->object_path);
+  }
+
+  return true;
+}
+
+
+int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
+{
+  df();
+  GError* error = NULL;
+
+  int argc = -1;
+  char** argv = g_application_command_line_get_arguments(cli, &argc);
+
+  Option* option = option_init(meta_get_option_entries(app->meta));
+  if (!option_parse(option, argc, argv)){
+    return 1;
+  };
+
+  Context* context = app_spawn_context(option);
+  if (!context) {
+    return 1;
+  }
+
+  context_load_device(context);
+  context_load_lua_context(context);
+
+  context_build_layout(context);
+  context_restore_default(context);
+  context_load_theme(context);
+  context_load_config(context);
+  context_override_by_option(context);
+
+  VteTerminal* vte = context->layout.vte;
+  GtkWindow* window = context->layout.window;
+
+  GtkTargetEntry drop_types[] = {
+    {"text/uri-list", 0, 0}
+  };
+  gtk_drag_dest_set(GTK_WIDGET(vte), GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP, drop_types, G_N_ELEMENTS(drop_types), GDK_ACTION_COPY);
+
+  context_signal_connect(context, vte, "drag-data-received", G_CALLBACK(on_vte_drag_data_received));
+  context_signal_connect(context, vte, "key-press-event", G_CALLBACK(on_vte_key_press));
+  context_signal_connect(context, vte, "scroll-event", G_CALLBACK(on_vte_mouse_scroll));
+  context_signal_connect(context, vte, "child-exited", G_CALLBACK(on_vte_child_exited));
+  context_signal_connect(context, vte, "window-title-changed", G_CALLBACK(on_vte_title_changed));
+  context_signal_connect(context, vte, "bell", G_CALLBACK(on_vte_bell));
+  context_signal_connect(context, vte, "button-press-event", G_CALLBACK(on_vte_click));
+  context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
+  context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
+  context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));
+  context_signal_connect(context, window, "focus-out-event", G_CALLBACK(on_window_focus_out));
+  context_signal_connect(context, window, "draw", G_CALLBACK(on_window_draw));
+
+  if (app->is_isolated) {
+    g_message("This process is isolated so never listen to D-Bus signal/method call.");
+  } else {
+    _subscribe_dbus(context);
   }
 
   const char* shell_line = context_get_str(context, "shell");

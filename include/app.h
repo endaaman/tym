@@ -19,6 +19,7 @@ typedef struct {
   Meta* meta;
   IPC* ipc;
   GList* contexts;
+  bool is_isolated;
 } App;
 
 extern App* app;

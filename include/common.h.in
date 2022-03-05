@@ -30,9 +30,11 @@
 
 #ifdef DEBUG
 #define TYM_APP_ID "me.endaaman.tym_dev"
+#define TYM_APP_ID_ISOLATED "me.endaaman.tym_isolated_dev"
 #define TYM_OBJECT_PATH_BASE "/me/endaaman/tym_dev"
 #else
 #define TYM_APP_ID "me.endaaman.tym"
+#define TYM_APP_ID_ISOLATED "me.endaaman.tym_isolated"
 #define TYM_OBJECT_PATH_BASE "/me/endaaman/tym"
 #endif
 

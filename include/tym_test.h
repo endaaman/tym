@@ -13,6 +13,7 @@
 #include "common.h"
 
 void test_config();
+void test_option();
 void test_regex();
 
 #endif

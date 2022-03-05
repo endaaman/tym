@@ -46,8 +46,20 @@ tym_CFLAGS = $(COMMON_CFLAGS) $(TYM_CFLAGS) $(LUA_CFLAGS)
 TESTS = tym-test
 check_PROGRAMS = tym-test
 tym_test_SOURCES = \
+	app.c \
+	builtin.c \
+	command.c \
+	common.c \
 	config.c \
+	context.c \
+	hook.c \
+	ipc.c \
+	keymap.c \
+	meta.c \
+	option.c \
+	property.c \
 	config_test.c \
+	option_test.c \
 	regex_test.c \
 	tym_test.c
 tym_test_LDADD = $(TYM_LIBS) $(LUA_LIBS)

@@ -14,26 +14,18 @@
 #include "meta.h"
 
 typedef struct {
-  GVariantDict* values;
+  GOptionContext* option_context;
+  GOptionEntry* entries;
+  GHashTable* entries_as_table;
 } Option;
-
-
-typedef struct{
-  bool version;
-  char* signal;
-} LocalOption;
-
 
 void* option_get(Option* option, const char* key);
 
-Option* option_init();
+Option* option_init(GOptionEntry* entries);
 void option_close(Option* option);
-void option_set_values(Option* option, GVariantDict* values);
-bool option_get_str_value(Option* option, const char* key, char** value);
-bool option_get_int_value(Option* option, const char* key, int* value);
-bool option_get_bool_value(Option* option, const char* key, bool* value);
-char* option_get_str(Option* option, const char* key);
-int option_get_int(Option* option, const char* key);
-bool option_get_bool(Option* option, const char* key);
+bool option_parse(Option* option, int argc, char** argv);
+bool option_get_str(Option* option, const char* key, char** value);
+bool option_get_int(Option* option, const char* key, int* value);
+bool option_get_bool(Option* option, const char* key, bool* value);
 
 #endif
