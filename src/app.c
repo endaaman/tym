@@ -21,7 +21,6 @@ void app_init()
   app = g_malloc0(sizeof(App));
   app->gapp = G_APPLICATION(gtk_application_new(
     TYM_APP_ID,
-    /* G_APPLICATION_NON_UNIQUE | G_APPLICATION_HANDLES_COMMAND_LINE */
     G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT
   ));
   app->meta = meta_init();
