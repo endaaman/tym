@@ -226,9 +226,7 @@ MetaEntry* meta_get_entry(Meta* meta, const char* key)
 
 static void* new_empty_bool()
 {
-  int* p = g_new(int, 1);
-  *(int*)p = 2;
-  return p;
+  return g_new0(gboolean, 1);
 }
 
 static void* new_empty_str()

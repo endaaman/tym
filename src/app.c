@@ -39,8 +39,8 @@ void app_close()
 
 static char* _get_dest_path_from_option(Option* option) {
   char* path = NULL;
-  char* dest = "0";
-  if (option_get_str(option, "dest", &dest)) {
+  char* dest = option_get_str(option, "dest");
+  if (dest) {
     path = g_strdup_printf(TYM_OBJECT_PATH_FMT_STR, dest);
   } else {
     char** env = g_get_environ();
@@ -73,15 +73,14 @@ int app_start(int argc, char** argv)
     return 1;
   }
 
-  bool version = false;
-  if (option_get_bool(option, "version", &version) && version) {
+  if (option_get_bool(option, "version")) {
     g_print("version %s\n", PACKAGE_VERSION);
     return 0;
   }
 
   GApplicationFlags flags = G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT;
   char* app_id = TYM_APP_ID;
-  if (option_get_bool(option, "isolated", &app->is_isolated) && app->is_isolated) {
+  if (option_get_bool(option, "isolated")) {
     flags |= G_APPLICATION_NON_UNIQUE;
     app_id = TYM_APP_ID_ISOLATED;
   }
@@ -89,9 +88,9 @@ int app_start(int argc, char** argv)
   app->gapp = G_APPLICATION(gtk_application_new(app_id, flags));
   g_application_register(app->gapp, NULL, &error);
 
-  char* signal_name = NULL;
-  char* method_name = NULL;
-  if (option_get_str(option, "signal", &signal_name) || option_get_str(option, "call", &method_name)) {
+  char* signal_name = option_get_str(option, "signal");
+  char* method_name = option_get_str(option, "call");
+  if (signal_name || method_name) {
     GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
     char* path = _get_dest_path_from_option(option);
     if (!path) {
@@ -99,9 +98,9 @@ int app_start(int argc, char** argv)
       return 1;
     }
 
-    char* param = NULL;
+    char* param = option_get_str(option, "param");
 
-    GVariant* params = option_get_str(option, "param", &param)
+    GVariant* params = param
       ? g_variant_new("(s)", param)
       : g_variant_new("()");
 
@@ -162,8 +161,8 @@ static int _contexts_sort_func(const void* a, const void* b)
 Context* app_spawn_context(Option* option)
 {
   unsigned index = 0;
-  int ordered_id = -1;
-  if (option_get_int(option, "id", &ordered_id)) {
+  int ordered_id = option_get_int(option, "id");
+  if (ordered_id) {
     for (GList* li = app->contexts; li != NULL; li = li->next) {
       Context* c = (Context*)li->data;
       if (c->id == ordered_id) {
@@ -451,73 +450,6 @@ void on_dbus_call_method(
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 {
   df();
-  return -1;
-  GError* error = NULL;
-  Option* option = (Option*)user_data;
-
-  bool opt_version = false;
-  if (option_get_bool(option, "version", &opt_version)) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return 0;
-  }
-
-  char* signal_name = NULL;
-  char* method_name = NULL;
-  if (option_get_str(option, "signal", &signal_name) || option_get_str(option, "call", &method_name)) {
-    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-    char* path = _get_dest_path_from_option(option);
-    if (!path) {
-      g_warning("--dest is not provided and $TYM_ID is not set.");
-      return 1;
-    }
-
-    char* param = NULL;
-
-    GVariant* params = option_get_str(option, "param", &param)
-      ? g_variant_new("(s)", param)
-      : g_variant_new("()");
-
-    /* process signal */
-    if (signal_name) {
-      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, params, &error);
-      g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, path, TYM_APP_ID);
-      g_free(signal_name);
-      g_free(path);
-      if (error) {
-        g_error("%s", error->message);
-        g_error_free(error);
-      }
-      return 0;
-    }
-
-    /* process method call */
-    GVariant* result = g_dbus_connection_call_sync(
-        conn,        // conn
-        TYM_APP_ID,  // bus_name
-        path,        // object_path
-        TYM_APP_ID,  // interface_name
-        method_name, // method_name
-        params,      // parameters
-        NULL,        // reply_type
-        G_DBUS_CALL_FLAGS_NONE, // flags
-        1000,        // timeout
-        NULL,        // cancellable
-        &error
-    );
-    g_print("Call method:%s on path:%s interface:%s\n", method_name, path, TYM_APP_ID);
-    g_free(method_name);
-    if (error) {
-      g_warning("%s", error->message);
-      g_error_free(error);
-      return 1;
-    }
-    dd("result type:%s", g_variant_get_type_string(result));
-    char* msg = g_variant_print(result, true);
-    g_print("%s\n", msg);
-    g_free(msg);
-    return 0;
-  }
-
   return -1;
 }
 

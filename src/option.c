@@ -20,6 +20,13 @@ Option* option_init(GOptionEntry* entries)
   g_option_context_add_main_entries(option->option_context, option->entries, NULL);
   /* g_option_context_set_help_enabled(option->option_context, false); */
   /* g_option_context_add_group(option->option_context, gtk_get_option_group(TRUE)); */
+
+  option->entries_as_table = g_hash_table_new_full(
+    g_str_hash,
+    g_str_equal,
+    NULL,
+    NULL
+  );
   return option;
 }
 
@@ -46,7 +53,7 @@ bool option_parse(Option* option, int argc, char** argv)
 {
   df();
   g_assert(option->entries);
-  g_assert(!option->entries_as_table);
+  g_assert(option->entries_as_table);
 
   GError* error = NULL;
 
@@ -69,13 +76,6 @@ bool option_parse(Option* option, int argc, char** argv)
     return false;
   }
 
-  option->entries_as_table = g_hash_table_new_full(
-    g_str_hash,
-    g_str_equal,
-    NULL,
-    NULL
-  );
-
   GOptionEntry* e = &option->entries[0];
   while (e->long_name) {
     g_hash_table_insert(option->entries_as_table, (void*)e->long_name, e);
@@ -85,61 +85,37 @@ bool option_parse(Option* option, int argc, char** argv)
   return true;
 }
 
-void* option_get(Option* option, const char* key)
+void* option_get_pointer(Option* option, const char* key)
 {
   g_assert(option->entries);
-  if (!option->entries_as_table) {
-    dw("option_parse() was not executed!");
-    return NULL;
-  }
-  g_assert(option->entries_as_table);
   GOptionEntry* e = (GOptionEntry*)g_hash_table_lookup(option->entries_as_table, key);
   g_assert(e);
-  g_assert(is_equal(e->long_name, key));
   return e->arg_data;
 }
 
-bool option_get_str(Option* option, const char* key, char** value)
+char* option_get_str(Option* option, const char* key)
 {
-  char** p = (char**)option_get(option, key);
+  char** p = (char**)option_get_pointer(option, key);
   if (!p) {
     return false;
   }
-  if (!*p) {
-    return false;
-  }
-  if (value) {
-    *value = *p;
-  }
-  return true;
+  return *p;
 }
 
-bool option_get_int(Option* option, const char* key, int* value)
+int option_get_int(Option* option, const char* key)
 {
-  int* p = (int*)option_get(option, key);
+  int* p = (int*)option_get_pointer(option, key);
   if (!p) {
     return false;
   }
-  if (!*p) {
-    return false;
-  }
-  if (value) {
-    *value = *p;
-  }
-  return true;
+  return *p;
 }
 
-bool option_get_bool(Option* option, const char* key, bool* value)
+bool option_get_bool(Option* option, const char* key)
 {
-  int* p = (int*)option_get(option, key);
+  gboolean* p = (gboolean*)option_get_pointer(option, key);
   if (!p) {
     return false;
   }
-  if (*p == 2) {
-    return false;
-  }
-  if (value) {
-    *value = *p;
-  }
-  return true;
+  return *p;
 }

@@ -19,7 +19,7 @@ static void test_parse()
 
   char* argv_base[] = {
     "tym",
-    "-u", "hi",
+    "-u", "config.lua",
     "--width", "123",
     "--autohide",
     NULL
@@ -27,21 +27,15 @@ static void test_parse()
   int argc = sizeof(argv_base) / sizeof(char*) - 1;
   g_assert(option_parse(option, argc, argv_base));
 
-  char* use = NULL;
-  g_assert(option_get_str(option, "use", &use));
-  g_assert(is_equal("hi", use));
+  g_assert(is_equal("config.lua", option_get_str(option, "use")));
 
-  int width = -1;
-  g_assert(option_get_int(option, "width", &width));
-  g_assert(width == 123);
+  g_assert(option_get_int(option, "width") == 123);
 
-  bool autohide = false;
-  g_assert(option_get_bool(option, "autohide", &autohide));
-  g_assert(autohide);
+  g_assert(option_get_bool(option, "autohide") == true);
 
-  g_assert_false(option_get_str(option, "theme", NULL));
-  g_assert_false(option_get_int(option, "height", NULL));
-  g_assert_false(option_get_bool(option, "silent", NULL));
+  g_assert(option_get_str(option, "theme") == NULL);
+  g_assert(option_get_int(option, "height") == 0);
+  g_assert_false(option_get_bool(option, "silent"));
 
 
   char** a = &argv_base[0];
