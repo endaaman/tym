@@ -160,6 +160,7 @@ static int _contexts_sort_func(const void* a, const void* b)
 
 Context* app_spawn_context(Option* option)
 {
+  df();
   unsigned index = 0;
   int ordered_id = option_get_int(option, "id");
   if (ordered_id) {
@@ -331,19 +332,6 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
   hook_perform_selected(context->hook, context->lua, text);
 }
 
-
-#ifdef TYM_USE_VTE_SPAWN_ASYNC
-static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
-{
-  Context* context = (Context*)user_data;
-  context->initialized = true;
-  if (error) {
-    g_error("%s", error->message);
-    app_quit_context(context);
-    return;
-  }
-}
-#endif
 
 static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
@@ -528,6 +516,21 @@ static bool _subscribe_dbus(Context* context)
   return true;
 }
 
+#ifdef TYM_USE_VTE_SPAWN_ASYNC
+static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
+{
+  Context* context = (Context*)user_data;
+  context->initialized = true;
+  if (error) {
+    g_warning("vte-spawn error: %s", error->message);
+    /* g_error_free(error); */
+    gtk_window_close(context->layout.window);
+    app_quit_context(context);
+    /* dd("%d", gtk_application_new); */
+    return;
+  }
+}
+#endif
 
 int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user_data)
 {
@@ -588,10 +591,10 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   char** shell_argv = NULL;
   g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
   if (error) {
-    g_error("%s", error->message);
+    g_warning("Parse error: %s", error->message);
     g_error_free(error);
     app_quit_context(context);
-    return 1;
+    return 0;
   }
 
   const char* const* env = g_application_command_line_get_environ(cli);
@@ -651,6 +654,6 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   g_strfreev(shell_env);
   g_strfreev(shell_argv);
   gtk_widget_grab_focus(GTK_WIDGET(vte));
-  gtk_widget_show_all(GTK_WIDGET(window));
+  gtk_widget_show_all(GTK_WIDGET(context->layout.window));
   return 0;
 }
