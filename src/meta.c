@@ -37,7 +37,7 @@ int entries_sort_func(const void* a, const void* b)
 
 Meta* meta_init()
 {
-  Meta* meta = g_malloc0(sizeof(Meta));
+  Meta* meta = g_new0(Meta, 1);
 #define	CB(f) ((MetaCallback) (f))
 #define color_special(key, default_color) \
   { \

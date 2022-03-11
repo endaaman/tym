@@ -27,7 +27,7 @@ static void free_keymap_entry(KeymapEntry* e, void* user_data)
 
 Keymap* keymap_init()
 {
-  Keymap* keymap = g_malloc0(sizeof(Keymap));
+  Keymap* keymap = g_new0(Keymap, 1);
   keymap->entries = NULL;
 
   return keymap;
@@ -55,7 +55,7 @@ bool keymap_add_entry(Keymap* keymap, const char* accelerator, int ref)
     return false;
   }
   bool removed = keymap_remove_entry(keymap, accelerator);
-  KeymapEntry* e = g_malloc0(sizeof(KeymapEntry));
+  KeymapEntry* e = g_new(KeymapEntry, 1);
   e->key = key;
   e->mod = mod;
   e->accelerator = g_strdup(accelerator);

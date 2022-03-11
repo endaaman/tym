@@ -13,7 +13,7 @@
 Option* option_init(GOptionEntry* entries)
 {
   df();
-  Option* option = g_malloc0(sizeof(Option));
+  Option* option = g_new0(Option, 1);
 
   option->entries = entries;
   option->option_context = g_option_context_new("tym command line");

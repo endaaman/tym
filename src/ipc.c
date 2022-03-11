@@ -123,7 +123,7 @@ MethodDef methods[] = {
 
 IPC* ipc_init()
 {
-  IPC* ipc = g_malloc0(sizeof(IPC));
+  IPC* ipc = g_new0(IPC, 1);
   ipc->signals = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,

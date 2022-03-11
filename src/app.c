@@ -18,7 +18,7 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cli, void* user_
 void app_init()
 {
   df();
-  app = g_malloc0(sizeof(App));
+  app = g_new0(App, 1);
   app->meta = meta_init();
   app->ipc = ipc_init();
 }
@@ -595,9 +595,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   }
 
   const char* const* env = g_application_command_line_get_environ(cli);
-  char** shell_env = (char**)g_malloc0_n(
-      g_strv_length((char**)env) + 1,
-      sizeof(char*));
+  char** shell_env = g_new0(char*, g_strv_length((char**)env) + 1);
   int i = 0;
   while (env[i]) {
     shell_env[i] = g_strdup(env[i]);

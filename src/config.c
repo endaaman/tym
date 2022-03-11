@@ -12,7 +12,7 @@
 
 Config* config_init()
 {
-  Config* config = g_malloc0(sizeof(Config));
+  Config* config = g_new(Config, 1);
   config->data = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,

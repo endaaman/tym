@@ -90,7 +90,7 @@ void context_load_lua_context(Context* context)
 Context* context_init(int id, Option* option)
 {
   dd("init context id=%d", id);
-  Context* context = g_malloc0(sizeof(Context));
+  Context* context = g_new0(Context, 1);
   g_assert(id >= 0);
   context->id = id;
   context->option = option;
@@ -121,7 +121,7 @@ void context_close(Context* context)
 
 void context_add_handler_tag(Context* context, void* object, int handler_id)
 {
-  HandlerTag* tag = g_malloc0(sizeof(HandlerTag));
+  HandlerTag* tag = g_new0(HandlerTag, 1);
   tag->handler_id = handler_id;
   tag->object = object;
   context->handler_tags = g_list_append(context->handler_tags, tag);

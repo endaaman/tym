@@ -398,7 +398,7 @@ static int builtin_set_timeout(lua_State* L)
 
   lua_pushvalue(L, 1);
   int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  TimeoutCallbackNotation* notation = g_malloc0(sizeof(TimeoutCallbackNotation));
+  TimeoutCallbackNotation* notation = g_new0(TimeoutCallbackNotation, 1);
   notation->context = context;
   notation->ref = ref;
   int tag = g_timeout_add_full(G_PRIORITY_DEFAULT, interval, (GSourceFunc)timeout_callback, notation, g_free);
@@ -574,7 +574,7 @@ static GVariant* table_to_variant(lua_State* L, int table_index)
 {
   luaL_argcheck(L, lua_istable(L, table_index), table_index, "table expected");
   size_t num_params = lua_rawlen(L, table_index);
-  GVariant** vv = g_malloc0_n(num_params, sizeof(char*));
+  GVariant** vv = g_new0(GVariant*, num_params);
   int i = 0;
   while (i < num_params) {
     lua_rawgeti(L, table_index, i + 1); // args[table_index][i+1]
@@ -697,7 +697,7 @@ static int builtin_call(lua_State* L)
     luaL_argcheck(L, lua_isfunction(L, 4), 4, "function expected");
     lua_pushvalue(L, 4);
     int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    notation = (CallCallbackNotation*)g_malloc(sizeof(CallCallbackNotation));
+    notation = g_new0(CallCallbackNotation, 1);
     notation->context = context;
     notation->ref = ref;
     cb = (GAsyncReadyCallback)call_callback;

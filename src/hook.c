@@ -38,7 +38,7 @@ const char* HOOK_KEYS[] = {
 
 Hook* hook_init()
 {
-  Hook* hook = g_malloc0(sizeof(Hook));
+  Hook* hook = g_new0(Hook, 1);
   hook->refs = g_hash_table_new_full(
     g_str_hash,
     g_str_equal,
@@ -48,7 +48,7 @@ Hook* hook_init()
 
   int i = 0;
   while (HOOK_KEYS[i]) {
-    int* p = g_malloc0(sizeof(int));
+    int* p = g_new0(int, 1);
     *p = -1;
     g_hash_table_insert(hook->refs, g_strdup(HOOK_KEYS[i]), p);
     i += 1;
