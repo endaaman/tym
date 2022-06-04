@@ -12,6 +12,12 @@
 $ yay -S tym
 ```
 
+### NixOS
+
+```
+$ nix-env -iA tym
+```
+
 ### Other distros
 
 Download the latest release from [Releases](https://github.com/endaaman/tym/releases), extract it and run as below
