@@ -427,6 +427,16 @@ void setter_autohide(Context* context, const char* key, bool value)
   vte_terminal_set_mouse_autohide(context->layout.vte, value);
 }
 
+bool getter_rewrap(Context* context, const char* key)
+{
+  return vte_terminal_get_rewrap_on_resize(context->layout.vte);
+}
+
+void setter_rewrap(Context* context, const char* key, bool value)
+{
+  vte_terminal_set_rewrap_on_resize(context->layout.vte, value);
+}
+
 // COLOR
 static void setter_color_special(Context* context, const char* key, const char* value, VteSetColorFunc color_func)
 {

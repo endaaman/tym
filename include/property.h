@@ -81,6 +81,9 @@ void setter_silent(Context* context, const char* key, bool value);
 bool getter_autohide(Context* context, const char* key);
 void setter_autohide(Context* context, const char* key, bool value);
 
+bool getter_rewrap(Context* context, const char* key);
+void setter_rewrap(Context* context, const char* key, bool value);
+
 // color
 void setter_color_normal(Context* context, const char* key, const char* value);
 void setter_color_window_background(Context* context, const char* key, const char* value);

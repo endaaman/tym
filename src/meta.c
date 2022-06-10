@@ -152,6 +152,11 @@ Meta* meta_init()
       .getter=CB(getter_autohide), .setter=CB(setter_autohide)
     },
     {
+      .name="rewrap", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
+      .desc="Rewrap the content when terminal size changed",
+      .getter=CB(getter_rewrap), .setter=CB(setter_rewrap)
+    },
+    {
       .name="silent", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to beep when bell sequence is sent",
       .getter=CB(getter_silent), .setter=CB(setter_silent),

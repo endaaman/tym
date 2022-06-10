@@ -93,6 +93,7 @@ All available config values are shown below.
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
+| `rewrap` | boolean | `false` | Rewrap the content when terminal size changed. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `isolated` | boolean | `false` | If true, the app instance will be insolated from D-Bus and no longer have ability to handle D-Bus signals/method calls. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
