@@ -273,12 +273,17 @@ tym.set_hooks({
   end,
 })
 
+--- NOTE:
+-- If you set the hook to 'clicked' handler, you need to open URI manually like below,
 tym.set_hook('clicked', function(button, uri)
-  print('you pressed button:', button) -- 1:left, 2:middle, 3:right...
-  if uri then
-    print('you clicked URI: ', uri)
-    if button == 2 then
-      -- disable URI open when middle button is clicked
+  print('you pressed button:', button) -- 1:left, 2:middle, 3:right
+
+  -- open URI only by middle click
+  if button == 2 then
+    if uri then
+      print('you clicked URI: ', uri)
+      tym.open(uri)
+      -- disable the default action 'put clipboard' when open URI
       return true
     end
   end

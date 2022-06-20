@@ -309,8 +309,11 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
     uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, NULL);
   }
   bool result = false;
-  if (hook_perform_clicked(context->hook, context->lua, event->button, uri, &result) && result) {
-    return true;
+  if (hook_perform_clicked(context->hook, context->lua, event->button, uri, &result)) {
+    if (result) {
+      return true;
+    }
+    return false;
   }
   if (uri) {
     context_launch_uri(context, uri);
