@@ -138,6 +138,13 @@ Default:	\fIfalse\fR
 .fi
 If it is provided, mouse cursor will be hidden when you presses a key.
 
+.IP \fBbold_is_bright\fR
+Type:	\fBboolean\fR
+.fi
+Default:	\fIfalse\fR
+.fi
+If it is provided, make bold texts bright..
+
 .IP \fBsilent\fR
 Type:	\fBboolean\fR
 .fi

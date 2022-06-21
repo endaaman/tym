@@ -426,7 +426,6 @@ void setter_scrollback_length(Context* context, const char* key, int value)
 
 
 // BOOL
-
 bool getter_silent(Context* context, const char* key)
 {
   return !vte_terminal_get_audible_bell(context->layout.vte);
@@ -445,6 +444,16 @@ bool getter_autohide(Context* context, const char* key)
 void setter_autohide(Context* context, const char* key, bool value)
 {
   vte_terminal_set_mouse_autohide(context->layout.vte, value);
+}
+
+bool gettter_bold_is_bright(Context* context, const char* key)
+{
+  return vte_terminal_get_bold_is_bright(context->layout.vte);
+}
+
+void setter_bold_is_bright(Context* context, const char* key, bool value)
+{
+  vte_terminal_set_bold_is_bright(context->layout.vte, value);
 }
 
 // COLOR
