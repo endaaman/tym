@@ -127,6 +127,16 @@ Meta* meta_init()
       .getter=CB(getter_scale), .setter=CB(setter_scale)
     },
     {
+      .name="cell_width", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_CELL_SIZE, sizeof(int)),
+      .arg_desc="<int>", .desc="Initial columns",
+      .getter=CB(getter_cell_width), .setter=CB(setter_cell_width)
+    },
+    {
+      .name="cell_height", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_CELL_SIZE, sizeof(int)),
+      .arg_desc="<int>", .desc="Initial rows",
+      .getter=CB(getter_cell_height), .setter=CB(setter_cell_height)
+    },
+    {
       .name="padding_horizontal", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
       .arg_desc="<int>", .desc="Horizontal padding",
       .setter=CB(setter_padding_horizontal)

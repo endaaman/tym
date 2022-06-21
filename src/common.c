@@ -12,6 +12,7 @@
 const int TYM_DEFAULT_WIDTH = 80;
 const int TYM_DEFAULT_HEIGHT = 22;
 const int TYM_DEFAULT_SCALE = 100;
+const int TYM_DEFAULT_CELL_SIZE = 100;
 const int TYM_DEFAULT_SCROLLBACK = 512;
 
 

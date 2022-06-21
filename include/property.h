@@ -67,6 +67,12 @@ void setter_height(Context* context, const char* key, int value);
 int getter_scale(Context* context, const char* key);
 void setter_scale(Context* context, const char* key, int value);
 
+int getter_cell_width(Context* context, const char* key);
+void setter_cell_width(Context* context, const char* key, int value);
+
+int getter_cell_height(Context* context, const char* key);
+void setter_cell_height(Context* context, const char* key, int value);
+
 void setter_padding_horizontal(Context* context, const char* key, int value);
 
 void setter_padding_vertical(Context* context, const char* key, int value);
