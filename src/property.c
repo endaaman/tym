@@ -382,6 +382,26 @@ void setter_scale(Context* context, const char* key, int value)
   vte_terminal_set_font_scale(context->layout.vte, (double)value / 100);
 }
 
+int getter_cell_width(Context* context, const char* key)
+{
+  return roundup(vte_terminal_get_cell_width_scale(context->layout.vte) * 100);
+}
+
+void setter_cell_width(Context* context, const char* key, int value)
+{
+  vte_terminal_set_cell_width_scale(context->layout.vte, (double)value / 100);
+}
+
+int getter_cell_height(Context* context, const char* key)
+{
+  return roundup(vte_terminal_get_cell_height_scale(context->layout.vte) * 100);
+}
+
+void setter_cell_height(Context* context, const char* key, int value)
+{
+  vte_terminal_set_cell_height_scale(context->layout.vte, (double)value / 100);
+}
+
 void setter_padding_horizontal(Context* context, const char* key, int value)
 {
   gtk_box_set_child_packing(context->layout.hbox, GTK_WIDGET(context->layout.vte), true, true, value, GTK_PACK_START);
@@ -406,7 +426,6 @@ void setter_scrollback_length(Context* context, const char* key, int value)
 
 
 // BOOL
-
 bool getter_silent(Context* context, const char* key)
 {
   return !vte_terminal_get_audible_bell(context->layout.vte);
@@ -425,6 +444,16 @@ bool getter_autohide(Context* context, const char* key)
 void setter_autohide(Context* context, const char* key, bool value)
 {
   vte_terminal_set_mouse_autohide(context->layout.vte, value);
+}
+
+bool gettter_bold_is_bright(Context* context, const char* key)
+{
+  return vte_terminal_get_bold_is_bright(context->layout.vte);
+}
+
+void setter_bold_is_bright(Context* context, const char* key, bool value)
+{
+  vte_terminal_set_bold_is_bright(context->layout.vte, value);
 }
 
 // COLOR

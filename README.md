@@ -88,12 +88,15 @@ All available config values are shown below.
 | `width` | integer | `80` | Initial columns. |
 | `height` | integer | `22` | Initial rows. |
 | `scale` | integer | `100` | Font scale in **percent(%)** |
+| `cell_width` | integer | `100` | Cell width scale in **percent(%)**. |
+| `cell_height` | integer | `100` | Cell height scale in **percent(%)**.  |
 | `padding_horizontal`  | integer | `0` | Horizontal padding. |
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
+| `bold_is_bright` | boolean | `false` | Whether to make bold texts bright. |
 | `isolated` | boolean | `false` | If true, the app instance will be insolated from D-Bus and no longer have ability to handle D-Bus signals/method calls. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
@@ -273,12 +276,17 @@ tym.set_hooks({
   end,
 })
 
+--- NOTE:
+-- If you set the hook to 'clicked' handler, you need to open URI manually like below,
 tym.set_hook('clicked', function(button, uri)
-  print('you pressed button:', button) -- 1:left, 2:middle, 3:right...
-  if uri then
-    print('you clicked URI: ', uri)
-    if button == 2 then
-      -- disable URI open when middle button is clicked
+  print('you pressed button:', button) -- 1:left, 2:middle, 3:right
+
+  -- open URI only by middle click
+  if button == 2 then
+    if uri then
+      print('you clicked URI: ', uri)
+      tym.open(uri)
+      -- disable the default action 'put clipboard' when open URI
       return true
     end
   end

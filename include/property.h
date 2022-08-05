@@ -67,6 +67,12 @@ void setter_height(Context* context, const char* key, int value);
 int getter_scale(Context* context, const char* key);
 void setter_scale(Context* context, const char* key, int value);
 
+int getter_cell_width(Context* context, const char* key);
+void setter_cell_width(Context* context, const char* key, int value);
+
+int getter_cell_height(Context* context, const char* key);
+void setter_cell_height(Context* context, const char* key, int value);
+
 void setter_padding_horizontal(Context* context, const char* key, int value);
 
 void setter_padding_vertical(Context* context, const char* key, int value);
@@ -80,6 +86,9 @@ void setter_silent(Context* context, const char* key, bool value);
 
 bool getter_autohide(Context* context, const char* key);
 void setter_autohide(Context* context, const char* key, bool value);
+
+bool gettter_bold_is_bright(Context* context, const char* key);
+void setter_bold_is_bright(Context* context, const char* key, bool value);
 
 // color
 void setter_color_normal(Context* context, const char* key, const char* value);

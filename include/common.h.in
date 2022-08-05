@@ -73,6 +73,7 @@
 extern const int TYM_DEFAULT_WIDTH;
 extern const int TYM_DEFAULT_HEIGHT;
 extern const int TYM_DEFAULT_SCALE;
+extern const int TYM_DEFAULT_CELL_SIZE;
 extern const int TYM_DEFAULT_SCROLLBACK;
 
 /* theme: iceberg (https://cocopon.github.io/iceberg.vim/) */

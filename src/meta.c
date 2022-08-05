@@ -127,6 +127,16 @@ Meta* meta_init()
       .getter=CB(getter_scale), .setter=CB(setter_scale)
     },
     {
+      .name="cell_width", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_CELL_SIZE, sizeof(int)),
+      .arg_desc="<int>", .desc="Initial columns",
+      .getter=CB(getter_cell_width), .setter=CB(setter_cell_width)
+    },
+    {
+      .name="cell_height", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_CELL_SIZE, sizeof(int)),
+      .arg_desc="<int>", .desc="Initial rows",
+      .getter=CB(getter_cell_height), .setter=CB(setter_cell_height)
+    },
+    {
       .name="padding_horizontal", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
       .arg_desc="<int>", .desc="Horizontal padding",
       .setter=CB(setter_padding_horizontal)
@@ -155,6 +165,11 @@ Meta* meta_init()
       .name="silent", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to beep when bell sequence is sent",
       .getter=CB(getter_silent), .setter=CB(setter_silent),
+    },
+    {
+      .name="bold_is_bright", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
+      .desc="Whether to make bold texts bright",
+      .getter=CB(gettter_bold_is_bright), .setter=CB(setter_bold_is_bright),
     },
     color_normal(0),  color_normal(1),  color_normal(2),  color_normal(3),
     color_normal(4),  color_normal(5),  color_normal(6),  color_normal(7),
