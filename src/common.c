@@ -86,7 +86,11 @@ bool is_empty(const char* s)
 
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata)
 {
+#if USES_LUAJIT
   luaL_getmetatable(L, LUA_LOADED_TABLE);
+#else
+  luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
+#endif
   lua_getfield(L, -1, modname);  /* LOADED[modname] */
   if (!lua_toboolean(L, -1)) {  /* package not already loaded? */
     lua_pop(L, 1);  /* remove field */
