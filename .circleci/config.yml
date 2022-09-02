@@ -5,4 +5,6 @@ jobs:
     steps:
       - checkout
       - run: docker build -t tym .
+      - run: docker build -t tym-luajit --build-arg EXTRA_CONF=--enable-luajit .
       - run: docker run tym
+      - run: docker run tym-luajit
