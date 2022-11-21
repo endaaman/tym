@@ -12,6 +12,21 @@
 $ yay -S tym
 ```
 
+### NixOS
+
+Add unstable channel (if you don't have it already)
+
+```
+$ sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos-unstable
+$ sudo nix-channel --update nixos-unstable
+```
+
+Install
+
+```
+$ nix-env -iA nixos-unstable.tym
+```
+
 ### Other distros
 
 Download the latest release from [Releases](https://github.com/endaaman/tym/releases), extract it and run as below
