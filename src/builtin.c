@@ -573,13 +573,12 @@ static int builtin_hex_to_rgb(lua_State* L)
 static GVariant* table_to_variant(lua_State* L, int table_index)
 {
   luaL_argcheck(L, lua_istable(L, table_index), table_index, "table expected");
-  size_t num_params =
+
 #if USES_LUAJIT
-    lua_objlen
+  size_t num_params = lua_objlen(L, table_index);
 #else
-    lua_rawlen
+  size_t num_params = lua_rawlen(L, table_index);
 #endif
-  (L, table_index);
   GVariant** vv = g_new0(GVariant*, num_params);
   int i = 0;
   while (i < num_params) {
