@@ -53,30 +53,10 @@ static char* _get_dest_path_from_option(Option* option) {
   return path;
 }
 
-int app_start(int argc, char** argv)
+int app_start(Option* option, int argc, char **argv)
 {
   df();
   g_assert(!app->gapp);
-
-  GError* error = NULL;
-  if (error) {
-    g_error("%s", error->message);
-    g_error_free(error);
-    return 1;
-  }
-
-
-  GOptionEntry* entries = meta_get_option_entries(app->meta);
-  Option* option = option_init(entries);
-
-  if (!option_parse(option, argc, argv)) {
-    return 1;
-  }
-
-  if (option_get_bool(option, "version")) {
-    g_print("version %s\n", PACKAGE_VERSION);
-    return 0;
-  }
 
   GApplicationFlags flags = G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_SEND_ENVIRONMENT;
   char* app_id = TYM_APP_ID;
@@ -86,6 +66,7 @@ int app_start(int argc, char** argv)
   }
 
   app->gapp = G_APPLICATION(gtk_application_new(app_id, flags));
+  GError* error = NULL;
   g_application_register(app->gapp, NULL, &error);
 
   char* signal_name = option_get_str(option, "signal");

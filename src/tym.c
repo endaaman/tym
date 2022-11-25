@@ -13,8 +13,21 @@
 int main(int argc, char* argv[])
 {
   dd("start");
+
   app_init();
-  int exit_code = app_start(argc, argv);
+  GOptionEntry* entries = meta_get_option_entries(app->meta);
+  Option* option = option_init(entries);
+
+  if (!option_parse(option, argc, argv)) {
+    return 1;
+  }
+
+  if (option_get_bool(option, "version")) {
+    g_print("version %s\n", PACKAGE_VERSION);
+    return 0;
+  }
+
+  int exit_code = app_start(option, argc, argv);
   app_close();
   return exit_code;
 }

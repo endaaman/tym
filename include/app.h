@@ -27,6 +27,6 @@ extern App* app;
 void app_init();
 void app_close();
 void app_quit_context(Context* context);
-int app_start(int argc, char **argv);
+int app_start(Option* option, int argc, char **argv);
 
 #endif
