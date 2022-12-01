@@ -33,3 +33,7 @@ test-driver
 .ccls-root
 .ccls-cache/
 compile_commands.json
+
+AppDir
+appimage-build
+*.AppImage*
