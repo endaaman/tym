@@ -426,6 +426,16 @@ void setter_scrollback_length(Context* context, const char* key, int value)
 
 
 // BOOL
+bool getter_scroll_on_output(Context* context, const char* key)
+{
+  return vte_terminal_get_scroll_on_output(context->layout.vte);
+}
+
+void setter_scroll_on_output(Context* context, const char* key, bool value)
+{
+  vte_terminal_set_scroll_on_output(context->layout.vte, value);
+}
+
 bool getter_silent(Context* context, const char* key)
 {
   return !vte_terminal_get_audible_bell(context->layout.vte);

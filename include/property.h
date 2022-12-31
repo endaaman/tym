@@ -81,6 +81,9 @@ int getter_scrollback_length(Context* context, const char* key);
 void setter_scrollback_length(Context* context, const char* key, int value);
 
 // bool
+bool getter_scroll_on_output(Context* context, const char* key);
+void setter_scroll_on_output(Context* context, const char* key, bool value);
+
 bool getter_silent(Context* context, const char* key);
 void setter_silent(Context* context, const char* key, bool value);
 
