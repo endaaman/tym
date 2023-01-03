@@ -7,6 +7,8 @@
  * NOTE:
  *   * URI is repleced by SCHEMELESS_URI, because the entire URI regex is dynamically constructed
  *     using an user-configured list of target schemes. SCHEME is used to validate the list.
+ *   * SUB_DELIMS does not contain "(" and ")", and subsequently USERINFO, IPVFUTURE, and REG_NAME do not allow these
+ *     characters. SEGMENT and QUERY rules have special PAREN rules that matches only paired "(" and ")".
  *   * Also, the following definitions are omitted:
  *     - URI-reference      only used in relative URIs.
  *     - relative-ref       (as above)
@@ -100,19 +102,23 @@
 
 #define PATH_ROOTLESS   "(?:" SEGMENT_NZ PATH_ABEMPTY ")"
 
-#define SEGMENT         "(?:" PCHAR ")*+"
+#define SEGMENT         "(?:" PCHAR "|" PAREN ")*+"
 
-#define SEGMENT_NZ      "(?:" PCHAR ")++"
+#define SEGMENT_NZ      "(?:" PCHAR "|" PAREN ")++"
 
-#define PCHAR           "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" ":" "|" "@" ")"
+#define PCHAR           "(?:" UNRESERVED "|" PCT_ENCODED "|" SUB_DELIMS "|" "[:@]" ")"
 
-#define QUERY           "(?:" PCHAR "|" "\\/" "|" "\\?" ")*+"
+#define PAREN           "(?:" "\\(" PCHAR "*+" "\\)" ")"
+
+#define QUERY           "(?:" PCHAR "|" "[\\/\\?]" "|" QUERY_PAREN ")*+"
+
+#define QUERY_PAREN     "(?:" "\\(" "(?:" PCHAR "|" "[\\/\\?]" ")*+" "\\)" ")"
 
 #define PCT_ENCODED     "(?:" "%" HEXDIG HEXDIG ")"
 
 #define UNRESERVED      "(?:" ALPHA "|" DIGIT "|" "[\\-\\._~]" ")"
 
-#define SUB_DELIMS      "(?:" "[!\\$&'\\(\\)\\*\\+,;=]" ")"
+#define SUB_DELIMS      "(?:" "[!\\$&'\\*\\+,;=]" ")"
 
 
 #endif
