@@ -124,6 +124,7 @@ void test_regex()
 
   // cases are cited from RFC3987 and RFC6068
   printf("Integrated tests\n");
+  g_assert(check_match(0 , URI , "http://localhost:3000/index.html"                                         , "http://localhost:3000/index.html"                                       , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D%C3%BCrst"                                        , "http://www.example.org/D%C3%BCrst"                                      , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D&#xFC;rst"                                        , "http://www.example.org/D&#xFC;rst"                                      , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D%FCrst"                                           , "http://www.example.org/D%FCrst"                                         , 0));
