@@ -167,8 +167,5 @@ void test_regex()
   // NOT match
   g_assert(check_match(0 , URI , "foo:" , NULL , 1));  // only scheme-like part
 
-  // TODO https://github.com/endaaman/tym/issues/46
-  // assert(check_match(0, URI, "link to https://example.com." , "https://example.com" , 0));
-
   printf("regex tests complete!\n");
 }

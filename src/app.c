@@ -302,6 +302,9 @@ static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_dat
     return false;
   }
   if (uri) {
+    for (int i = strlen(uri) - 1; uri[i] == '.' || uri[i] == ','; i--) {
+      uri[i] = '\0';
+    }
     context_launch_uri(context, uri);
     return true;
   }
