@@ -16,6 +16,8 @@
  *     - absolute-URI       special case of URI. not distinguishable in regex.
  *     - path               not referenced from any other rules.
  *     - path-empty         to avoid highlighting meaningless URI like `foo:`.
+ *     - gen-delims         not referenced from any other rules.
+ *     - reserved           not referenced from any other rules.
  *
  * Copyright (c) 2020 endaaman, iTakeshi
  *
@@ -55,7 +57,7 @@
  * main rules
  */
 
-#define SCHEMELESS_URI  "(?:" ":" HIER_PART "(?:" "\\?" QUERY ")?" "(?:" "\\#" FRAGMENT ")?" ")"
+#define SCHEMELESS_URI  "(?:" ":" HIER_PART "(?:" "\\?" QUERY ")?" "(?:" "\\#" QUERY ")?" ")"
 
 #define HIER_PART       "(?:" "\\/\\/" AUTHORITY PATH_ABEMPTY "|" PATH_ABSOLUTE "|" PATH_ROOTLESS ")"
 
@@ -65,11 +67,11 @@
 
 #define HOST            "(?:" IP_LITERAL "|" IPV4ADDRESS "|" REG_NAME")"
 
-#define PORT            "(?:" DIGIT ")*"
+#define PORT            "(?:" DIGIT ")*+"
 
 #define IP_LITERAL      "(?:" "\\[" "(?:" IPV6ADDRESS "|" IPVFUTURE ")" "\\]" ")"
 
-#define IPVFUTURE       "(?:" "v" "(?:" HEXDIG ")++" "\\." "(?:" UNRESERVED "|" SUB_DELIMS "|" ":" ")++" ")"
+#define IPVFUTURE       "(?:" "v" HEXDIG "++" "\\." "(?:" UNRESERVED "|" SUB_DELIMS "|" ":" ")++" ")"
 
 #define IPV6ADDRESS     "(?:"                                            "(?:" H16 ":" "){6}" LS32 \
                           "|"                                       "::" "(?:" H16 ":" "){5}" LS32 \
@@ -94,7 +96,7 @@
 
 #define PATH_ABEMPTY    "(?:" "\\/" SEGMENT ")*+"
 
-#define PATH_ABSOLUTE   "(?:" "\\/" "(?:" SEGMENT_NZ PATH_ABEMPTY ")?" ")"
+#define PATH_ABSOLUTE   "(?:" "\\/" PATH_ROOTLESS "?" ")"
 
 #define PATH_ROOTLESS   "(?:" SEGMENT_NZ PATH_ABEMPTY ")"
 
@@ -106,15 +108,9 @@
 
 #define QUERY           "(?:" PCHAR "|" "\\/" "|" "\\?" ")*+"
 
-#define FRAGMENT        "(?:" PCHAR "|" "\\/" "|" "\\?" ")*+"
-
 #define PCT_ENCODED     "(?:" "%" HEXDIG HEXDIG ")"
 
 #define UNRESERVED      "(?:" ALPHA "|" DIGIT "|" "[\\-\\._~]" ")"
-
-#define RESERVED        "(?:" GEN_DELIMS "|" SUB_DELIMS ")"
-
-#define GEN_DELIMS      "(?:" "[:\\/\\?\\#\\[\\]@]" ")"
 
 #define SUB_DELIMS      "(?:" "[!\\$&'\\(\\)\\*\\+,;=]" ")"
 
