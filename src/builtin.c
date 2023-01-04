@@ -782,6 +782,26 @@ static int builtin_get_selection(lua_State* L)
   return 1;
 }
 
+static int builtin_unselect_all(lua_State* L)
+{
+	Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+	vte_terminal_unselect_all(context->layout.vte);
+	return 0;
+}
+
+static int builtin_select_all(lua_State *L) {
+	Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+	vte_terminal_select_all(context->layout.vte);
+	return 0;
+}
+
+static int builtin_has_selection(lua_State *L) {
+	Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+	lua_pushboolean(L, vte_terminal_get_has_selection(context->layout.vte));
+	return 1;
+}
+
+
 static int builtin_get_text(lua_State* L)
 {
   Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
@@ -919,6 +939,9 @@ int builtin_register_module(lua_State* L)
     { "get_cursor_position" , builtin_get_cursor_position  },
     { "get_clipboard"       , builtin_get_clipboard        },
     { "get_selection"       , builtin_get_selection        },
+    { "unselect_all"        , builtin_unselect_all         },
+    { "select_all"          , builtin_select_all           },
+    { "has_selection"       , builtin_has_selection        },
     { "get_text"            , builtin_get_text             },
     { "get_config_path"     , builtin_get_config_path      },
     { "get_theme_path"      , builtin_get_theme_path       },
