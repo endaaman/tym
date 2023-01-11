@@ -53,6 +53,59 @@ static char* _get_dest_path_from_option(Option* option) {
   return path;
 }
 
+int app_perform_signal(char* dest_path, char* signal_name, char* method_name, char* param)
+{
+  GError* error = NULL;
+
+  GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
+  if (!dest_path) {
+    g_warning("--dest is not provided and $TYM_ID is not set.");
+    return 1;
+  }
+
+  GVariant* params = param
+    ? g_variant_new("(s)", param)
+    : g_variant_new("()");
+
+  /* process signal */
+  if (signal_name) {
+    g_dbus_connection_emit_signal(conn, NULL, dest_path, TYM_APP_ID, signal_name, params, &error);
+    g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, dest_path, TYM_APP_ID);
+    g_free(signal_name);
+    if (error) {
+      g_error("%s", error->message);
+      g_error_free(error);
+    }
+    return 0;
+  }
+
+  /* process method call */
+  GVariant* result = g_dbus_connection_call_sync(
+      conn,        // conn
+      TYM_APP_ID,  // bus_name
+      dest_path,   // object_path
+      TYM_APP_ID,  // interface_name
+      method_name, // method_name
+      params,      // parameters
+      NULL,        // reply_type
+      G_DBUS_CALL_FLAGS_NONE, // flags
+      1000,        // timeout
+      NULL,        // cancellable
+      &error
+  );
+  g_print("Call method:%s on path:%s interface:%s\n", method_name, dest_path, TYM_APP_ID);
+  if (error) {
+    g_warning("%s", error->message);
+    g_error_free(error);
+    return 1;
+  }
+  dd("result type:%s", g_variant_get_type_string(result));
+  char* msg = g_variant_print(result, true);
+  g_print("%s\n", msg);
+  g_free(msg);
+  return 0;
+}
+
 int app_start(Option* option, int argc, char **argv)
 {
   df();
@@ -69,61 +122,14 @@ int app_start(Option* option, int argc, char **argv)
   GError* error = NULL;
   g_application_register(app->gapp, NULL, &error);
 
+  char* dest_path = _get_dest_path_from_option(option);
   char* signal_name = option_get_str(option, "signal");
   char* method_name = option_get_str(option, "call");
+  char* param = option_get_str(option, "param");
   if (signal_name || method_name) {
-    GDBusConnection* conn = g_application_get_dbus_connection(app->gapp);
-    char* path = _get_dest_path_from_option(option);
-    if (!path) {
-      g_warning("--dest is not provided and $TYM_ID is not set.");
-      return 1;
-    }
-
-    char* param = option_get_str(option, "param");
-
-    GVariant* params = param
-      ? g_variant_new("(s)", param)
-      : g_variant_new("()");
-
-    /* process signal */
-    if (signal_name) {
-      g_dbus_connection_emit_signal(conn, NULL, path, TYM_APP_ID, signal_name, params, &error);
-      g_print("Sent signal:%s to path:%s interface:%s\n", signal_name, path, TYM_APP_ID);
-      g_free(signal_name);
-      g_free(path);
-      if (error) {
-        g_error("%s", error->message);
-        g_error_free(error);
-      }
-      return 0;
-    }
-
-    /* process method call */
-    GVariant* result = g_dbus_connection_call_sync(
-        conn,        // conn
-        TYM_APP_ID,  // bus_name
-        path,        // object_path
-        TYM_APP_ID,  // interface_name
-        method_name, // method_name
-        params,      // parameters
-        NULL,        // reply_type
-        G_DBUS_CALL_FLAGS_NONE, // flags
-        1000,        // timeout
-        NULL,        // cancellable
-        &error
-    );
-    g_print("Call method:%s on path:%s interface:%s\n", method_name, path, TYM_APP_ID);
-    g_free(method_name);
-    if (error) {
-      g_warning("%s", error->message);
-      g_error_free(error);
-      return 1;
-    }
-    dd("result type:%s", g_variant_get_type_string(result));
-    char* msg = g_variant_print(result, true);
-    g_print("%s\n", msg);
-    g_free(msg);
-    return 0;
+    int code = app_perform_signal(dest_path, signal_name, method_name, param);
+    g_free(dest_path);
+    return code;
   }
 
   /* g_application_add_main_option_entries(app->gapp, entries); */
