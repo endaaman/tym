@@ -132,8 +132,6 @@ int app_start(Option* option, int argc, char **argv)
     return code;
   }
 
-  /* g_application_add_main_option_entries(app->gapp, entries); */
-
   g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option);
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
   return g_application_run(app->gapp, argc, argv);
@@ -533,6 +531,12 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   if (!option_parse(option, argc, argv)){
     return 1;
   };
+
+  if (option_get_bool(option, "daemon")) {
+    g_message("Starting as daemon process.");
+    gtk_main(); // Start empty main loop
+    return 0;
+  }
 
   Context* context = app_spawn_context(option);
   if (!context) {
