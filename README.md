@@ -108,6 +108,7 @@ All available config values are shown below.
 | `padding_horizontal`  | integer | `0` | Horizontal padding. |
 | `padding_vertical`  | integer | `0` | Vertical padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
+| `scrollback_on_output` | boolean | `true` | Whether to scroll the buffer when the new data is output. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
@@ -260,6 +261,9 @@ tym.set_keymaps({
 | `tym.get_cursor_position()`          | int, int | Get where column and row the cursor is. |
 | `tym.get_clipboard(target='clipboard')` | string | Get content in the clipboard. |
 | `tym.get_selection()`                | string   | Get selected text. |
+| `tym.has_selection()`                | bool     | Get if selected. |
+| `tym.select_all()`                   | void     | Select all texts. |
+| `tym.unselect_all()`                 | void     | Unselect all texts. |
 | `tym.get_text(start_row, start_col, end_row, end_col)` | string | Get text on the terminal screen. If you set `-1` to `end_row` and `end_col`, the target area will be the size of termianl. |
 | `tym.get_config_path()`              | string   | Get full path to config file. |
 | `tym.get_theme_path()`               | string   | Get full path to theme file. |
