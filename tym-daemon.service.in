@@ -3,7 +3,7 @@ Description=tym daemon
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/tym --daemon
+ExecStart=@prefix@/bin/tym --daemon
 
 [Install]
 WantedBy=default.target
