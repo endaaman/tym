@@ -137,7 +137,6 @@ int app_start(Option* option, int argc, char **argv)
   g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option);
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
   return g_application_run(app->gapp, argc, argv);
-  return 0;
 }
 
 static int _contexts_sort_func(const void* a, const void* b)
