@@ -53,7 +53,7 @@ static char* _get_dest_path_from_option(Option* option) {
   return path;
 }
 
-int app_perform_signal(char* dest_path, char* signal_name, char* method_name, char* param)
+static int _perform_signal(char* dest_path, char* signal_name, char* method_name, char* param)
 {
   GError* error = NULL;
 
@@ -127,7 +127,7 @@ int app_start(Option* option, int argc, char **argv)
   char* method_name = option_get_str(option, "call");
   char* param = option_get_str(option, "param");
   if (signal_name || method_name) {
-    int code = app_perform_signal(dest_path, signal_name, method_name, param);
+    int code = _perform_signal(dest_path, signal_name, method_name, param);
     g_free(dest_path);
     return code;
   }
