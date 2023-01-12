@@ -533,8 +533,15 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   };
 
   if (option_get_bool(option, "daemon")) {
+    GtkWindow* window = gtk_application_get_active_window(GTK_APPLICATION(gapp));
+    if (window) {
+      g_warning("There is any tym instance, so could not start as daemon process.");
+      return 1;
+    }
+
+    /* only creates window, never shows it. */
+    window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(app->gapp)));
     g_message("Starting as daemon process.");
-    gtk_main(); // Start empty main loop
     return 0;
   }
 
