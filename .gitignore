@@ -24,6 +24,7 @@ tym.1
 tym
 tym-test
 include/common.h
+tym-daemon.service
 /config.*
 /app-config.*
 tym-*.tar.gz
