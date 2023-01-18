@@ -102,10 +102,10 @@ void test_regex()
   g_assert(check_match(1, SCHEME , "0foo"    , NULL , 1)); // disallow non-alphabet character at the beginning
 
   printf("Testing USERINFO\n");
-  g_assert(check_match(1, USERINFO , "foo.bar-baz"          , NULL , 0));
-  g_assert(check_match(1, USERINFO , "user:pass!$&'()*+,;=" , NULL , 0));
-  g_assert(check_match(1, USERINFO , "user@"                , NULL , 1)); // disallow `@`
-  g_assert(check_match(1, USERINFO , "user:pass@"           , NULL , 1)); // disallow `@`
+  g_assert(check_match(1, USERINFO , "foo.bar-baz"        , NULL , 0));
+  g_assert(check_match(1, USERINFO , "user:pass!$&'*+,;=" , NULL , 0));
+  g_assert(check_match(1, USERINFO , "user@"              , NULL , 1)); // disallow `@`
+  g_assert(check_match(1, USERINFO , "user:pass@"         , NULL , 1)); // disallow `@`
 
   printf("Testing HOST\n");
   g_assert(check_match(1 , HOST , "localhost"                 , NULL , 0));
@@ -124,6 +124,7 @@ void test_regex()
 
   // cases are cited from RFC3987 and RFC6068
   printf("Integrated tests\n");
+  g_assert(check_match(0 , URI , "http://localhost:3000/index.html"                                         , "http://localhost:3000/index.html"                                       , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D%C3%BCrst"                                        , "http://www.example.org/D%C3%BCrst"                                      , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D&#xFC;rst"                                        , "http://www.example.org/D&#xFC;rst"                                      , 0));
   g_assert(check_match(0 , URI , "http://www.example.org/D%FCrst"                                           , "http://www.example.org/D%FCrst"                                         , 0));
@@ -155,15 +156,17 @@ void test_regex()
   g_assert(check_match(0 , URI , "<mailto:user@%E7%B4%8D%E8%B1%86.example.org?subject=Test&body=NATTO>"     , "mailto:user@%E7%B4%8D%E8%B1%86.example.org?subject=Test&body=NATTO"     , 0));
   g_assert(check_match(0 , URI , "file:///"                                                                 , "file:///"                                                               , 0));
   g_assert(check_match(0 , URI , "file:///home/user/example.txt"                                            , "file:///home/user/example.txt"                                          , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com)"                                               , "https://example.com"                                                    , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/path)"                                          , "https://example.com/path"                                               , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/path?query)"                                    , "https://example.com/path?query"                                         , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/path?query#fragment)"                           , "https://example.com/path?query#fragment"                                , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/p(at)h?q(uer)y#fr(ag)ment)"                     , "https://example.com/p(at)h?q(uer)y#fr(ag)ment"                          , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/pat)h?q(uer)y#fr(ag)ment)"                      , "https://example.com/pat"                                                , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/p(at)h?quer)y#fr(ag)ment)"                      , "https://example.com/p(at)h?quer"                                        , 0));
+  g_assert(check_match(0 , URI, "[link](https://example.com/p(at)h?q(uer)y#frag)ment)"                      , "https://example.com/p(at)h?q(uer)y#frag"                                , 0));
 
   // NOT match
-  assert(check_match(0 , URI , "foo:" , NULL , 1));  // only scheme-like part
-
-  // TODO https://github.com/endaaman/tym/issues/46
-  //
-  // assert(check_match(0, URI, "[link](https://example.com)"  , "https://example.com" , 0));
-  // assert(check_match(0, URI, "link to https://example.com." , "https://example.com" , 0));
+  g_assert(check_match(0 , URI , "foo:" , NULL , 1));  // only scheme-like part
 
   printf("regex tests complete!\n");
 }
-
