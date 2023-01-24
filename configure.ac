@@ -1,5 +1,5 @@
 m4_define([tym_major_version],[3])
-m4_define([tym_minor_version],[3])
+m4_define([tym_minor_version],[4])
 m4_define([tym_micro_version],[0])
 m4_define([tym_version],[tym_major_version().tym_minor_version().tym_micro_version()])
 
