@@ -41,6 +41,7 @@ rm -f include/Makefile.in
 rm -f include/common.h
 
 rm -f tym.1
+rm -f tym-daemon.service
 rm -f test-driver
 
 echo 'Cleaned files.'
