@@ -491,6 +491,19 @@ $ docker run tym
 
 ## Pro tips
 
+<details><summary>Enable Lua JIT</summary>
+<div>
+
+Just add `--enable-luajit` option when building.
+
+```
+$ ./configure --enable-luajit
+```
+
+</div>
+</details>
+
+
 <details><summary>Enable sixel support(for Arch Linux users)</summary>
 <div>
 
