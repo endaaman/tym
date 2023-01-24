@@ -122,6 +122,16 @@ int app_start(Option* option, int argc, char **argv)
   GError* error = NULL;
   g_application_register(app->gapp, NULL, &error);
 
+  if (option_get_bool(option, "daemon")) {
+    if (g_application_get_is_remote(app->gapp)) {
+      /* If there is a normal primary instance, --daemon flag would make it "zombie" */
+      /* So daemonization should be allowed only when the instanciation is the primary */
+      g_warning("There is any tym instance. So could not start as daemon process.");
+      g_application_run(app->gapp, argc, argv);
+      return 1;
+    }
+  }
+
   char* dest_path = _get_dest_path_from_option(option);
   char* signal_name = option_get_str(option, "signal");
   char* method_name = option_get_str(option, "call");
@@ -129,10 +139,9 @@ int app_start(Option* option, int argc, char **argv)
   if (signal_name || method_name) {
     int code = _perform_signal(dest_path, signal_name, method_name, param);
     g_free(dest_path);
+    g_application_run(app->gapp, argc, argv);
     return code;
   }
-
-  /* g_application_add_main_option_entries(app->gapp, entries); */
 
   g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option);
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
@@ -536,6 +545,26 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   if (!option_parse(option, argc, argv)){
     return 1;
   };
+
+  if (option_get_bool(option, "daemon")) {
+    GtkWindow* window = gtk_application_get_active_window(GTK_APPLICATION(gapp));
+    if (window) {
+      g_warning("Blocked another instance from trying to start as daemon process.");
+      return 1;
+    }
+
+    /* Only creates a window, never shows it. */
+    window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(gapp)));
+    UNUSED(window);
+    g_message("Starting as daemon process.");
+    return 0;
+  }
+
+  if (option_get_str(option, "signal") || option_get_str(option, "call")) {
+    /* Do nothing */
+    dd("D-Bus signal/method call was performed on a remote process.");
+    return 0;
+  }
 
   Context* context = app_spawn_context(option);
   if (!context) {

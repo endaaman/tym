@@ -439,6 +439,30 @@ Calls D-Bus method of the current instance (determined by `$TYM_ID` environment 
 $ tym --call eval --param 'return 1 + 2'
 ```
 
+### `--daemon`
+
+This makes tym a daemon process, which has no window or application context.
+
+```
+$ tym --daemon
+```
+
+When the primary instance exists, the secondary execution will be united into the primary and it will be a bit faster because it has less cost to initialize GTK application footprint. The daemon process makes first execution like as secondary.
+
+This execution is wrapped as systemd-unit.
+
+```
+$ systemctl --user start tym-daemon.service
+```
+
+However, this will also failed in your working tym instance. To start the daemon process, we need to stop all tym instances including the terminal just you are working on!
+
+So the following may help you.
+
+```
+$ nohup sh -c 'killall tym; sleep 1; systemctl --user start tym-daemon.service; tym' >/dev/null 2>&1 &
+```
+
 ### `--<config option>`
 
 You can set config value via command line option.

@@ -15,6 +15,7 @@ AC_CONFIG_FILES([
   src/Makefile
   include/Makefile
   include/common.h
+  tym-daemon.service
   tym.1
 ])
 

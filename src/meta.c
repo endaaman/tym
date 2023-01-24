@@ -270,6 +270,13 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .description = "Show version",
       .arg_description = NULL,
     }, {
+      .long_name = "daemon",
+      .short_name = 'v',
+      .arg = G_OPTION_ARG_NONE,
+      .arg_data = new_empty_bool(),
+      .description = "Launch as daemon process",
+      .arg_description = NULL,
+    }, {
       .long_name = "use",
       .short_name = 'u',
       .arg = G_OPTION_ARG_STRING,
