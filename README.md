@@ -65,7 +65,7 @@ We did not check which packages are needed to build on other distros or OS. We a
 
 ## Configuration
 
-If `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed when the app starts. You can change the path by `--use`/`-u` option.
+If `$XDG_CONFIG_HOME/tym/config.lua` exists, it is executed when the app starts. You can change the path with the `--use`/`-u` option.
 
 ```lua
 -- At first, you need to require tym module
@@ -120,7 +120,7 @@ All available config values are shown below.
 
 ## Theme customization
 
-When `$XDG_CONFIG_HOME/tym/theme.lua` exists, it is loaded **before** loading config. You can change the path by `--theme`/`-t` option. The following is an example, whose color values are built-in default. They were ported from [iceberg](https://cocopon.github.io/iceberg.vim/).
+When `$XDG_CONFIG_HOME/tym/theme.lua` exists, it is loaded **before** loading config. You can change the path by using the `--theme`/`-t` option. The following is an example, whose color values are built-in default. They were ported from [iceberg](https://cocopon.github.io/iceberg.vim/).
 
 ```lua
 local bg = '#161821'
@@ -192,7 +192,7 @@ color_15 : white
 
 ### Customizing keymap
 
-You can register keymap(s) using `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If turethy value is returned, the event propagation will **not be stopped**.
+You can register keymap(s) using `tym.set_keymap(accelerator, func)` or `tym.set_keymaps(table)`. `accelerator` must be in a format parsable by [gtk_accelerator_parse()](https://developer.gnome.org/gtk3/stable/gtk3-Keyboard-Accelerators.html#gtk-accelerator-parse). If a truthy value is returned, the event propagation will **not be stopped**.
 
 ```lua
 -- also can set keymap
@@ -285,7 +285,7 @@ tym.set_keymaps({
 | `unselected`  | nil    | nothing | Triggered when the selection is unselected. |
 | `signal`      | string | nothing | Triggered when `me.endaaman.tym.hook` signal is received. |
 
-If turethy value is returned in a callback function, the default action is will **be canceled**.
+If truthy value is returned in a callback function, the default action is will **be canceled**.
 
 ```lua
 tym.set_hooks({
@@ -449,13 +449,13 @@ $ tym --daemon
 
 When the primary instance exists, the secondary execution will be united into the primary and it will be a bit faster because it has less cost to initialize GTK application footprint. The daemon process makes first execution like as secondary.
 
-This execution is wrapped as systemd-unit.
+This execution is wrapped as a systemd-unit.
 
 ```
 $ systemctl --user start tym-daemon.service
 ```
 
-However, this will also failed in your working tym instance. To start the daemon process, we need to stop all tym instances including the terminal just you are working on!
+However, this will fail if executed from your working tym instance. To start the daemon process, we need to stop all tym instances including the one you are currently using!
 
 So the following may help you.
 
@@ -524,7 +524,7 @@ prepare() {
 }
 ```
 
-And you should install `tym-git` package, since new features about sixel might be always on HEAD.
+And you should install `tym-git` package, since new features about sixel will always be on HEAD.
 
 </div>
 </details>
