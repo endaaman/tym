@@ -630,11 +630,13 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   shell_env = g_environ_setenv(shell_env, "TYM_ID", id_str, true);
   g_free(id_str);
 
+  char* cwd = g_application_command_line_get_cwd(cli);
+
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
   vte_terminal_spawn_async(
     vte,                 // terminal
     VTE_PTY_DEFAULT,     // pty flag
-    NULL,                // working directory
+    cwd,                 // working directory
     shell_argv,          // argv
     shell_env,           // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
@@ -651,7 +653,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   vte_terminal_spawn_sync(
     vte,
     VTE_PTY_DEFAULT,
-    NULL,
+    cwd,
     shell_argv,
     shell_env,
     G_SPAWN_SEARCH_PATH,
