@@ -18,6 +18,9 @@ Use <PATH> instead of default config file.
 .IP "\fB\-t\fR, \fB\-\-theme\fR=\fI<PATH>\fR"
 Use <PATH> instead of default theme file.
 
+.IP "\fB\-\-cwd\fR=\fI<PATH>\fR"
+Use <PATH> as the terminal's working directory. Must be an absolute path.
+
 .IP "\fB\-\-\fR\fI<OPTION>\fR=\fI<VALUE>\fR"
 Replace <OPTION> config option, where \fI<OPTION>\fR is a config option and
 \fI<VALUE>\fR is a value of its option.

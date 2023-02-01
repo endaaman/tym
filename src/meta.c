@@ -330,6 +330,12 @@ GOptionEntry* meta_get_option_entries(Meta* meta)
       .arg_data = new_empty_bool(),
       .description = "Start as an isolated instance",
       .arg_description = NULL,
+    }, {
+      .long_name = "cwd",
+      .arg = G_OPTION_ARG_STRING,
+      .arg_data = new_empty_str(),
+      .description = "Set the terminal's working directory. Must be an absolute path.",
+      .arg_description = "<path>",
     }
   };
 
