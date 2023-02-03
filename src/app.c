@@ -438,6 +438,13 @@ void on_dbus_call_method(
 
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 {
+  Option* option = (Option*)(user_data);
+  const char* cwd = option_get_str(option, "cwd");
+  if (cwd != NULL && !g_path_is_absolute(cwd)) {
+    g_warning("cwd must be an absolute path");
+    return 1;
+  }
+
   df();
   return -1;
 }
@@ -630,11 +637,16 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   shell_env = g_environ_setenv(shell_env, "TYM_ID", id_str, true);
   g_free(id_str);
 
+  char* cwd = option_get_str(option, "cwd");
+  if (cwd == NULL) {
+    cwd = g_application_command_line_get_cwd(cli);
+  }
+
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
   vte_terminal_spawn_async(
     vte,                 // terminal
     VTE_PTY_DEFAULT,     // pty flag
-    NULL,                // working directory
+    cwd,                 // working directory
     shell_argv,          // argv
     shell_env,           // envv
     G_SPAWN_SEARCH_PATH, // spawn_flags
@@ -651,7 +663,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   vte_terminal_spawn_sync(
     vte,
     VTE_PTY_DEFAULT,
-    NULL,
+    cwd,
     shell_argv,
     shell_env,
     G_SPAWN_SEARCH_PATH,

@@ -463,6 +463,15 @@ So the following may help you.
 $ nohup sh -c 'killall tym; sleep 1; systemctl --user start tym-daemon.service; tym' >/dev/null 2>&1 &
 ```
 
+
+### `--cwd=<path>`
+
+This sets the terminal's working directory. `<path>` must be an absolute path. If unspecified `tym` will use the current working directory of the terminal invocation.
+
+```console
+$ tym --cwd=/home/user/projects
+```
+
 ### `--<config option>`
 
 You can set config value via command line option.
