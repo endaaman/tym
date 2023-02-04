@@ -122,27 +122,6 @@ int app_start(Option* option, int argc, char **argv)
   GError* error = NULL;
   g_application_register(app->gapp, NULL, &error);
 
-  if (option_get_bool(option, "daemon")) {
-    if (g_application_get_is_remote(app->gapp)) {
-      /* If there is a normal primary instance, --daemon flag would make it "zombie" */
-      /* So daemonization should be allowed only when the instanciation is the primary */
-      g_warning("There is any tym instance. So could not start as daemon process.");
-      g_application_run(app->gapp, argc, argv);
-      return 1;
-    }
-  }
-
-  char* dest_path = _get_dest_path_from_option(option);
-  char* signal_name = option_get_str(option, "signal");
-  char* method_name = option_get_str(option, "call");
-  char* param = option_get_str(option, "param");
-  if (signal_name || method_name) {
-    int code = _perform_signal(dest_path, signal_name, method_name, param);
-    g_free(dest_path);
-    g_application_run(app->gapp, argc, argv);
-    return code;
-  }
-
   g_signal_connect(app->gapp, "handle-local-options", G_CALLBACK(on_local_options), option);
   g_signal_connect(app->gapp, "command-line", G_CALLBACK(on_command_line), NULL);
   return g_application_run(app->gapp, argc, argv);
@@ -438,14 +417,34 @@ void on_dbus_call_method(
 
 int on_local_options(GApplication* gapp, GVariantDict* values, void* user_data)
 {
+  df();
   Option* option = (Option*)(user_data);
+
+  char* dest_path = _get_dest_path_from_option(option);
+  char* signal_name = option_get_str(option, "signal");
+  char* method_name = option_get_str(option, "call");
+  char* param = option_get_str(option, "param");
+  if (signal_name || method_name) {
+    int code = _perform_signal(dest_path, signal_name, method_name, param);
+    g_free(dest_path);
+    return code;
+  }
+
+  if (option_get_bool(option, "daemon")) {
+    if (g_application_get_is_remote(app->gapp)) {
+      /* If there is a normal primary instance, --daemon flag would make it "zombie" */
+      /* So daemonization should be allowed only when the instanciation is the primary */
+      g_warning("There is any tym instance. So could not start as daemon process.");
+      return 1;
+    }
+  }
+
   const char* cwd = option_get_str(option, "cwd");
   if (cwd != NULL && !g_path_is_absolute(cwd)) {
     g_warning("cwd must be an absolute path");
     return 1;
   }
 
-  df();
   return -1;
 }
 
@@ -637,7 +636,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   shell_env = g_environ_setenv(shell_env, "TYM_ID", id_str, true);
   g_free(id_str);
 
-  char* cwd = option_get_str(option, "cwd");
+  const char* cwd = option_get_str(option, "cwd");
   if (cwd == NULL) {
     cwd = g_application_command_line_get_cwd(cli);
   }
@@ -680,7 +679,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     g_error("%s", error->message);
     g_error_free(error);
     app_quit_context(context);
-    return;
+    return 1;
   }
 #endif
 
