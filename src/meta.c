@@ -152,11 +152,11 @@ Meta* meta_init()
       .getter=CB(getter_scrollback_length), .setter=CB(setter_scrollback_length)
     },
     // BOOL
-	{
-		.name="scroll_on_output", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
-		.desc="Scroll down on output",
-		.getter=CB(getter_scroll_on_output), .setter=CB(setter_scroll_on_output)
-	},
+    {
+      .name="scroll_on_output", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
+      .desc="Scroll down on output",
+      .getter=CB(getter_scroll_on_output), .setter=CB(setter_scroll_on_output)
+    },
     {
       .name="ignore_default_keymap", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
       .desc="Whether to use default keymap",
