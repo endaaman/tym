@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym) [![Discord](https://img.shields.io/discord/1065853670371119124?label=chat%20on%20discord)](https://discord.gg/xJ6nASBt)
 
-`tym` is a Lua-configurable terminal emulator base on VTE.
+`tym` is a Lua-configurable terminal emulator base on [VTE](https://gitlab.gnome.org/GNOME/vte).
 
 ## Installation
 
@@ -84,6 +84,8 @@ tym.set_config({
   color_foreground = 'red',
 })
 ```
+
+See [wiki](https://github.com/endaaman/tym/wiki) to check out the advanced examples.
 
 All available config values are shown below.
 
