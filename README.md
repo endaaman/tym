@@ -115,7 +115,7 @@ All available config values are shown below.
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `bold_is_bright` | boolean | `false` | Whether to make bold texts bright. |
-| `isolated` | boolean | `false` | If true, the app instance will be insolated from D-Bus and no longer have ability to handle D-Bus signals/method calls. |
+| `isolated` | boolean | `false` | If true, the app instance will be isolated from D-Bus and no longer have ability to handle D-Bus signals/method calls. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
 
