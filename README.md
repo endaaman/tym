@@ -279,7 +279,7 @@ tym.set_keymaps({
 | `title`       | title  | changes title | If string is returned, it will be used as the new title. |
 | `bell`        | nil    | makes the window urgent when it is inactive. | If true is returned, the window will not be urgent. |
 | `clicked`     | button, uri | If URI exists under cursor, opens it | Triggered when mouse button is pressed. |
-| `scroll`      | delta_x, delta_x, mouse_x, mouse_y  | scroll buffer | Triggered when mouse wheel is scrolled. |
+| `scroll`      | delta_x, delta_y, mouse_x, mouse_y  | scroll buffer | Triggered when mouse wheel is scrolled. |
 | `drag`        | filepath  | feed filepath to the console | Triggered when files are dragged to the screen. |
 | `activated`   | nil    | nothing | Triggered when the window is activated. |
 | `deactivated` | nil    | nothing | Triggered when the window is deactivated. |
@@ -287,7 +287,7 @@ tym.set_keymaps({
 | `unselected`  | nil    | nothing | Triggered when the selection is unselected. |
 | `signal`      | string | nothing | Triggered when `me.endaaman.tym.hook` signal is received. |
 
-If truthy value is returned in a callback function, the default action is will **be canceled**.
+If truthy value is returned in a callback function, the default action will be **stopped**.
 
 ```lua
 tym.set_hooks({
