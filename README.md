@@ -14,17 +14,8 @@ $ yay -S tym
 
 ### NixOS
 
-Add unstable channel (if you don't have it already)
-
 ```
-$ sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos-unstable
-$ sudo nix-channel --update nixos-unstable
-```
-
-Install
-
-```
-$ nix-env -iA nixos-unstable.tym
+$ nix-env -iA nixos.tym
 ```
 
 ### Other distros
