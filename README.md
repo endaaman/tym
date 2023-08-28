@@ -236,6 +236,7 @@ tym.set_keymaps({
 | `tym.reload()`                       | void     | Reload config file.|
 | `tym.reload_theme()`                 | void     | Reload theme file. |
 | `tym.send_key()`                     | void     | Send key press event. |
+| `tym.signal(id, hook, {param...})`   | void     | Send signal to the tym instance specified by id. |
 | `tym.set_timeout(func, interval=0)`  | int(tag) | Set timeout. return true in func to execute again. |
 | `tym.clear_timeout(tag)`             | void     | Clear the timeout. |
 | `tym.put(text)`                      | void     | Feed text. |
@@ -261,6 +262,7 @@ tym.set_keymaps({
 | `tym.get_config_path()`              | string   | Get full path to config file. |
 | `tym.get_theme_path()`               | string   | Get full path to theme file. |
 | `tym.get_pid()`                      | integer  | Get pid. |
+| `tym.get_ids()`                      | table[int] | Get tym instance ids. |
 | `tym.get_version()`                  | string   | Get version string. |
 
 ### Hooks
@@ -327,6 +329,12 @@ end)
 
 ```
 $ dbus-send /me/endaaman/tym0 me.endaaman.tym.hook string:'THIS IS PARAM'
+```
+
+or
+
+```lua
+tym.signal(0, 'hook', {'THIS IS PARAM'}) -- NOTICE: param must be table
 ```
 
 you will get an output like below.
