@@ -64,12 +64,8 @@ bool option_parse(Option* option, int argc, char** argv)
     i++;
   }
   g_option_context_parse_strv(option->option_context, &argv_strv, &error);
-  char** a = &argv_strv[0];
-  while (*a) {
-    g_free(*a);
-    a++;
-  }
-  g_free(argv_strv);
+  /* Rest value containes un-parsed parts that is followed by "--" double dash */
+  option->rest_argv = argv_strv;
 
   if (error) {
     g_warning("%s", error->message);

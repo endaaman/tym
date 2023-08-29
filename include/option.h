@@ -16,6 +16,7 @@
 typedef struct {
   GOptionContext* option_context;
   GOptionEntry* entries;
+  char** rest_argv;
   GHashTable* entries_as_table;
 } Option;
 

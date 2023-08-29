@@ -616,12 +616,27 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   const char* shell_line = context_get_str(context, "shell");
 
   char** shell_argv = NULL;
-  g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
-  if (error) {
-    g_warning("Parse error: %s", error->message);
-    g_error_free(error);
-    app_quit_context(context);
-    return 0;
+  if (g_strv_length(option->rest_argv) >= 2) {
+    GStrvBuilder* builder = g_strv_builder_new();
+    char** a = &option->rest_argv[1];
+    while (*a) {
+      /* Skips an unnecessary entry that equals `--` */
+      if (is_equal(*a, "--")) {
+        a++;
+        continue;
+      }
+      g_strv_builder_add(builder, *a);
+      a++;
+    }
+    shell_argv = g_strv_builder_end(builder);
+  } else {
+    g_shell_parse_argv(shell_line, NULL, &shell_argv, &error);
+    if (error) {
+      g_warning("Parse error: %s", error->message);
+      g_error_free(error);
+      app_quit_context(context);
+      return 0;
+    }
   }
 
   const char* const* env = g_application_command_line_get_environ(cli);

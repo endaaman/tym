@@ -469,6 +469,12 @@ You can set config value via command line option.
 $ tym --shell=/bin/zsh --color_background=red --width=40 --ignore_default_keymap
 ```
 
+tym also accepts double dash `--` option as the command line to spawn.
+
+```console
+$ tym -- less -N Dockerfile
+```
+
 ## Development
 
 Clone this repo and run as below
