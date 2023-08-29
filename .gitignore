@@ -3,6 +3,7 @@
 *.l[ao]
 *.o
 *~
+.cache
 .dirstamp
 Makefile
 Makefile.in
