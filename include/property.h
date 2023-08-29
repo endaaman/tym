@@ -73,9 +73,19 @@ void setter_cell_width(Context* context, const char* key, int value);
 int getter_cell_height(Context* context, const char* key);
 void setter_cell_height(Context* context, const char* key, int value);
 
+/* DEPRECATED START */
 void setter_padding_horizontal(Context* context, const char* key, int value);
-
 void setter_padding_vertical(Context* context, const char* key, int value);
+/* DEPRECATED END */
+
+int getter_padding_top(Context* context, const char* key);
+int getter_padding_bottom(Context* context, const char* key);
+int getter_padding_left(Context* context, const char* key);
+int getter_padding_right(Context* context, const char* key);
+void setter_padding_top(Context* context, const char* key, int value);
+void setter_padding_bottom(Context* context, const char* key, int value);
+void setter_padding_left(Context* context, const char* key, int value);
+void setter_padding_right(Context* context, const char* key, int value);
 
 int getter_scrollback_length(Context* context, const char* key);
 void setter_scrollback_length(Context* context, const char* key, int value);

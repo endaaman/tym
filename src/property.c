@@ -402,16 +402,60 @@ void setter_cell_height(Context* context, const char* key, int value)
   vte_terminal_set_cell_height_scale(context->layout.vte, (double)value / 100);
 }
 
+/* DEPRECATED START */
 void setter_padding_horizontal(Context* context, const char* key, int value)
 {
   gtk_box_set_child_packing(context->layout.hbox, GTK_WIDGET(context->layout.vte), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
+  g_warning("Proprty `%s` is deprecated. Use `padding_left` and `padding_right` instead.", key);
 }
 
 void setter_padding_vertical(Context* context, const char* key, int value)
 {
   gtk_box_set_child_packing(context->layout.vbox, GTK_WIDGET(context->layout.hbox), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
+  g_warning("Proprty `%s` is deprecated. Use `padding_top` and `padding_bottom` instead.", key);
+}
+/* DEPRECATED END */
+
+int getter_padding_top(Context* context, const char* key)
+{
+  return gtk_widget_get_margin_top(GTK_WIDGET(context->layout.vte));
+}
+
+void setter_padding_top(Context* context, const char* key, int value)
+{
+  gtk_widget_set_margin_top(GTK_WIDGET(context->layout.vte), value);
+}
+
+int getter_padding_bottom(Context* context, const char* key)
+{
+  return gtk_widget_get_margin_bottom(GTK_WIDGET(context->layout.vte));
+}
+
+void setter_padding_bottom(Context* context, const char* key, int value)
+{
+  gtk_widget_set_margin_bottom(GTK_WIDGET(context->layout.vte), value);
+}
+
+int getter_padding_left(Context* context, const char* key)
+{
+  return gtk_widget_get_margin_start(GTK_WIDGET(context->layout.vte));
+}
+
+void setter_padding_left(Context* context, const char* key, int value)
+{
+  gtk_widget_set_margin_start(GTK_WIDGET(context->layout.vte), value);
+}
+
+int getter_padding_right(Context* context, const char* key)
+{
+  return gtk_widget_get_margin_end(GTK_WIDGET(context->layout.vte));
+}
+
+void setter_padding_right(Context* context, const char* key, int value)
+{
+  gtk_widget_set_margin_end(GTK_WIDGET(context->layout.vte), value);
 }
 
 int getter_scrollback_length(Context* context, const char* key)

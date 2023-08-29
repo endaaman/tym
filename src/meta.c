@@ -136,6 +136,8 @@ Meta* meta_init()
       .arg_desc="<int>", .desc="Initial rows",
       .getter=CB(getter_cell_height), .setter=CB(setter_cell_height)
     },
+
+    /* DEPRECATED START */
     {
       .name="padding_horizontal", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
       .arg_desc="<int>", .desc="Horizontal padding",
@@ -146,6 +148,29 @@ Meta* meta_init()
       .arg_desc="<int>", .desc="Vertical padding",
       .setter=CB(setter_padding_vertical)
     },
+    /* DEPRECATED END */
+
+    {
+      .name="padding_top", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
+      .arg_desc="<int>", .desc="Top padding",
+      .getter=CB(getter_padding_top), .setter=CB(setter_padding_top)
+    },
+    {
+      .name="padding_bottom", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
+      .arg_desc="<int>", .desc="Bottom padding",
+      .getter=CB(getter_padding_bottom), .setter=CB(setter_padding_bottom)
+    },
+    {
+      .name="padding_left", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
+      .arg_desc="<int>", .desc="Left padding",
+      .getter=CB(getter_padding_left), .setter=CB(setter_padding_left)
+    },
+    {
+      .name="padding_right", .type=T_INT, .default_value=memdup(&v_zero, sizeof(int)),
+      .arg_desc="<int>", .desc="Right padding",
+      .getter=CB(getter_padding_right), .setter=CB(setter_padding_right)
+    },
+
     {
       .name="scrollback_length", .type=T_INT, .default_value=memdup(&TYM_DEFAULT_SCROLLBACK, sizeof(int)),
       .arg_desc="<int>", .desc="Scrollback buffer length",

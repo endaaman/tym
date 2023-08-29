@@ -98,8 +98,12 @@ All available config values are shown below.
 | `scale` | integer | `100` | Font scale in **percent(%)** |
 | `cell_width` | integer | `100` | Cell width scale in **percent(%)**. |
 | `cell_height` | integer | `100` | Cell height scale in **percent(%)**.  |
-| `padding_horizontal`  | integer | `0` | Horizontal padding. |
-| `padding_vertical`  | integer | `0` | Vertical padding. |
+> | `padding_horizontal`  | integer | `0` | Horizontal padding. |
+> | `padding_vertical`  | integer | `0` | Vertical padding. |
+| `padding_top`  | integer | `0` | Top padding. |
+| `padding_bottom`  | integer | `0` | Bottom padding. |
+| `padding_left`  | integer | `0` | Left padding. |
+| `padding_right`  | integer | `0` | Right padding. |
 | `scrollback_length` | integer | `512` | Length of the scrollback buffer. |
 | `scrollback_on_output` | boolean | `true` | Whether to scroll the buffer when the new data is output. |
 | `ignore_default_keymap` | boolean | `false` | Whether to use default keymap. |
