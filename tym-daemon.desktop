@@ -1,8 +1,6 @@
 [Desktop Entry]
-Categories=GTK;System;TerminalEmulator;
-Categories=System;GTK;Utility;TerminalEmulator;
+Categories=System;TerminalEmulator;
 Comment=Daemon process for tym
-Encoding=UTF-8
 Exec=tym --daemon
 GenericName=Terminal
 Icon=utilities-terminal
