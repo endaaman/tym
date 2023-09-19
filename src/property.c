@@ -407,14 +407,22 @@ void setter_padding_horizontal(Context* context, const char* key, int value)
 {
   gtk_box_set_child_packing(context->layout.hbox, GTK_WIDGET(context->layout.vte), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
-  g_warning("Proprty `%s` is deprecated. Use `padding_left` and `padding_right` instead.", key);
+  if (value != 0) {
+    const char* s = "Proprty `padding_horizontal` is deprecated. Use `padding_top` and `padding_bottom` instead.";
+    g_warning("%s", s);
+    context_notify(context, s, "Deprecation warning");
+  }
 }
 
 void setter_padding_vertical(Context* context, const char* key, int value)
 {
   gtk_box_set_child_packing(context->layout.vbox, GTK_WIDGET(context->layout.hbox), true, true, value, GTK_PACK_START);
   config_set_int(context->config, key, value);
-  g_warning("Proprty `%s` is deprecated. Use `padding_top` and `padding_bottom` instead.", key);
+  if (value != 0) {
+    const char* s = "Proprty `padding_vertical` is deprecated. Use `padding_top` and `padding_bottom` instead.";
+    g_warning("%s", s);
+    context_notify(context, s, "Deprecation warning");
+  }
 }
 /* DEPRECATED END */
 
