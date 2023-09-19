@@ -58,8 +58,8 @@ char* context_acquire_config_path(Context* context)
 
 char* context_acquire_theme_path(Context* context)
 {
-  char* path = NULL;
-  if (!option_get_str(context->option, "theme")) {
+  char* path = option_get_str(context->option, "theme");
+  if (!path) {
     return g_build_path(
       G_DIR_SEPARATOR_S,
       g_get_user_config_dir(),
