@@ -47,7 +47,7 @@ char* context_acquire_config_path(Context* context)
   }
 
   if (g_path_is_absolute(path)) {
-    return path;
+    return g_strdup(path);
   }
   char* cwd = g_get_current_dir();
   char* abs_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
@@ -73,9 +73,10 @@ char* context_acquire_theme_path(Context* context)
   }
 
   char* cwd = g_get_current_dir();
-  path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
+  char* abs_path = g_build_path(G_DIR_SEPARATOR_S, cwd, path, NULL);
   g_free(cwd);
-  return path;
+  g_free(path);
+  return abs_path;
 }
 
 void context_load_lua_context(Context* context)
