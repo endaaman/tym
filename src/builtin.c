@@ -815,7 +815,7 @@ static int builtin_get_text(lua_State* L)
   if (end_col < 0) {
     end_col = vte_terminal_get_column_count(context->layout.vte);
   }
-  char* selection = vte_terminal_get_text_range(context->layout.vte, start_row, start_col, end_row, end_col, NULL, NULL, NULL);
+  char* selection = vte_terminal_get_text_range_format(context->layout.vte, VTE_FORMAT_TEXT, start_row, start_col, end_row, end_col, NULL);
   lua_pushstring(L, selection);
   g_free(selection);
   return 1;
