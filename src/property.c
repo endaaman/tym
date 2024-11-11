@@ -20,33 +20,6 @@ typedef enum {
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
 
-static void set_size(Context* context, int width, int height)
-{
-  GtkWindow* window = context->layout.window;
-  VteTerminal* vte = context->layout.vte;
-  bool visible = gtk_widget_is_visible(GTK_WIDGET(window));
-  if (visible) {
-    GtkBorder border;
-    gtk_style_context_get_padding(
-      gtk_widget_get_style_context(GTK_WIDGET(vte)),
-      gtk_widget_get_state_flags(GTK_WIDGET(vte)),
-      &border
-    );
-    const int char_width = vte_terminal_get_char_width(vte);
-    const int char_height = vte_terminal_get_char_height(vte);
-    const int hpad = context_get_int(context, "padding_horizontal");
-    const int vpad = context_get_int(context, "padding_vertical");
-    gtk_window_resize(
-      context->layout.window,
-      width * char_width + border.left + border.right + hpad * 2,
-      height * char_height + border.top + border.bottom + vpad * 2
-    );
-  } else {
-    vte_terminal_set_size(vte, width, height);
-  }
-}
-
-
 // STR
 
 void setter_shell(Context* context, const char* key, const char* value)
@@ -359,7 +332,7 @@ int getter_width(Context* context, const char* key)
 
 void setter_width(Context* context, const char* key, int value)
 {
-  set_size(context, value, context_get_int(context, "height"));
+  context_resize(context, value, context_get_int(context, "height"));
 }
 
 int getter_height(Context* context, const char* key)
@@ -369,7 +342,7 @@ int getter_height(Context* context, const char* key)
 
 void setter_height(Context* context, const char* key, int value)
 {
-  set_size(context, context_get_int(context, "width"), value);
+  context_resize(context, context_get_int(context, "width"), value);
 }
 
 int getter_scale(Context* context, const char* key)

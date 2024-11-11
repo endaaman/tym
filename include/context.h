@@ -79,5 +79,6 @@ bool context_get_bool(Context* context, const char* key);
 void context_set_str(Context* context, const char* key, const char* value);
 void context_set_int(Context* context, const char* key, int value);
 void context_set_bool(Context* context, const char* key, bool value);
+void context_resize(Context* context, int width, int height);
 
 #endif

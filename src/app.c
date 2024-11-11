@@ -312,6 +312,13 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
   hook_perform_selected(context->hook, context->lua, text);
 }
 
+static void on_vte_resize_request(GtkWidget* widget, unsigned int width, unsigned int height, void* user_data)
+{
+  Context* context = (Context*)user_data;
+  dd("Recieve resize sequence: width=%d height=%d", width, height);
+  context_resize(context, width, height);
+}
+
 
 static gboolean on_window_close(GtkWidget* widget, cairo_t* cr, void* user_data)
 {
@@ -602,6 +609,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   context_signal_connect(context, vte, "bell", G_CALLBACK(on_vte_bell));
   context_signal_connect(context, vte, "button-press-event", G_CALLBACK(on_vte_click));
   context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
+  context_signal_connect(context, vte, "resize-window", G_CALLBACK(on_vte_resize_request));
   context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
   context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));
   context_signal_connect(context, window, "focus-out-event", G_CALLBACK(on_window_focus_out));
