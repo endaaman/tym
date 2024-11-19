@@ -30,6 +30,7 @@ bool hook_perform_activated(Hook* hook, lua_State* L);
 bool hook_perform_deactivated(Hook* hook, lua_State* L);
 bool hook_perform_selected(Hook* hook, lua_State* L, const char* text);
 bool hook_perform_unselected(Hook* hook, lua_State* L);
+bool hook_perform_resized(Hook* hook, lua_State* L);
 bool hook_perform_signal(Hook* hook, lua_State* L, const char* param);
 
 #endif

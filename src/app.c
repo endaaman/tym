@@ -362,6 +362,12 @@ static gboolean on_window_draw(GtkWidget* widget, cairo_t* cr, void* user_data)
   return false;
 }
 
+static void on_window_resize(GtkWidget* widget, GtkAllocation* allocation, gpointer user_data)
+{
+  Context* context = (Context*)user_data;
+  hook_perform_resized(context->hook, context->lua);
+}
+
 void on_dbus_signal(
   GDBusConnection* conn,
   const char* sender_name,
@@ -614,6 +620,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));
   context_signal_connect(context, window, "focus-out-event", G_CALLBACK(on_window_focus_out));
   context_signal_connect(context, window, "draw", G_CALLBACK(on_window_draw));
+  context_signal_connect(context, window, "size-allocate", G_CALLBACK(on_window_resize));
 
   if (app->is_isolated) {
     g_message("This process is isolated so never listen to D-Bus signal/method call.");

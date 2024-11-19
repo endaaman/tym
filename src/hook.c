@@ -19,6 +19,7 @@
 #define HOOK_KEY_DEACTIVATED "deactivated"
 #define HOOK_KEY_SELECTED "selected"
 #define HOOK_KEY_UNSELECTED "unselected"
+#define HOOK_KEY_RESIZED "resized"
 #define HOOK_KEY_SIGNAL "signal"
 
 
@@ -32,6 +33,7 @@ const char* HOOK_KEYS[] = {
   HOOK_KEY_DEACTIVATED,
   HOOK_KEY_SELECTED,
   HOOK_KEY_UNSELECTED,
+  HOOK_KEY_RESIZED,
   HOOK_KEY_SIGNAL,
   NULL
 };
@@ -223,6 +225,14 @@ bool hook_perform_unselected(Hook* hook, lua_State* L)
     return false;
   }
   return hook_perform(hook, L, HOOK_KEY_UNSELECTED, 0, 0);
+}
+
+bool hook_perform_resized(Hook* hook, lua_State* L)
+{
+  if (!L) {
+    return false;
+  }
+  return hook_perform(hook, L, HOOK_KEY_RESIZED, 0, 0);
 }
 
 bool hook_perform_signal(Hook* hook, lua_State* L, const char* param)
