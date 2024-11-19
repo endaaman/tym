@@ -109,7 +109,7 @@ All available config values are shown below.
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `bold_is_bright` | boolean | `false` | Whether to make bold texts bright. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
-| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
+| `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See the next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
 
 
 ## Theme customization
@@ -277,6 +277,7 @@ tym.set_keymaps({
 | `drag`        | filepath  | feed filepath to the console | Triggered when files are dragged to the screen. |
 | `activated`   | nil    | nothing | Triggered when the window is activated. |
 | `deactivated` | nil    | nothing | Triggered when the window is deactivated. |
+| `resized`     | nil    | nothing | Triggered when the window is resized. |
 | `selected`    | string | nothing | Triggered when the text in the terminal screen is selected. |
 | `unselected`  | nil    | nothing | Triggered when the selection is unselected. |
 | `signal`      | string | nothing | Triggered when `me.endaaman.tym.hook` signal is received. |
@@ -468,8 +469,6 @@ You can set config value via command line option.
 $ tym --shell=/bin/zsh --color_background=red --width=40 --ignore_default_keymap
 ```
 
-tym also accepts double dash `--` option as the command line to spawn.
-
 ### `--isolated`
 
 ```console
@@ -480,6 +479,8 @@ This option enables tym to create a separate process for each instance. Then an 
 
 
 ### `--` ("double dash" option)
+
+tym also accepts double dash `--` option as the command line to spawn.
 
 ```console
 $ tym -- less -N Dockerfile
