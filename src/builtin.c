@@ -884,9 +884,16 @@ static int builtin_get_object_path(lua_State* L)
   return 1;
 }
 
-static int builtin_get_pid(lua_State* L)
+static int builtin_get_terminal_pid(lua_State* L)
 {
   lua_pushinteger(L, getpid());
+  return 1;
+}
+
+static int builtin_get_pid(lua_State* L)
+{
+  Context* context = (Context*)lua_touserdata(L, lua_upvalueindex(1));
+  lua_pushinteger(L, context->child_pid);
   return 1;
 }
 
@@ -953,6 +960,7 @@ int builtin_register_module(lua_State* L)
     { "get_id"              , builtin_get_id               },
     { "get_ids"             , builtin_get_ids              },
     { "get_object_path"     , builtin_get_object_path      },
+    { "get_terminal_pid"    , builtin_get_terminal_pid     },
     { "get_pid"             , builtin_get_pid              },
     { "get_version"         , builtin_get_version          },
     // DEPRECATED

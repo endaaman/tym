@@ -37,6 +37,7 @@ typedef struct {
   bool initialized;
   char* object_path;
   int registration_id;
+  int child_pid;
   GList* handler_tags;
   Option* option;
   Config* config;

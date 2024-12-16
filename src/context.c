@@ -98,6 +98,7 @@ Context* context_init(int id, Option* option)
   context->config_loading = false;
   context->initialized = false;
   context->object_path = g_strdup_printf(TYM_OBJECT_PATH_FMT_INT, context->id);
+  context->child_pid = -1;
   context->config = config_init();
   context->keymap = keymap_init();
   context->hook = hook_init();

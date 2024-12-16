@@ -537,10 +537,11 @@ static bool _subscribe_dbus(Context* context)
 }
 
 #ifdef TYM_USE_VTE_SPAWN_ASYNC
-static void on_vte_spawn(VteTerminal* vte, GPid pid, GError* error, void* user_data)
+static void on_vte_spawn(VteTerminal* vte, GPid child_pid, GError* error, void* user_data)
 {
   Context* context = (Context*)user_data;
   context->initialized = true;
+  context->child_pid = child_pid;
   if (error) {
     g_warning("vte-spawn error: %s", error->message);
     /* g_error_free(error); */
@@ -702,6 +703,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
     NULL,
     &error
   );
+  context->child_pid = child_pid;
 
   if (error) {
     g_strfreev(shell_env);
