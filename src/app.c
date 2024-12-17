@@ -251,7 +251,13 @@ static void on_vte_title_changed(VteTerminal* vte, void* user_data)
   Context* context = (Context*)user_data;
   GtkWindow* window = context->layout.window;
   bool result = false;
+
+#ifdef TYM_USE_VTE_TERMPROP
+  const char* title = vte_terminal_get_termprop_string(context->layout.vte, "xterm.title", NULL);
+#else
   const char* title = vte_terminal_get_window_title(context->layout.vte);
+#endif
+
   if (hook_perform_title(context->hook, context->lua, title, &result) && result) {
     return;
   }

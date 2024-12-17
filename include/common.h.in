@@ -158,6 +158,12 @@ extern const int TYM_DEFAULT_SCROLLBACK;
 #endif
 #endif
 
+#if VTE_MAJOR_VERSION == 0
+#if VTE_MINOR_VERSION >= 78
+#define TYM_USE_VTE_TERMPROP
+#endif
+#endif
+
 #endif /* END: TYM_USE_OLD_VTE */
 
 

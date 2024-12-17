@@ -44,16 +44,33 @@ fi
 
 AC_ARG_ENABLE(debug,
   [AC_HELP_STRING([--enable-debug],[turn on debugging(default=no)])],
-[\
-case "${enableval}" in
- yes) enable_debug=yes ;;
- no)  enable_debug=no ;;
- *)   AC_MSG_ERROR(bad value for --enable-debug) ;;
-esac],
-enable_debug=no)
+  [\
+  case "${enableval}" in
+   yes) enable_debug=yes ;;
+   no)  enable_debug=no ;;
+   *)   AC_MSG_ERROR(bad value for --enable-debug) ;;
+  esac],
+  [enable_debug=no]
+)
 if test x"${enable_debug}" = x"yes"; then
   AC_DEFINE(DEBUG, 1, [Define to 1 if you want to debug])
 fi
 AM_CONDITIONAL([DEBUG], [test "$enable_debug" = yes])
+
+# --enable-old-vte
+AC_ARG_ENABLE(old-vte,
+  [AC_HELP_STRING([--enable-old-vte], [use old VTE API(default=no)])],
+  [\
+  case "${enableval}" in
+    yes) enable_old_vte=yes ;;
+    no)  enable_old_vte=no ;;
+    *) AC_MSG_ERROR(bad value for --enable-old-vte) ;;
+  esac],
+  [enable_old_vte=no]
+)
+
+if test x"${enable_old_vte}" = x"yes"; then
+  AC_DEFINE([TYM_USE_OLD_VTE], 1, [Define to 1 if using old VTE API])
+fi
 
 AC_OUTPUT
