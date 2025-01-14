@@ -207,6 +207,7 @@ void setter_background_image(Context* context, const char* key, const char* valu
   GtkStyleContext* style_context = gtk_widget_get_style_context(GTK_WIDGET(context->layout.window));
   gtk_style_context_add_provider(style_context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
   config_set_str(context->config, key, value);
+  g_object_unref(css_provider);
 }
 
 void setter_uri_schemes(Context* context, const char* key, const char* value)
