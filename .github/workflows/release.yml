@@ -21,7 +21,7 @@ jobs:
       - name: Build
         run: |
           autoreconf -fvi
-          ./configure
+          ./configure --prefix=/usr
           make
           make check
 
@@ -34,10 +34,78 @@ jobs:
           # fails when the tag does not match the version in configure.ac
           test -f "tym-${GITHUB_REF_NAME}.tar.gz"
 
+      - name: Build deb package
+        run: |
+          make install DESTDIR="$PWD/debroot"
+          mkdir -p debroot/DEBIAN debian
+          touch debian/control  # dpkg-shlibdeps requires this
+          deps=$(dpkg-shlibdeps -O debroot/usr/bin/tym | sed 's/^shlibs:Depends=//')
+          rm -r debian
+          cat > debroot/DEBIAN/control <<EOF
+          Package: tym
+          Version: ${GITHUB_REF_NAME}
+          Section: x11
+          Priority: optional
+          Architecture: amd64
+          Maintainer: endaaman <ken@endaaman.com>
+          Depends: ${deps}
+          Homepage: https://github.com/endaaman/tym
+          Description: Lua-configurable terminal emulator based on VTE
+          EOF
+          dpkg-deb --build --root-owner-group debroot "tym_${GITHUB_REF_NAME}_amd64.deb"
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "tym-${GITHUB_REF_NAME}.tar.gz" \
+          gh release create "$GITHUB_REF_NAME" \
+            "tym-${GITHUB_REF_NAME}.tar.gz" \
+            "tym_${GITHUB_REF_NAME}_amd64.deb" \
             --title "$GITHUB_REF_NAME" \
             --generate-notes
+
+  aur:
+    needs: release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Generate PKGBUILD
+        run: |
+          url="https://github.com/endaaman/tym/releases/download/${GITHUB_REF_NAME}/tym-${GITHUB_REF_NAME}.tar.gz"
+          curl -fL -o tym.tar.gz "$url"
+          sha256=$(sha256sum tym.tar.gz | cut -d' ' -f1)
+          cat > PKGBUILD <<'EOF'
+          # Maintainer: endaaman <ken@endaaman.com>
+
+          pkgname=tym
+          pkgver=@VERSION@
+          pkgrel=1
+          pkgdesc="Lua-configurable terminal emulator"
+          arch=("x86_64")
+          url="https://github.com/endaaman/tym"
+          license=("MIT")
+          depends=("vte3" "lua")
+          source=("https://github.com/endaaman/${pkgname}/releases/download/$pkgver/${pkgname}-$pkgver.tar.gz")
+          sha256sums=("@SHA256@")
+
+          build() {
+          	cd "$pkgname-$pkgver"
+          	./configure --prefix=/usr
+          	make
+          }
+
+          package() {
+          	cd "$pkgname-$pkgver"
+          	make DESTDIR="$pkgdir/" install
+          }
+          EOF
+          sed -i "s/@VERSION@/${GITHUB_REF_NAME}/; s/@SHA256@/${sha256}/" PKGBUILD
+
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v4.2.0
+        with:
+          pkgname: tym
+          pkgbuild: ./PKGBUILD
+          commit_username: endaaman
+          commit_email: ken@endaaman.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Update to ${{ github.ref_name }}
