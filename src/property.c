@@ -290,6 +290,10 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
         context->layout.uri_tag = -1;
         config_set_str(context->config, key, value);
       }
+      if (context->layout.uri_regex) {
+        pcre2_code_free(context->layout.uri_regex);
+        context->layout.uri_regex = NULL;
+      }
       return;
     }
 
@@ -307,7 +311,6 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
 
   GError* error = NULL;
   VteRegex* regex = vte_regex_new_for_match(uri_pattern, -1, PCRE2_UTF | PCRE2_MULTILINE | PCRE2_CASELESS, &error);
-  g_free(uri_pattern);
 
   if (error) {
     g_warning("Error when adding regex to VTE: %s", error->message);
@@ -320,8 +323,31 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     context->layout.uri_tag = tag;
     vte_terminal_match_set_cursor_name(context->layout.vte, tag, "hand");
     vte_regex_unref(regex);
+
+    // keep a plain PCRE2 code of the same pattern to detect URIs that are
+    // hard-wrapped by TUI apps (VTE only joins soft-wrapped lines)
+    int errorcode;
+    PCRE2_SIZE erroroffset;
+    pcre2_code* code = pcre2_compile(
+      (PCRE2_SPTR)uri_pattern,
+      PCRE2_ZERO_TERMINATED,
+      PCRE2_UTF | PCRE2_CASELESS,
+      &errorcode,
+      &erroroffset,
+      NULL
+    );
+    if (code) {
+      if (context->layout.uri_regex) {
+        pcre2_code_free(context->layout.uri_regex);
+      }
+      context->layout.uri_regex = code;
+    } else {
+      g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
+    }
+
     config_set_str(context->config, key, value);
   }
+  g_free(uri_pattern);
 }
 
 // INT

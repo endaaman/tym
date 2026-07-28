@@ -23,6 +23,7 @@ typedef struct {
   GtkBox* hbox;
   GtkBox* vbox;
   int uri_tag;
+  pcre2_code* uri_regex;
   bool alpha_supported;
 } Layout;
 

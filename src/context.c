@@ -117,6 +117,9 @@ void context_close(Context* context)
   config_close(context->config);
   keymap_close(context->keymap);
   hook_close(context->hook);
+  if (context->layout.uri_regex) {
+    pcre2_code_free(context->layout.uri_regex);
+  }
   lua_close(context->lua);
   g_free(context);
 }
@@ -409,6 +412,7 @@ void context_build_layout(Context* context)
   GtkBox* hbox = context->layout.hbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
   GtkBox* vbox = context->layout.vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
   context->layout.uri_tag = -1;
+  context->layout.uri_regex = NULL;
 
   gtk_container_add(GTK_CONTAINER(hbox), GTK_WIDGET(vte));
   gtk_container_add(GTK_CONTAINER(vbox), GTK_WIDGET(hbox));

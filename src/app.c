@@ -280,26 +280,179 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
   }
 }
 
+static glong _cell_width(gunichar c, bool cjk_wide)
+{
+  if (g_unichar_iszerowidth(c)) {
+    return 0;
+  }
+  if (cjk_wide ? g_unichar_iswide_cjk(c) : g_unichar_iswide(c)) {
+    return 2;
+  }
+  return 1;
+}
+
+static glong _text_width(const char* text, bool cjk_wide)
+{
+  glong width = 0;
+  for (const char* p = text; *p; p = g_utf8_next_char(p)) {
+    width += _cell_width(g_utf8_get_char(p), cjk_wide);
+  }
+  return width;
+}
+
+static glong _byte_offset_for_col(const char* text, glong col, bool cjk_wide)
+{
+  glong width = 0;
+  for (const char* p = text; *p; p = g_utf8_next_char(p)) {
+    glong w = _cell_width(g_utf8_get_char(p), cjk_wide);
+    if (col < width + w) {
+      return p - text;
+    }
+    width += w;
+  }
+  return -1;
+}
+
+static char* _get_row_text(VteTerminal* vte, glong row)
+{
+#ifdef TYM_USE_VTE_GET_TEXT_RANGE_FORMAT
+  char* text = vte_terminal_get_text_range_format(vte, VTE_FORMAT_TEXT, row, 0, row, vte_terminal_get_column_count(vte), NULL);
+#else
+  char* text = vte_terminal_get_text_range(vte, row, 0, row, vte_terminal_get_column_count(vte), NULL, NULL, NULL);
+#endif
+  if (!text) {
+    return NULL;
+  }
+  size_t len = strlen(text);
+  while (len > 0 && (text[len - 1] == '\n' || text[len - 1] == '\r')) {
+    text[--len] = '\0';
+  }
+  return text;
+}
+
+// Detect an URI spanning hard-wrapped lines. VTE joins soft-wrapped lines when
+// matching, but TUI apps that wrap text by themselves (e.g. Ink-based ones)
+// emit hard line breaks, so VTE matches only a single-line fragment. Here rows
+// filled up to the last column are joined with the following row, then the URI
+// regex is applied to the restored paragraph.
+static char* check_wrapped_uri(Context* context, VteTerminal* vte, GdkEventButton* event)
+{
+  const glong MAX_JOINED_ROWS = 64;
+
+  pcre2_code* code = context->layout.uri_regex;
+  if (!code) {
+    return NULL;
+  }
+
+  glong cols = vte_terminal_get_column_count(vte);
+  glong char_width = vte_terminal_get_char_width(vte);
+  glong char_height = vte_terminal_get_char_height(vte);
+  if (cols <= 0 || char_width <= 0 || char_height <= 0) {
+    return NULL;
+  }
+  bool cjk_wide = vte_terminal_get_cjk_ambiguous_width(vte) == 2;
+
+  GtkStyleContext* style = gtk_widget_get_style_context(GTK_WIDGET(vte));
+  GtkBorder padding;
+  gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
+
+  GtkAdjustment* adj = gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(vte));
+  double adj_lower = gtk_adjustment_get_lower(adj);
+  double adj_upper = gtk_adjustment_get_upper(adj);
+  double adj_value = gtk_adjustment_get_value(adj);
+  glong lower = (glong)adj_lower;
+  glong upper = (glong)adj_upper;
+  glong row = (glong)(adj_value + (event->y - padding.top) / char_height);
+  glong col = (glong)((event->x - padding.left) / char_width);
+  if (col < 0 || col >= cols || row < lower || row >= upper) {
+    return NULL;
+  }
+
+  // walk up to the first row of the wrapped paragraph
+  glong start = row;
+  while (start > lower && row - start < MAX_JOINED_ROWS) {
+    char* text = _get_row_text(vte, start - 1);
+    bool full = text && _text_width(text, cjk_wide) >= cols;
+    g_free(text);
+    if (!full) {
+      break;
+    }
+    start -= 1;
+  }
+
+  // join rows downward while each row is filled up to the last column
+  GString* joined = g_string_new(NULL);
+  PCRE2_SIZE clicked = PCRE2_SIZE_MAX;
+  for (glong r = start; r < upper && r - start < MAX_JOINED_ROWS * 2; r++) {
+    char* text = _get_row_text(vte, r);
+    if (!text) {
+      text = g_strdup("");
+    }
+    if (r == row) {
+      glong offset = _byte_offset_for_col(text, col, cjk_wide);
+      if (offset < 0) {
+        // clicked on an empty cell
+        g_free(text);
+        g_string_free(joined, true);
+        return NULL;
+      }
+      clicked = joined->len + offset;
+    }
+    glong width = _text_width(text, cjk_wide);
+    g_string_append(joined, text);
+    g_free(text);
+    if (width < cols) {
+      break;
+    }
+  }
+
+  char* uri = NULL;
+  if (clicked != PCRE2_SIZE_MAX && joined->len > 0) {
+    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
+    PCRE2_SIZE offset = 0;
+    while (offset < joined->len) {
+      int res = pcre2_match(code, (PCRE2_SPTR)joined->str, joined->len, offset, 0, match_data, NULL);
+      if (res <= 0) {
+        break;
+      }
+      PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
+      if (ovector[0] <= clicked && clicked < ovector[1]) {
+        uri = g_strndup(joined->str + ovector[0], ovector[1] - ovector[0]);
+        break;
+      }
+      if (ovector[1] > clicked) {
+        break;
+      }
+      offset = ovector[1] > offset ? ovector[1] : offset + 1;
+    }
+    pcre2_match_data_free(match_data);
+  }
+  g_string_free(joined, true);
+  return uri;
+}
+
 static bool on_vte_click(VteTerminal* vte, GdkEventButton* event, void* user_data)
 {
   df();
   Context* context = (Context*)user_data;
   char* uri = NULL;
   if (context->layout.uri_tag >= 0) {
-    uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, NULL);
+    uri = check_wrapped_uri(context, vte, event);
+    if (!uri) {
+      uri = vte_terminal_match_check_event(vte, (GdkEvent*)event, NULL);
+    }
   }
   bool result = false;
   if (hook_perform_clicked(context->hook, context->lua, event->button, uri, &result)) {
-    if (result) {
-      return true;
-    }
-    return false;
+    g_free(uri);
+    return result;
   }
   if (uri) {
     for (int i = strlen(uri) - 1; uri[i] == '.' || uri[i] == ','; i--) {
       uri[i] = '\0';
     }
     context_launch_uri(context, uri);
+    g_free(uri);
     return true;
   }
   return false;
