@@ -83,6 +83,7 @@ jobs:
           arch=("x86_64")
           url="https://github.com/endaaman/tym"
           license=("MIT")
+          options=("!debug")
           depends=("vte3" "lua")
           source=("https://github.com/endaaman/${pkgname}/releases/download/$pkgver/${pkgname}-$pkgver.tar.gz")
           sha256sums=("@SHA256@")
