@@ -1,6 +1,6 @@
 # tym
 
-[![CircleCI](https://circleci.com/gh/endaaman/tym.svg?style=svg)](https://circleci.com/gh/endaaman/tym) [![Discord](https://img.shields.io/discord/1065853670371119124?label=chat%20on%20discord)](https://discord.gg/Ftt8PGYmJY)
+[![CI](https://github.com/endaaman/tym/actions/workflows/ci.yml/badge.svg)](https://github.com/endaaman/tym/actions/workflows/ci.yml) [![Discord](https://img.shields.io/discord/1065853670371119124?label=chat%20on%20discord)](https://discord.gg/Ftt8PGYmJY)
 
 `tym` is a Lua-configurable terminal emulator base on [VTE](https://gitlab.gnome.org/GNOME/vte).
 
