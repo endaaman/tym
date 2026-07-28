@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: lua
+            lua_package: liblua5.3-dev
+            configure_flags: ''
+          - name: luajit
+            lua_package: libluajit-5.1-dev
+            configure_flags: '--enable-luajit'
+    name: test (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf libgtk-3-dev libvte-2.91-dev libpcre2-dev xvfb ${{ matrix.lua_package }}
+
+      - name: Build and test
+        run: |
+          autoreconf -fvi
+          ./configure ${{ matrix.configure_flags }}
+          make
+          make check
+
+      - name: Run e2e
+        run: xvfb-run -a ./src/tym -u ./lua/e2e.lua
