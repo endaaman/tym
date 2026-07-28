@@ -84,6 +84,15 @@ bool is_empty(const char* s)
   return g_strcmp0(s, "") == 0;
 }
 
+char* tym_get_text_range(VteTerminal* vte, long start_row, long start_col, long end_row, long end_col)
+{
+#ifdef TYM_USE_VTE_GET_TEXT_RANGE_FORMAT
+  return vte_terminal_get_text_range_format(vte, VTE_FORMAT_TEXT, start_row, start_col, end_row, end_col, NULL);
+#else
+  return vte_terminal_get_text_range(vte, start_row, start_col, end_row, end_col, NULL, NULL, NULL);
+#endif
+}
+
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata)
 {
 #if USES_LUAJIT

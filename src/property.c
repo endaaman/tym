@@ -19,6 +19,24 @@ typedef enum {
 
 typedef void (*VteSetColorFunc)(VteTerminal*, const GdkRGBA*);
 
+static pcre2_code* compile_pcre2_pattern(const char* pattern, uint32_t options)
+{
+  int errorcode;
+  PCRE2_SIZE erroroffset;
+  pcre2_code* code = pcre2_compile(
+    (PCRE2_SPTR)pattern,
+    PCRE2_ZERO_TERMINATED,
+    options,
+    &errorcode,
+    &erroroffset,
+    NULL
+  );
+  if (!code) {
+    g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`", errorcode, (int)erroroffset);
+  }
+  return code;
+}
+
 
 // STR
 
@@ -217,18 +235,8 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
   if (g_strcmp0(TYM_SYMBOL_WILDCARD, value) == 0) {
     uri_pattern = g_strconcat(SCHEME, SCHEMELESS_URI, NULL);
   } else {
-    int errorcode;
-    PCRE2_SIZE erroroffset;
-    pcre2_code* code = pcre2_compile(
-      SCHEME_LIST,
-      PCRE2_ZERO_TERMINATED,
-      PCRE2_ANCHORED | PCRE2_CASELESS | PCRE2_ENDANCHORED,
-      &errorcode,
-      &erroroffset,
-      NULL
-    );
+    pcre2_code* code = compile_pcre2_pattern(SCHEME_LIST, PCRE2_ANCHORED | PCRE2_CASELESS | PCRE2_ENDANCHORED);
     if (!code) {
-      g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
       return;
     }
 
@@ -263,6 +271,7 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
         }
         pcre2_match_data_free(match_data);
         pcre2_code_free(code);
+        g_slist_free_full(schemes, g_free);
         return;
       }
 
@@ -272,14 +281,14 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
           schemes = g_slist_prepend(schemes, g_strndup(v + ovector[2], length)); // get first scheme
           scheme_length_sum += length + 1; // 1 for separater `|` or terminal null char
       }
-
-      if (ovector[1] > ovector[3]) {
-        // there is at least one more scheme in the list, so move the pointer forward
-        v = &v[ovector[3] + 1];
-      } else {
+      bool has_more = ovector[1] > ovector[3];
+      PCRE2_SIZE next = ovector[3] + 1;
+      pcre2_match_data_free(match_data);
+      if (!has_more) {
         break;
       }
-      pcre2_match_data_free(match_data);
+      // there is at least one more scheme in the list, so move the pointer forward
+      v = &v[next];
     }
     pcre2_code_free(code);
 
@@ -325,25 +334,12 @@ void setter_uri_schemes(Context* context, const char* key, const char* value)
     vte_regex_unref(regex);
 
     // keep a plain PCRE2 code of the same pattern to detect URIs that are
-    // hard-wrapped by TUI apps (VTE only joins soft-wrapped lines)
-    int errorcode;
-    PCRE2_SIZE erroroffset;
-    pcre2_code* code = pcre2_compile(
-      (PCRE2_SPTR)uri_pattern,
-      PCRE2_ZERO_TERMINATED,
-      PCRE2_UTF | PCRE2_CASELESS,
-      &errorcode,
-      &erroroffset,
-      NULL
-    );
-    if (code) {
-      if (context->layout.uri_regex) {
-        pcre2_code_free(context->layout.uri_regex);
-      }
-      context->layout.uri_regex = code;
-    } else {
-      g_warning("pcre2_compile failed for errorcode `%d` at offset `%d`\n", errorcode, (int)erroroffset);
+    // hard-wrapped by TUI apps (VTE only joins soft-wrapped lines).
+    // NULL on compile failure, which just disables the wrapped-URI detection
+    if (context->layout.uri_regex) {
+      pcre2_code_free(context->layout.uri_regex);
     }
+    context->layout.uri_regex = compile_pcre2_pattern(uri_pattern, PCRE2_UTF | PCRE2_CASELESS);
 
     config_set_str(context->config, key, value);
   }

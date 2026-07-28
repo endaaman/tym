@@ -291,35 +291,42 @@ static glong _cell_width(gunichar c, bool cjk_wide)
   return 1;
 }
 
-static glong _text_width(const char* text, bool cjk_wide)
+static bool _row_is_full(const char* text, glong cols, bool cjk_wide)
 {
   glong width = 0;
   for (const char* p = text; *p; p = g_utf8_next_char(p)) {
     width += _cell_width(g_utf8_get_char(p), cjk_wide);
+    if (width >= cols) {
+      return true;
+    }
   }
-  return width;
+  return false;
 }
 
-static glong _byte_offset_for_col(const char* text, glong col, bool cjk_wide)
+// byte offset of the character covering `col`, or -1 when the cell is empty.
+// also reports whether the row is filled up to the last column.
+static glong _scan_row(const char* text, glong col, glong cols, bool cjk_wide, bool* full)
 {
   glong width = 0;
+  glong offset = -1;
   for (const char* p = text; *p; p = g_utf8_next_char(p)) {
     glong w = _cell_width(g_utf8_get_char(p), cjk_wide);
-    if (col < width + w) {
-      return p - text;
+    if (offset < 0 && col < width + w) {
+      offset = p - text;
     }
     width += w;
+    if (offset >= 0 && width >= cols) {
+      *full = true;
+      return offset;
+    }
   }
-  return -1;
+  *full = width >= cols;
+  return offset;
 }
 
 static char* _get_row_text(VteTerminal* vte, glong row)
 {
-#ifdef TYM_USE_VTE_GET_TEXT_RANGE_FORMAT
-  char* text = vte_terminal_get_text_range_format(vte, VTE_FORMAT_TEXT, row, 0, row, vte_terminal_get_column_count(vte), NULL);
-#else
-  char* text = vte_terminal_get_text_range(vte, row, 0, row, vte_terminal_get_column_count(vte), NULL, NULL, NULL);
-#endif
+  char* text = tym_get_text_range(vte, row, 0, row, vte_terminal_get_column_count(vte));
   if (!text) {
     return NULL;
   }
@@ -368,50 +375,63 @@ static char* check_wrapped_uri(Context* context, VteTerminal* vte, GdkEventButto
     return NULL;
   }
 
-  // walk up to the first row of the wrapped paragraph
-  glong start = row;
-  while (start > lower && row - start < MAX_JOINED_ROWS) {
-    char* text = _get_row_text(vte, start - 1);
-    bool full = text && _text_width(text, cjk_wide) >= cols;
+  char* text = _get_row_text(vte, row);
+  if (!text) {
+    return NULL;
+  }
+  bool full = false;
+  glong offset = _scan_row(text, col, cols, cjk_wide, &full);
+  if (offset < 0) {
+    // clicked on an empty cell
     g_free(text);
-    if (!full) {
-      break;
-    }
-    start -= 1;
+    return NULL;
   }
 
-  // join rows downward while each row is filled up to the last column
-  GString* joined = g_string_new(NULL);
-  PCRE2_SIZE clicked = PCRE2_SIZE_MAX;
-  for (glong r = start; r < upper && r - start < MAX_JOINED_ROWS * 2; r++) {
-    char* text = _get_row_text(vte, r);
-    if (!text) {
-      text = g_strdup("");
-    }
-    if (r == row) {
-      glong offset = _byte_offset_for_col(text, col, cjk_wide);
-      if (offset < 0) {
-        // clicked on an empty cell
-        g_free(text);
-        g_string_free(joined, true);
-        return NULL;
-      }
-      clicked = joined->len + offset;
-    }
-    glong width = _text_width(text, cjk_wide);
-    g_string_append(joined, text);
-    g_free(text);
-    if (width < cols) {
+  // rows above belong to the same wrapped paragraph while each of them is
+  // filled up to the last column
+  GPtrArray* above = g_ptr_array_new_with_free_func(g_free);
+  for (glong r = row; r > lower && (glong)above->len < MAX_JOINED_ROWS; r--) {
+    char* t = _get_row_text(vte, r - 1);
+    if (!t || !_row_is_full(t, cols, cjk_wide)) {
+      g_free(t);
       break;
     }
+    g_ptr_array_add(above, t);
+  }
+
+  if (!full && above->len == 0) {
+    // no wrapping around the clicked row; leave it to the plain VTE match
+    g_free(text);
+    g_ptr_array_free(above, true);
+    return NULL;
+  }
+
+  GString* joined = g_string_new(NULL);
+  for (guint i = above->len; i > 0; i--) {
+    g_string_append(joined, g_ptr_array_index(above, i - 1));
+  }
+  g_ptr_array_free(above, true);
+  PCRE2_SIZE clicked = joined->len + offset;
+  g_string_append(joined, text);
+  g_free(text);
+
+  // join rows downward while the last joined row is filled up to the last column
+  for (glong r = row; full && r + 1 < upper && r - row < MAX_JOINED_ROWS; r++) {
+    char* t = _get_row_text(vte, r + 1);
+    if (!t) {
+      break;
+    }
+    full = _row_is_full(t, cols, cjk_wide);
+    g_string_append(joined, t);
+    g_free(t);
   }
 
   char* uri = NULL;
-  if (clicked != PCRE2_SIZE_MAX && joined->len > 0) {
-    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
-    PCRE2_SIZE offset = 0;
-    while (offset < joined->len) {
-      int res = pcre2_match(code, (PCRE2_SPTR)joined->str, joined->len, offset, 0, match_data, NULL);
+  pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);
+  if (match_data) {
+    PCRE2_SIZE match_offset = 0;
+    while (match_offset < joined->len) {
+      int res = pcre2_match(code, (PCRE2_SPTR)joined->str, joined->len, match_offset, 0, match_data, NULL);
       if (res <= 0) {
         break;
       }
@@ -423,7 +443,7 @@ static char* check_wrapped_uri(Context* context, VteTerminal* vte, GdkEventButto
       if (ovector[1] > clicked) {
         break;
       }
-      offset = ovector[1] > offset ? ovector[1] : offset + 1;
+      match_offset = ovector[1] > match_offset ? ovector[1] : match_offset + 1;
     }
     pcre2_match_data_free(match_data);
   }
@@ -469,6 +489,7 @@ static void on_vte_selection_changed(GtkWidget* widget, void* user_data)
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   char* text = gtk_clipboard_wait_for_text(cb);
   hook_perform_selected(context->hook, context->lua, text);
+  g_free(text);
 }
 
 static void on_vte_resize_request(GtkWidget* widget, unsigned int width, unsigned int height, void* user_data)
