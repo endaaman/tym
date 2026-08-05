@@ -59,6 +59,13 @@
 #define TYM_CJK_WIDTH_NARROW "narrow"
 #define TYM_CJK_WIDTH_WIDE "wide"
 
+// VTE termprop names must have at least 4 components and start with `vte.ext`
+#define TYM_TERMPROP_CLIPBOARD "vte.ext.tym.clipboard"
+// tmux only expands its `Ms` capability when the string references the capability's
+// first parameter, which is the selection flags. tym has no use for them, so they
+// are parked in this termprop to keep the payload a bare base64 string.
+#define TYM_TERMPROP_CLIPBOARD_FLAGS "vte.ext.tym.clipboard.flags"
+
 #define TYM_CLIPBOARD_CLIPBOARD "clipborad"
 #define TYM_CLIPBOARD_PRIMARY "primary"
 #define TYM_CLIPBOARD_SECONDARY "secondary"

@@ -21,6 +21,12 @@ void app_init()
   app = g_new0(App, 1);
   app->meta = meta_init();
   app->ipc = ipc_init();
+#ifdef TYM_USE_VTE_TERMPROP
+  // VTE does not implement OSC 52, so the clipboard is written through a termprop
+  // of our own instead. The value is base64 so that it needs no escaping.
+  vte_install_termprop(TYM_TERMPROP_CLIPBOARD, VTE_PROPERTY_STRING, VTE_PROPERTY_FLAG_NONE);
+  vte_install_termprop(TYM_TERMPROP_CLIPBOARD_FLAGS, VTE_PROPERTY_STRING, VTE_PROPERTY_FLAG_EPHEMERAL);
+#endif
 }
 
 void app_close()
@@ -279,6 +285,49 @@ static void on_vte_bell(VteTerminal* vte, void* user_data)
     gtk_window_set_urgency_hint(window, true);
   }
 }
+
+#ifdef TYM_USE_VTE_TERMPROP
+static int _set_clipboard_from_termprop(void* user_data)
+{
+  df();
+  GBytes* bytes = (GBytes*)user_data;
+  gsize len = 0;
+  const char* text = (const char*)g_bytes_get_data(bytes, &len);
+  GtkClipboard* clipboard = gtk_clipboard_get_for_display(
+    gdk_display_get_default(), GDK_SELECTION_CLIPBOARD);
+  gtk_clipboard_set_text(clipboard, text, len);
+  gtk_clipboard_store(clipboard);
+  g_bytes_unref(bytes);
+  return G_SOURCE_REMOVE;
+}
+
+static void on_vte_clipboard_termprop_changed(VteTerminal* vte, const char* name, void* user_data)
+{
+  df();
+  Context* context = (Context*)user_data;
+  if (!context_get_bool(context, "osc_clipboard")) {
+    return;
+  }
+  // Only `vte_terminal_get_termprop_*()` may be called on the terminal from this
+  // handler, so the payload is copied out and the clipboard is set from an idle.
+  size_t size = 0;
+  const char* value = vte_terminal_get_termprop_string(vte, TYM_TERMPROP_CLIPBOARD, &size);
+  if (!value) {
+    return;
+  }
+  gsize len = 0;
+  char* text = (char*)g_base64_decode(value, &len);
+  if (!text) {
+    return;
+  }
+  if (len > 0 && g_utf8_validate(text, len, NULL)) {
+    g_idle_add(_set_clipboard_from_termprop, g_bytes_new_take(text, len));
+  } else {
+    context_log_warn(context, false, "Ignored invalid clipboard payload from the application");
+    g_free(text);
+  }
+}
+#endif
 
 static glong _cell_width(gunichar c, bool cjk_wide)
 {
@@ -796,6 +845,9 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   context_signal_connect(context, vte, "bell", G_CALLBACK(on_vte_bell));
   context_signal_connect(context, vte, "button-press-event", G_CALLBACK(on_vte_click));
   context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
+#ifdef TYM_USE_VTE_TERMPROP
+  context_signal_connect(context, vte, "termprop-changed::" TYM_TERMPROP_CLIPBOARD, G_CALLBACK(on_vte_clipboard_termprop_changed));
+#endif
   context_signal_connect(context, vte, "resize-window", G_CALLBACK(on_vte_resize_request));
   context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
   context_signal_connect(context, window, "focus-in-event", G_CALLBACK(on_window_focus_in));

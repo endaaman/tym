@@ -108,8 +108,33 @@ All available config values are shown below.
 | `autohide` | boolean | `false` | Whether to hide mouse cursor when the user presses a key. |
 | `silent` | boolean | `false` | Whether to beep when bell sequence is sent. |
 | `bold_is_bright` | boolean | `false` | Whether to make bold texts bright. |
+| `osc_clipboard` | boolean | `false` | Whether to let the application write the clipboard. [See the next section](#user-content-writing-the-clipboard-from-the-application). Requires VTE >= 0.78. |
 | `color_window_background` | string | `''` | Color of the terminal window. It is seen when `'padding_horizontal'` `'padding_vertical'` is not `0`. If you set `'NONE'`, the window background will not be drawn. |
 | `color_foreground`, `color_background`, `color_cursor`, `color_cursor_foreground`, `color_highlight`, `color_highlight_foreground`, `color_bold`, `color_0` ... `color_15` | string | [See the next section](#user-content-theme-customization) | You can specify standard color string such as `'#f00'`, `'#ff0000'`, `'rgba(22, 24, 33, 0.7)'` or `'red'`. It will be parsed by [`gdk_rgba_parse()`](https://developer.gnome.org/gdk3/stable/gdk3-RGBA-Colors.html#gdk-rgba-parse). If empty string is set, the VTE default color will be used. If you set `'NONE'` for `color_background`, the terminal background will not be drawn.|
+
+
+## Writing the clipboard from the application
+
+Most terminals let the running application put text into the clipboard with `OSC 52`, which is what makes copying work over SSH and inside tmux. VTE does not implement it ([GNOME/vte#2495](https://gitlab.gnome.org/GNOME/vte/-/issues/2495)) and gives no hook to intercept it, so tym exposes the same capability through a VTE termprop instead.
+
+Set `osc_clipboard = true` in your config to enable it, then write base64-encoded UTF-8 text to the `vte.ext.tym.clipboard` termprop:
+
+```sh
+printf '\033]666;vte.ext.tym.clipboard=%s\033\\' "$(printf 'hello' | base64 | tr -d '\n')"
+```
+
+The sequence must end with `ST` (`\033\\`). VTE does not accept `BEL` as the terminator of `OSC 666`.
+
+For tmux, point the `Ms` capability at the same sequence and `set-clipboard` will use it:
+
+```tmux
+set -g set-clipboard on
+set -as terminal-overrides ',*:Ms=\E]666;vte.ext.tym.clipboard.flags=%p1%s;vte.ext.tym.clipboard=%p2%s\E\\'
+```
+
+tmux only expands `Ms` when the capability references its first parameter, which is the selection flags, so they are parked in `vte.ext.tym.clipboard.flags` (`OSC 666` takes several `;`-separated termprops at once). tym ignores that termprop; it exists to keep the payload a bare base64 string.
+
+This is disabled by default on purpose: any output the terminal receives can then replace your clipboard, so simply `cat`ing a hostile file would be enough to overwrite it. Reading the clipboard is not implemented, so the application can never learn its contents.
 
 
 ## Theme customization

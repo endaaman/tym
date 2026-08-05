@@ -201,6 +201,10 @@ Meta* meta_init()
       .desc="Whether to make bold texts bright",
       .getter=CB(gettter_bold_is_bright), .setter=CB(setter_bold_is_bright),
     },
+    {
+      .name="osc_clipboard", .type=T_BOOL, .default_value=memdup(&v_false, sizeof(bool)),
+      .desc="Whether to let the application write the clipboard (requires VTE >= 0.78)",
+    },
     color_normal(0),  color_normal(1),  color_normal(2),  color_normal(3),
     color_normal(4),  color_normal(5),  color_normal(6),  color_normal(7),
     color_normal(8),  color_normal(9),  color_normal(10), color_normal(11),
