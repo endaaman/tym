@@ -68,7 +68,7 @@
 // The size VTE allows a `VTE_PROPERTY_DATA` termprop value to have once decoded
 #define TYM_TERMPROP_CLIPBOARD_MAX_SIZE 2048
 
-#define TYM_CLIPBOARD_CLIPBOARD "clipborad"
+#define TYM_CLIPBOARD_CLIPBOARD "clipboard"
 #define TYM_CLIPBOARD_PRIMARY "primary"
 #define TYM_CLIPBOARD_SECONDARY "secondary"
 
