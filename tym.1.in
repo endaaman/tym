@@ -155,6 +155,13 @@ Default:	\fIfalse\fR
 .fi
 If it is provided, beep does not sound when bell sequence is sent.
 
+.IP \fBosc_clipboard\fR
+Type:	\fBboolean\fR
+.fi
+Default:	\fIfalse\fR
+.fi
+If it is provided, the application can write the clipboard by setting the \fBvte.ext.tym.clipboard\fR termprop to base64-encoded UTF-8 text, up to 2048 bytes once decoded. It requires VTE 0.78 or later.
+
 .IP \fBscrollback_length\fR
 Type:	\fBinteger\fR
 .fi

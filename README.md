@@ -125,6 +125,8 @@ printf '\033]666;vte.ext.tym.clipboard=%s\033\\' "$(printf 'hello' | base64 | tr
 
 The sequence must end with `ST` (`\033\\`). VTE does not accept `BEL` as the terminator of `OSC 666`.
 
+Text longer than **2048 bytes** is dropped: that is the size limit VTE puts on the termprop. tym logs a warning about it when the tmux setup below is in use, but only as long as the sequence stays within the length limit of `OSC 666` itself — past roughly 3000 bytes VTE throws the whole sequence away before tym hears anything, and the copy is lost without a word.
+
 For tmux, point the `Ms` capability at the same sequence and `set-clipboard` will use it:
 
 ```tmux
@@ -132,7 +134,7 @@ set -g set-clipboard on
 set -as terminal-overrides ',*:Ms=\E]666;vte.ext.tym.clipboard.flags=%p1%s;vte.ext.tym.clipboard=%p2%s\E\\'
 ```
 
-tmux only expands `Ms` when the capability references its first parameter, which is the selection flags, so they are parked in `vte.ext.tym.clipboard.flags` (`OSC 666` takes several `;`-separated termprops at once). tym ignores that termprop; it exists to keep the payload a bare base64 string.
+tmux only expands `Ms` when the capability references its first parameter, which is the selection flags, so they are parked in `vte.ext.tym.clipboard.flags` (`OSC 666` takes several `;`-separated termprops at once). tym does not act on the flags themselves — the termprop exists to keep the payload a bare base64 string, and, since it arrives even when VTE has thrown the payload away, to let tym warn that a copy was lost.
 
 This is disabled by default on purpose: any output the terminal receives can then replace your clipboard, so simply `cat`ing a hostile file would be enough to overwrite it. Reading the clipboard is not implemented, so the application can never learn its contents.
 

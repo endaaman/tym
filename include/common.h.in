@@ -65,6 +65,8 @@
 // first parameter, which is the selection flags. tym has no use for them, so they
 // are parked in this termprop to keep the payload a bare base64 string.
 #define TYM_TERMPROP_CLIPBOARD_FLAGS "vte.ext.tym.clipboard.flags"
+// The size VTE allows a `VTE_PROPERTY_DATA` termprop value to have once decoded
+#define TYM_TERMPROP_CLIPBOARD_MAX_SIZE 2048
 
 #define TYM_CLIPBOARD_CLIPBOARD "clipborad"
 #define TYM_CLIPBOARD_PRIMARY "primary"

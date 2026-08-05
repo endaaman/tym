@@ -23,8 +23,12 @@ void app_init()
   app->ipc = ipc_init();
 #ifdef TYM_USE_VTE_TERMPROP
   // VTE does not implement OSC 52, so the clipboard is written through a termprop
-  // of our own instead. The value is base64 so that it needs no escaping.
-  vte_install_termprop(TYM_TERMPROP_CLIPBOARD, VTE_PROPERTY_STRING, VTE_PROPERTY_FLAG_NONE);
+  // of our own instead. `VTE_PROPERTY_DATA` takes base64 in the sequence and hands
+  // the decoded bytes over, and it accepts 2048 bytes where a string termprop would
+  // only take 1024 codepoints, that is 768 bytes of base64-encoded payload.
+  // It must be ephemeral: VTE emits no change notification when a termprop is set
+  // to the value it already has, so copying the same text twice would be a no-op.
+  vte_install_termprop(TYM_TERMPROP_CLIPBOARD, VTE_PROPERTY_DATA, VTE_PROPERTY_FLAG_EPHEMERAL);
   vte_install_termprop(TYM_TERMPROP_CLIPBOARD_FLAGS, VTE_PROPERTY_STRING, VTE_PROPERTY_FLAG_EPHEMERAL);
 #endif
 }
@@ -293,10 +297,8 @@ static int _set_clipboard_from_termprop(void* user_data)
   GBytes* bytes = (GBytes*)user_data;
   gsize len = 0;
   const char* text = (const char*)g_bytes_get_data(bytes, &len);
-  GtkClipboard* clipboard = gtk_clipboard_get_for_display(
-    gdk_display_get_default(), GDK_SELECTION_CLIPBOARD);
+  GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   gtk_clipboard_set_text(clipboard, text, len);
-  gtk_clipboard_store(clipboard);
   g_bytes_unref(bytes);
   return G_SOURCE_REMOVE;
 }
@@ -311,20 +313,35 @@ static void on_vte_clipboard_termprop_changed(VteTerminal* vte, const char* name
   // Only `vte_terminal_get_termprop_*()` may be called on the terminal from this
   // handler, so the payload is copied out and the clipboard is set from an idle.
   size_t size = 0;
-  const char* value = vte_terminal_get_termprop_string(vte, TYM_TERMPROP_CLIPBOARD, &size);
-  if (!value) {
+  const uint8_t* data = vte_terminal_get_termprop_data(vte, TYM_TERMPROP_CLIPBOARD, &size);
+  if (!data || size < 1) {
+    // The termprop was reset, which is not a request to clear the clipboard.
     return;
   }
-  gsize len = 0;
-  char* text = (char*)g_base64_decode(value, &len);
-  if (!text) {
-    return;
-  }
-  if (len > 0 && g_utf8_validate(text, len, NULL)) {
-    g_idle_add(_set_clipboard_from_termprop, g_bytes_new_take(text, len));
-  } else {
+  if (!g_utf8_validate((const char*)data, size, NULL)) {
     context_log_warn(context, false, "Ignored invalid clipboard payload from the application");
-    g_free(text);
+    return;
+  }
+  g_idle_add(_set_clipboard_from_termprop, g_bytes_new(data, size));
+}
+
+static void on_vte_clipboard_flags_termprop_changed(VteTerminal* vte, const char* name, void* user_data)
+{
+  df();
+  Context* context = (Context*)user_data;
+  if (!context_get_bool(context, "osc_clipboard")) {
+    return;
+  }
+  // VTE turns a payload it rejects into a reset, so an oversized one is indiscernible
+  // from an ordinary reset on the payload termprop alone. The flags termprop is set by
+  // the same sequence and survives it, which is the only chance to report the loss.
+  size_t size = 0;
+  if (!vte_terminal_get_termprop_data(vte, TYM_TERMPROP_CLIPBOARD, &size)) {
+    context_log_warn(
+      context, false,
+      "Ignored clipboard payload from the application: it is malformed or larger than %d bytes",
+      TYM_TERMPROP_CLIPBOARD_MAX_SIZE
+    );
   }
 }
 #endif
@@ -847,6 +864,7 @@ int on_command_line(GApplication* gapp, GApplicationCommandLine* cli, void* user
   context_signal_connect(context, vte, "selection-changed", G_CALLBACK(on_vte_selection_changed));
 #ifdef TYM_USE_VTE_TERMPROP
   context_signal_connect(context, vte, "termprop-changed::" TYM_TERMPROP_CLIPBOARD, G_CALLBACK(on_vte_clipboard_termprop_changed));
+  context_signal_connect(context, vte, "termprop-changed::" TYM_TERMPROP_CLIPBOARD_FLAGS, G_CALLBACK(on_vte_clipboard_flags_termprop_changed));
 #endif
   context_signal_connect(context, vte, "resize-window", G_CALLBACK(on_vte_resize_request));
   context_signal_connect(context, window, "destroy", G_CALLBACK(on_window_close));
