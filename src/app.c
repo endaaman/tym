@@ -390,17 +390,54 @@ static glong _scan_row(const char* text, glong col, glong cols, bool cjk_wide, b
   return offset;
 }
 
-static char* _get_row_text(VteTerminal* vte, glong row)
+// Cut a line into the rows it occupies on screen. VTE reports a paragraph
+// soft-wrapped by itself as a single line, so anything wider than the screen
+// is put back on the grid the click coordinates address.
+static void _append_screen_rows(GPtrArray* rows, const char* line, glong cols, bool cjk_wide)
 {
-  char* text = tym_get_text_range(vte, row, 0, row, vte_terminal_get_column_count(vte));
+  const char* head = line;
+  glong width = 0;
+  bool wrapped = false;
+  for (const char* p = line; *p; p = g_utf8_next_char(p)) {
+    width += _cell_width(g_utf8_get_char(p), cjk_wide);
+    if (width >= cols) {
+      const char* next = g_utf8_next_char(p);
+      g_ptr_array_add(rows, g_strndup(head, next - head));
+      head = next;
+      width = 0;
+      wrapped = true;
+    }
+  }
+  if (*head || !wrapped) {
+    g_ptr_array_add(rows, g_strdup(head));
+  }
+}
+
+// The rows currently on screen, top first. They are taken from the visible
+// text as a whole rather than read one by one out of the scrollback ring:
+// while the alternate screen is up -- which is where TUI apps live -- the
+// vertical adjustment reports `[0, row_count)` although the ring keeps
+// numbering rows from the scrollback, so row numbers derived from the
+// adjustment address rows that are not the ones on screen.
+static GPtrArray* _get_screen_rows(VteTerminal* vte, glong cols, bool cjk_wide)
+{
+  char* text = tym_get_visible_text(vte);
   if (!text) {
     return NULL;
   }
-  size_t len = strlen(text);
-  while (len > 0 && (text[len - 1] == '\n' || text[len - 1] == '\r')) {
-    text[--len] = '\0';
+  GPtrArray* rows = g_ptr_array_new_with_free_func(g_free);
+  char** lines = g_strsplit(text, "\n", -1);
+  g_free(text);
+  guint count = g_strv_length(lines);
+  // the visible text ends with a line break, which is not a row of its own
+  if (count > 1 && is_empty(lines[count - 1])) {
+    --count;
   }
-  return text;
+  for (guint i = 0; i < count; i++) {
+    _append_screen_rows(rows, lines[i], cols, cjk_wide);
+  }
+  g_strfreev(lines);
+  return rows;
 }
 
 // Detect an URI spanning hard-wrapped lines. VTE joins soft-wrapped lines when
@@ -429,68 +466,60 @@ static char* check_wrapped_uri(Context* context, VteTerminal* vte, GdkEventButto
   GtkBorder padding;
   gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
-  GtkAdjustment* adj = gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(vte));
-  double adj_lower = gtk_adjustment_get_lower(adj);
-  double adj_upper = gtk_adjustment_get_upper(adj);
-  double adj_value = gtk_adjustment_get_value(adj);
-  glong lower = (glong)adj_lower;
-  glong upper = (glong)adj_upper;
-  glong row = (glong)(adj_value + (event->y - padding.top) / char_height);
+  glong row = (glong)((event->y - padding.top) / char_height);
   glong col = (glong)((event->x - padding.left) / char_width);
-  if (col < 0 || col >= cols || row < lower || row >= upper) {
+  if (col < 0 || col >= cols || row < 0) {
     return NULL;
   }
 
-  char* text = _get_row_text(vte, row);
-  if (!text) {
+  GPtrArray* rows = _get_screen_rows(vte, cols, cjk_wide);
+  if (!rows) {
     return NULL;
   }
+  glong count = (glong)rows->len;
+  if (row >= count) {
+    // clicked below the last row holding text
+    g_ptr_array_free(rows, true);
+    return NULL;
+  }
+
+  const char* text = g_ptr_array_index(rows, row);
   bool full = false;
   glong offset = _scan_row(text, col, cols, cjk_wide, &full);
   if (offset < 0) {
     // clicked on an empty cell
-    g_free(text);
+    g_ptr_array_free(rows, true);
     return NULL;
   }
 
   // rows above belong to the same wrapped paragraph while each of them is
   // filled up to the last column
-  GPtrArray* above = g_ptr_array_new_with_free_func(g_free);
-  for (glong r = row; r > lower && (glong)above->len < MAX_JOINED_ROWS; r--) {
-    char* t = _get_row_text(vte, r - 1);
-    if (!t || !_row_is_full(t, cols, cjk_wide)) {
-      g_free(t);
-      break;
-    }
-    g_ptr_array_add(above, t);
+  glong first = row;
+  while (first > 0 && row - first < MAX_JOINED_ROWS
+         && _row_is_full(g_ptr_array_index(rows, first - 1), cols, cjk_wide)) {
+    --first;
   }
 
-  if (!full && above->len == 0) {
+  if (!full && first == row) {
     // no wrapping around the clicked row; leave it to the plain VTE match
-    g_free(text);
-    g_ptr_array_free(above, true);
+    g_ptr_array_free(rows, true);
     return NULL;
   }
 
   GString* joined = g_string_new(NULL);
-  for (guint i = above->len; i > 0; i--) {
-    g_string_append(joined, g_ptr_array_index(above, i - 1));
+  for (glong r = first; r < row; r++) {
+    g_string_append(joined, g_ptr_array_index(rows, r));
   }
-  g_ptr_array_free(above, true);
   PCRE2_SIZE clicked = joined->len + offset;
   g_string_append(joined, text);
-  g_free(text);
 
   // join rows downward while the last joined row is filled up to the last column
-  for (glong r = row; full && r + 1 < upper && r - row < MAX_JOINED_ROWS; r++) {
-    char* t = _get_row_text(vte, r + 1);
-    if (!t) {
-      break;
-    }
+  for (glong r = row; full && r + 1 < count && r - row < MAX_JOINED_ROWS; r++) {
+    const char* t = g_ptr_array_index(rows, r + 1);
     full = _row_is_full(t, cols, cjk_wide);
     g_string_append(joined, t);
-    g_free(t);
   }
+  g_ptr_array_free(rows, true);
 
   char* uri = NULL;
   pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(code, NULL);

@@ -93,6 +93,15 @@ char* tym_get_text_range(VteTerminal* vte, long start_row, long start_col, long 
 #endif
 }
 
+char* tym_get_visible_text(VteTerminal* vte)
+{
+#ifdef TYM_USE_VTE_GET_TEXT_RANGE_FORMAT
+  return vte_terminal_get_text_format(vte, VTE_FORMAT_TEXT);
+#else
+  return vte_terminal_get_text(vte, NULL, NULL, NULL);
+#endif
+}
+
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata)
 {
 #if USES_LUAJIT

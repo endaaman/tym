@@ -204,6 +204,7 @@ bool is_equal(const char* a, const char* b);
 bool is_none(const char* s);
 bool is_empty(const char* s);
 char* tym_get_text_range(VteTerminal* vte, long start_row, long start_col, long end_row, long end_col);
+char* tym_get_visible_text(VteTerminal* vte);
 void luaX_requirec(lua_State* L, const char* modname, lua_CFunction openf, int glb, void* userdata);
 int luaX_warn(lua_State* L, const char* fmt, ...);
 
